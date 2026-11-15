@@ -340,6 +340,11 @@ export function HomeClient() {
           </a>
         </p>
       )}
+      <p className="text-center text-xs">
+        <Link href="/privacy" className="inline-flex min-h-11 items-center text-white/60 underline underline-offset-2 hover:text-white/80">
+          プライバシーポリシー
+        </Link>
+      </p>
       {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く */}
       {process.env.BILLING_ON === "1" && (
         <p className="text-center text-xs">
