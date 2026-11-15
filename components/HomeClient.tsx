@@ -336,7 +336,7 @@ export function HomeClient() {
             className="inline-flex min-h-11 items-center gap-1.5 font-bold text-white/60 underline underline-offset-2 hover:text-white/80"
           >
             <Heart className="size-3.5" aria-hidden />
-            つどろ を応援する(OFUSE)
+            Tsudoro を応援する(OFUSE)
           </a>
         </p>
       )}

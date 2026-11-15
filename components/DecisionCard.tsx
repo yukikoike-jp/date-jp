@@ -57,7 +57,7 @@ export function DecisionCard({ decision, partyId, title, url }: { decision: Deci
       ) : (
         <p className="mt-1 text-center text-sm text-muted">お店は未定</p>
       )}
-      {/* カレンダーに入れると、前日のお知らせは各自のスマホが出す(つどろ は連絡先を持たない) */}
+      {/* カレンダーに入れると、前日のお知らせは各自のスマホが出す(Tsudoro は連絡先を持たない) */}
       <p className="mt-4 text-center text-xs font-bold text-match-text">カレンダーに入れる</p>
       <div className="mt-2 grid grid-cols-2 gap-2">
         <a

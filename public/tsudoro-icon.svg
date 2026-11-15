@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
-  <!-- つどろのアイコン(切り絵): 黒い地に、白い紙のグラスが2つ。中は黄色のビールと白い泡。影は金。
+  <!-- Tsudoroのアイコン(切り絵): 黒い地に、白い紙のグラスが2つ。中は黄色のビールと白い泡。影は金。
        components/Logo.tsx の CheersArt と lib/og.tsx と同じ形にそろえる -->
   <rect width="200" height="200" fill="#0f0d0b"/>
   <g fill="#6b4f17" transform="translate(5 5)">

@@ -94,7 +94,7 @@ export function ProPaywall({ feature, price, onClose }: { feature: string; price
         {pending && !restoring ? "お会計のページを開いています…" : `${yen(price)}で買う(買い切り)`}
       </button>
       <p className="mt-2 text-center text-xs text-muted">
-        お支払いは Stripe のページで ・ カードの番号は つどろ に届かない ・{" "}
+        お支払いは Stripe のページで ・ カードの番号は Tsudoro に届かない ・{" "}
         <a href="/legal" className="underline underline-offset-2">
           特定商取引法に基づく表記
         </a>

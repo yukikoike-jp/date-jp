@@ -17,7 +17,7 @@ export function teamsShareUrl(text: string): string {
 }
 
 // LINE で送る文。友だちに自分で打つような短い文にする。
-// アプリの宣伝の一言は付けない(URL を貼ると つどろ のカードが出るので、それで伝わる)
+// アプリの宣伝の一言は付けない(URL を貼ると Tsudoro のカードが出るので、それで伝わる)
 
 /** start = 幹事が決めた開始時刻(分)。あれば「19:00〜」と添える */
 export function inviteText(title: string, url: string, start: number | null = null): string {

@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 // ホーム画面に追加したときの名前とアイコン。アイコンは public/tsudoro-icon.svg から scripts/make-icons.mjs で書き出す
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "つどろ 飲み会の日程とお店がすぐ決まる",
-    short_name: "つどろ",
+    name: "Tsudoro 飲み会の日程とお店がすぐ決まる",
+    short_name: "Tsudoro",
     description: "URLを貼るだけで、飲み会の日にちと予算とお店が決まります",
     lang: "ja",
     start_url: "/",

@@ -10,7 +10,7 @@ export function SiteHeader({ children }: { children?: React.ReactNode }) {
       <div className="mx-auto max-w-xl px-4 pt-2 pb-2">
         <div className="grid h-11 grid-cols-[2.75rem_1fr_2.75rem] items-center">
           <BackButton />
-          <Link href="/" className="justify-self-center" aria-label="つどろ のトップ">
+          <Link href="/" className="justify-self-center" aria-label="Tsudoro のトップ">
             <Wordmark size={24} />
           </Link>
           <Link
