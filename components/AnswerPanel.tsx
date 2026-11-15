@@ -169,7 +169,7 @@ export function AnswerPanel({
           <Link href="/" className="mt-3 flex items-center gap-2 rounded-2xl bg-white/5 px-3 py-3 text-sm ring-1 ring-white/10 transition-colors hover:bg-white/10">
             <span className="min-w-0 flex-1">
               <span className="font-bold">{occasion}の幹事になったら</span>
-              <span className="text-muted">、Dateなら3分で決定</span>
+              <span className="text-muted">、つどろなら3分で決定</span>
             </span>
             <ArrowRight className="size-4 shrink-0 text-accent" aria-hidden />
           </Link>

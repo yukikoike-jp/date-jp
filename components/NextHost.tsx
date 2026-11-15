@@ -10,7 +10,7 @@ export function NextHost({ occasion = "次の飲み会" }: { occasion?: string }
       <div className="flex items-center gap-4">
         <LogoMark size={48} />
         <p className="min-w-0 flex-1">
-          <span className="block font-black">{occasion}の幹事になったら、Dateで決めませんか</span>
+          <span className="block font-black">{occasion}の幹事になったら、つどろで決めませんか</span>
           <span className="mt-0.5 block text-xs text-muted">日にちもお店も3分で決定</span>
         </p>
       </div>

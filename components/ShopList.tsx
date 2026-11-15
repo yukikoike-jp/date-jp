@@ -139,7 +139,7 @@ export function ShopList({
             <a
               href={`/go/${partyId}/${s.id}`}
               className="mt-3 flex min-h-11 items-center justify-center gap-1 rounded-xl border border-border text-sm font-bold"
-              // お店のページは新しいタブで開き、Date の画面(選んだ条件や回答)をそのまま残す
+              // お店のページは新しいタブで開き、つどろ の画面(選んだ条件や回答)をそのまま残す
               target="_blank"
               rel="nofollow noopener"
             >

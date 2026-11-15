@@ -16,14 +16,14 @@ type Section = { title: string; body: (string | string[])[] };
 
 export default async function PrivacyPage() {
   await connection();
-  const operator = cleanText(process.env.OPERATOR_NAME) ?? cleanText(process.env.SELLER_NAME) ?? "Date 運営";
+  const operator = cleanText(process.env.OPERATOR_NAME) ?? cleanText(process.env.SELLER_NAME) ?? "つどろ 運営";
   const contact = cleanText(process.env.CONTACT_EMAIL) ?? cleanText(process.env.SELLER_EMAIL);
 
   const sections: Section[] = [
     {
       title: "1. 取得する情報",
       body: [
-        "Date は、会員登録なしで使えるサービスです。氏名・住所・電話番号・メールアドレスなどを、登録のために求めることはありません。使い方に応じて、次の情報をお預かりします。",
+        "つどろ は、会員登録なしで使えるサービスです。氏名・住所・電話番号・メールアドレスなどを、登録のために求めることはありません。使い方に応じて、次の情報をお預かりします。",
         [
           "会を作るとき: 会のタイトル、候補の日、始まる時刻、会の種類",
           "日程に答えるとき: 名前(ニックネームでかまいません)、行ける日、予算、最寄りの駅、お酒を飲むか、たばこを吸うか、苦手な食べもの、ひとこと",

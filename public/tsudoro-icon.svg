@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- つどろのアイコン: 2つのジョッキで乾杯。線を減らした平たい絵にして、写真のような陰影は付けない -->
+  <rect width="512" height="512" fill="#14110e"/>
+  <!-- 乾杯の「カチン」 -->
+  <g stroke="#fff3d6" stroke-width="14" stroke-linecap="round">
+    <path d="M256 70v40"/>
+    <path d="M200 92l18 28"/>
+    <path d="M312 92l-18 28"/>
+  </g>
+  <!-- 左のジョッキ(取っ手は外側)。上の内側の角を軸に、少し内側へ傾ける -->
+  <g transform="translate(116 200) rotate(14 140 0)">
+    <path d="M0 52h-22a32 32 0 0 0-32 32v46a32 32 0 0 0 32 32h22" fill="none" stroke="#f5b83d" stroke-width="22"/>
+    <rect x="0" y="0" width="140" height="196" rx="22" fill="#f5b83d"/>
+    <rect x="22" y="46" width="14" height="118" rx="7" fill="#fff" opacity="0.35"/>
+    <rect x="52" y="46" width="8" height="118" rx="4" fill="#fff" opacity="0.2"/>
+    <rect x="-4" y="-8" width="148" height="34" rx="14" fill="#fff3d6"/>
+    <circle cx="28" cy="-8" r="28" fill="#fff3d6"/>
+    <circle cx="74" cy="-20" r="32" fill="#fff3d6"/>
+    <circle cx="118" cy="-6" r="26" fill="#fff3d6"/>
+  </g>
+  <!-- 右のジョッキ(左右反転) -->
+  <g transform="translate(396 200) scale(-1 1) rotate(14 140 0)">
+    <path d="M0 52h-22a32 32 0 0 0-32 32v46a32 32 0 0 0 32 32h22" fill="none" stroke="#f5b83d" stroke-width="22"/>
+    <rect x="0" y="0" width="140" height="196" rx="22" fill="#f5b83d"/>
+    <rect x="22" y="46" width="14" height="118" rx="7" fill="#fff" opacity="0.35"/>
+    <rect x="52" y="46" width="8" height="118" rx="4" fill="#fff" opacity="0.2"/>
+    <rect x="-4" y="-8" width="148" height="34" rx="14" fill="#fff3d6"/>
+    <circle cx="28" cy="-8" r="28" fill="#fff3d6"/>
+    <circle cx="74" cy="-20" r="32" fill="#fff3d6"/>
+    <circle cx="118" cy="-6" r="26" fill="#fff3d6"/>
+  </g>
+</svg>

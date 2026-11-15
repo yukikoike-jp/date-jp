@@ -10,15 +10,15 @@ const jp = Noto_Sans_JP({
   variable: "--font-jp",
 });
 
-// 名前「Date」だけに使う字体。丸みのある幾何学的な太字で、親しみやすく今っぽく見せる
+// 英字の飾りに使う字体(名前「つどろ」は日本語の太字で出す)
 const logo = Poppins({ weight: "700", subsets: ["latin"], display: "swap", variable: "--font-poppins" });
 
 export const metadata: Metadata = {
-  title: { default: "Date | 飲み会セッティング", template: "%s | Date" },
+  title: { default: "つどろ | 飲み会の日程とお店がすぐ決まる", template: "%s | つどろ" },
   description:
     "URLをLINEに貼ってみんなが30秒で答えるだけで、飲み会の日にちと予算とお店が決まります",
-  applicationName: "Date",
-  appleWebApp: { title: "Date", statusBarStyle: "black-translucent", capable: true },
+  applicationName: "つどろ",
+  appleWebApp: { title: "つどろ", statusBarStyle: "black-translucent", capable: true },
 };
 
 export const viewport: Viewport = {

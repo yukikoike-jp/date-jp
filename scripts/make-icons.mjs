@@ -1,7 +1,7 @@
-// public/date-icon.svg から、ブラウザのタブ・ホーム画面のアイコン(PNG)を書き出す
+// public/tsudoro-icon.svg から、ブラウザのタブ・ホーム画面のアイコン(PNG)を書き出す
 import sharp from "sharp";
 
-const svg = "public/date-icon.svg";
+const svg = "public/tsudoro-icon.svg";
 const out = [
   ["public/icon-192.png", 192],
   ["public/icon-512.png", 512],

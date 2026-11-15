@@ -1,5 +1,5 @@
 // 決まった会をカレンダーに入れる。Google カレンダーのリンクと、iPhone などで開く .ics の中身を作る。純粋関数。
-// 連絡先を集めずに、前日などのお知らせを各自のカレンダーに任せる(Date から通知は送らない)
+// 連絡先を集めずに、前日などのお知らせを各自のカレンダーに任せる(つどろ から通知は送らない)
 
 import { FIRST_PARTY_MINUTES } from "./sendai";
 
@@ -45,7 +45,7 @@ export function icsContent(e: CalendarEvent, uid: string, now: Date = new Date()
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Date//nomikai//JA",
+    "PRODID:-//tsudoro//nomikai//JA",
     "CALSCALE:GREGORIAN",
     "BEGIN:VEVENT",
     `UID:${uid}`,

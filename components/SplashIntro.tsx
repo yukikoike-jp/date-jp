@@ -1,12 +1,12 @@
-import { CRESCENT_PATH } from "./Logo";
+import { CheersArt } from "./Logo";
 
 // 起動の演出(約3.2秒)
 // 左右から金の線で描いたグラスが勢いよく飛んできて、真ん中で乾杯する。
-// ぶつかった瞬間に画面が揺れて光り、その衝撃から伊達の三日月が刀を振ったように一閃で走る。
-// グラスが下に退くと、一閃の線の下から「Date」がせり上がる。
+// ぶつかった瞬間に画面が揺れて光り、ジョッキの絵(ロゴと同じ)がぽんと出る。
+// グラスが下に退くと、線の下から「つどろ」がせり上がる。
 // 動きは globals.css の .intro-* に置く。動きを減らす設定の人には出さない(HomeClient で判定)
 
-const NAME = "Date";
+const NAME = "つどろ";
 
 // 乾杯の瞬間の集中線。角度だけ決めておく
 const LINES = [-150, -120, -90, -60, -30, 30, 150];
@@ -42,7 +42,7 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
       <span aria-hidden className="intro-flash pointer-events-none absolute inset-0" />
 
       <span className="intro-stage absolute inset-0 flex flex-col items-center justify-center">
-        {/* 乾杯と三日月は同じ場所で重ねる */}
+        {/* 乾杯の線画と、ジョッキの絵は同じ場所で重ねる */}
         <span className="relative grid h-36 w-72 place-items-center">
           <span aria-hidden className="absolute top-1/2 left-1/2">
             {LINES.map((deg) => (
@@ -55,8 +55,8 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
           <span className="intro-glass-right absolute">
             <Glass side="right" />
           </span>
-          <svg viewBox="0 0 240 120" className="intro-moon absolute w-72" aria-hidden>
-            <path className="intro-moon-path" pathLength="1" d={CRESCENT_PATH} fill="var(--accent)" stroke="var(--accent)" strokeWidth="2" strokeLinejoin="round" />
+          <svg viewBox="0 0 512 512" className="intro-cheers absolute w-44" aria-hidden>
+            <CheersArt />
           </svg>
         </span>
 
@@ -66,7 +66,7 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
             {NAME.split("").map((c, i) => (
               <span
                 key={i}
-                className="intro-letter inline-block font-logo text-7xl font-bold tracking-[-0.02em] text-text"
+                className="intro-letter inline-block text-6xl font-black tracking-[0.04em] text-text"
                 style={{ animationDelay: `${1.45 + i * 0.06}s` }}
               >
                 {c}

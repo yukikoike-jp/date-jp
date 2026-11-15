@@ -52,7 +52,7 @@ export async function createProCheckout(origin: string, back: string): Promise<s
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "jpy",
     "line_items[0][price_data][unit_amount]": String(proPrice()),
-    "line_items[0][price_data][product_data][name]": "Date 会計・集金の全部の機能(買い切り)",
+    "line_items[0][price_data][product_data][name]": "つどろ 会計・集金の全部の機能(買い切り)",
     // 別の端末で使うときに、メールアドレスから買ったことを確かめられるようにする
     customer_creation: "always",
     "metadata[kind]": "pro",
