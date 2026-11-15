@@ -15,6 +15,7 @@ import { verifyToken } from "@/lib/tokens";
 import { dietNotice } from "@/lib/diet";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 export const metadata: Metadata = { title: "幹事の画面", robots: { index: false } };
 
@@ -42,6 +43,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
   }
 
   return (
+    <PullToRefresh>
     <PageMotion>
       {/* 日にちが決まるまでは「日程調整」、決まったら「お店探し」 */}
       <SiteHeader>
@@ -112,5 +114,6 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
         )}
       </div>
     </PageMotion>
+    </PullToRefresh>
   );
 }

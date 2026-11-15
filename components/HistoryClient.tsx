@@ -8,6 +8,7 @@ import { mapsUrl } from "@/lib/maps";
 import { loadMyCollections, type MyCollection } from "@/lib/myCollections";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { clock, dateLabel, yen } from "@/lib/sendai";
+import { SkeletonRows } from "./Skeleton";
 import { BUTTON_PRIMARY } from "./ui";
 
 // これまでの会の記録。この端末で作った会のうち、日にちまで決まった会を新しい順に並べ、
@@ -39,7 +40,12 @@ export function HistoryClient() {
       .catch(() => setRows([]));
   }, []);
 
-  if (rows === null) return <p className="px-4 text-sm text-muted">読み込んでいます…</p>;
+  if (rows === null)
+    return (
+      <div className="px-4">
+        <SkeletonRows count={3} label="これまでの会を読み込んでいます" />
+      </div>
+    );
   if (rows.length === 0) {
     return (
       <div className="px-4">

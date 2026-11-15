@@ -1,6 +1,7 @@
 import { CalendarDays, ChevronDown, Cigarette, Clock, MapPin, MessageSquareText, Moon, UtensilsCrossed, Users, Wallet, Wine } from "lucide-react";
 import { areaLabel, budgetLabel, clock, dateLabel, stayLabel } from "@/lib/sendai";
 import type { Summary } from "@/lib/summary";
+import { RankBars } from "./RankBars";
 import { WhoCanGo } from "./WhoCanGo";
 
 // みんなの回答から決まったこと。予算は「全員が出せる額」だけを出し、誰がいくらと答えたかは出さない
@@ -155,19 +156,9 @@ export function SummaryView({ summary }: { summary: Summary }) {
         </dl>
         <Diet diet={summary.diet} />
         <Notes notes={summary.notes} />
-        <ul className="mt-2 space-y-1 text-sm">
-          {summary.ranking.map((r) => (
-            <li key={r.date} className="flex justify-between">
-              <span>
-                {dateLabel(r.date)}
-                {r.date === summary.date && <span className="ml-2 text-xs font-bold text-match-text">★ この日</span>}
-              </span>
-              <span>
-                ○ {r.ok}人 / △ {r.maybe}人
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-3">
+          <RankBars ranking={summary.ranking} total={summary.who.length} best={summary.date} />
+        </div>
         <ul className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
           {summary.attendees.map((a) => (
             <li key={a.name} className="flex justify-between">

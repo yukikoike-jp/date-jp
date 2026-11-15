@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "./Toast";
 import { ArrowRight, CalendarDays, Check, Cigarette, Clock, Heart, MapPin, MessageSquareText, Moon, Pencil, UserRound, UtensilsCrossed, Wallet, Wine } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -127,6 +128,7 @@ export function AnswerPanel({
       setEditing(false);
       setSaved(true);
       setPassed(pass);
+      toast(pass ? "「今回はパス」で伝えました" : "回答を保存しました");
       router.refresh();
     });
   }

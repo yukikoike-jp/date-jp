@@ -7,6 +7,7 @@ import { AUDIENCES, isAdult, loadAudience, type Audience } from "@/lib/audience"
 import { GENRES, yen, type GenreKey } from "@/lib/sendai";
 import type { Shop } from "@/lib/shops";
 import type { Station } from "@/lib/stations";
+import { SkeletonShops } from "./Skeleton";
 import { ShopList } from "./ShopList";
 import { StationPicker } from "./StationPicker";
 import { LABEL } from "./ui";
@@ -188,13 +189,15 @@ export function ShopSearch() {
         </div>
       </div>
 
-      <div className={`mt-4 transition-opacity ${pending ? "opacity-50" : ""}`} aria-busy={pending}>
+      <div className="mt-4" aria-busy={pending}>
         {!station && (
           <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">
             上の「どこで飲む?」で駅を選ぶと、近くのお店を表示
           </p>
         )}
-        {station && result &&
+        {/* 探しているあいだは、お店のカードの形だけを先に出す */}
+        {station && pending && <SkeletonShops />}
+        {station && result && !pending &&
           (result.shops.length > 0 ? (
             <>
               <ShopList partyId="search" shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} />

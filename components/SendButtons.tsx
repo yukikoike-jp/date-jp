@@ -2,6 +2,7 @@
 
 import { Check, Copy, Share, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "./Toast";
 import { BUTTON_PRIMARY, BUTTON_SUB } from "./ui";
 
 /** スマホの共有の画面(Slack・メモ・メールなど)を開けるか。開けないパソコンではコピーを大きくする */
@@ -33,6 +34,7 @@ function CopyButton({ text, label, className }: { text: string; label: string; c
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text);
+          toast("コピーしました。LINE などに貼り付けてください");
           setDone(true);
           setTimeout(() => setDone(false), 2000);
         } catch {}
@@ -66,6 +68,7 @@ export function SendButtons({ mainLabel, share, copy, copyLabel = "URLをコピ�
     }
     try {
       await navigator.clipboard.writeText(copy);
+      toast("コピーしました。LINE などに貼り付けてください");
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {}

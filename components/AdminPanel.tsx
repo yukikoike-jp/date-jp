@@ -1,5 +1,7 @@
 "use client";
 
+import { BottomSheet } from "./BottomSheet";
+import { toast } from "./Toast";
 import { CalendarClock, CalendarDays, Calculator, Check, ChevronDown, ChevronRight, KeyRound, PartyPopper, Store, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -74,6 +76,8 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
   const [shopId, setShopId] = useState<string | null>(decision?.shopId ?? shops[0]?.id ?? null);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  // 決定の取り消しは、下から出るシートで確かめる(ブラウザの確認の窓は、ホーム画面のアプリで見づらい)
+  const [confirmUndo, setConfirmUndo] = useState(false);
   // 決めるときのお店の候補は、最初は3軒だけ出す(選んだお店が4軒目より後なら、それも出す)
   const [allShops, setAllShops] = useState(false);
   const shownShops = allShops ? shops : shops.filter((s, i) => i < 3 || s.id === shopId);
@@ -96,7 +100,10 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
     start(async () => {
       const result = await decide(partyId, token, choice);
       if (!result.ok) setError(result.error);
-      else router.refresh();
+      else {
+        toast(choice ? "決まりました。みんなに知らせましょう" : "決定を取り消しました");
+        router.refresh();
+      }
     });
   }
 
@@ -209,12 +216,31 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
           {/* 取り消しはめったに使わないので、小さな文字のボタンにする */}
           <button
             type="button"
-            onClick={() => window.confirm("決定を取り消して、日にちとお店を選び直しますか?") && submit(null)}
+            onClick={() => setConfirmUndo(true)}
             disabled={pending}
             className="mx-auto mt-3 flex min-h-11 items-center px-3 text-xs font-bold text-muted underline underline-offset-2 hover:text-text"
           >
             決定を取り消す
           </button>
+          <BottomSheet open={confirmUndo} onClose={() => setConfirmUndo(false)} title="決定を取り消しますか?">
+            <p className="text-sm leading-relaxed text-muted">日にちとお店の決定を取り消して、選び直せる状態に戻します。みんなの回答は消えません。</p>
+            <div className="mt-5 grid gap-2">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  setConfirmUndo(false);
+                  submit(null);
+                }}
+                className="min-h-12 rounded-2xl bg-red-500 px-4 text-base font-black text-white transition active:scale-[0.98] disabled:opacity-50"
+              >
+                取り消して選び直す
+              </button>
+              <button type="button" onClick={() => setConfirmUndo(false)} className="min-h-12 rounded-2xl bg-white/8 px-4 text-base font-bold ring-1 ring-white/12">
+                やめる
+              </button>
+            </div>
+          </BottomSheet>
         </section>
       ) : (
         ranking.some((r) => r.ok > 0) && (

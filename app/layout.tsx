@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP, Poppins } from "next/font/google";
+import { ToastHost } from "@/components/Toast";
 import "./globals.css";
 
 const jp = Noto_Sans_JP({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="ja" className={`${jp.variable} ${logo.variable} h-full antialiased`}>
       <body className="min-h-full">
         <main>{children}</main>
+        <ToastHost />
       </body>
     </html>
   );

@@ -228,3 +228,22 @@ h3 {
 /* 自分で倍率を書いた人 */
 .tier-gray { --ts: #2c2925; --tc: #ece6dc; --tb: #b9b0a2; }
 
+
+/* --- 画面の小さな動き(トースト・ボトムシート・スケルトン・棒グラフ)。動きを減らす設定では止める --- */
+.skeleton {
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.06) 0%, rgb(255 255 255 / 0.13) 50%, rgb(255 255 255 / 0.06) 100%);
+  background-size: 200% 100%;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton { animation: skeleton-shine 1.3s ease-in-out infinite; }
+  .anim-toast { animation: toast-in 260ms cubic-bezier(0.2, 0.9, 0.3, 1.2); }
+  .anim-sheet { animation: sheet-up 280ms cubic-bezier(0.2, 0.9, 0.3, 1); }
+  .anim-fade { animation: fade-in 200ms ease-out; }
+  .anim-wiggle { animation: wiggle 0.6s ease-in-out infinite; }
+  .bar-width { transition: width 700ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+}
+@keyframes skeleton-shine { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wiggle { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }

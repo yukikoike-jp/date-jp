@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
 import { AUDIENCES, AUDIENCE_ORDER, loadAudience, saveAudience, type Audience } from "@/lib/audience";
-import { loadMyParties, type MyParty } from "@/lib/myParties";
+import { forgetParty, loadMyParties, rememberParty, type MyParty } from "@/lib/myParties";
+import { SkeletonRows } from "./Skeleton";
+import { SwipeRow } from "./SwipeRow";
+import { toast } from "./Toast";
 import { clock, dateLabel } from "@/lib/sendai";
 import { WEIGHTS } from "@/lib/split";
 import { Wordmark } from "./Logo";
@@ -63,10 +66,13 @@ function PartyGroup({
   title,
   icon,
   items,
+  onRemove,
 }: {
   title: string;
   icon: React.ReactNode;
   items: { party: MyParty; icon: React.ReactNode; sub: string }[];
+  /** 左にスワイプして、この端末の一覧から外す */
+  onRemove: (p: MyParty) => void;
 }) {
   const [all, setAll] = useState(false);
   return (
@@ -76,7 +82,9 @@ function PartyGroup({
       </SectionTitle>
       <div className="space-y-2">
         {(all ? items : items.slice(0, 2)).map(({ party: p, icon: rowIcon, sub }) => (
-          <HomeRow key={p.id} href={`/p/${p.id}/admin?token=${p.token}`} icon={rowIcon} title={p.title} sub={sub} />
+          <SwipeRow key={p.id} onAction={() => onRemove(p)}>
+            <HomeRow href={`/p/${p.id}/admin?token=${p.token}`} icon={rowIcon} title={p.title} sub={sub} />
+          </SwipeRow>
         ))}
       </div>
       {!all && items.length > 2 && (
@@ -285,8 +293,27 @@ export function HomeClient() {
       </Link>
 
       {/* あなたの会。調整中と、これからの会だけを出す。終わった会は「これまでの会」へ */}
+      {/* 会の様子を読み込むあいだは、行の形だけを先に出す */}
+      {parties.length > 0 && statuses === null && (
+        <section>
+          <SectionTitle icon={<CalendarDays className="size-3.5" aria-hidden />}>あなたの会</SectionTitle>
+          <SkeletonRows count={Math.min(2, parties.length)} label="あなたの会を読み込んでいます" />
+        </section>
+      )}
       {active.length > 0 && (
         <PartyGroup
+          onRemove={(p) => {
+            // 幹事の URL はこの端末にしか残っていないので、すぐ元に戻せるようにする
+            const gone = forgetParty(p.id);
+            setParties((list) => list.filter((x) => x.id !== p.id));
+            toast(`「${p.title}」を一覧から外しました`, {
+              label: "元に戻す",
+              onClick: () => {
+                if (gone) rememberParty(gone);
+                setParties(loadMyParties());
+              },
+            });
+          }}
           title="あなたの会"
           icon={<CalendarDays className="size-3.5" aria-hidden />}
           items={active.map((p) => {

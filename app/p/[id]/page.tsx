@@ -16,6 +16,7 @@ import { monthInJapan, nextOccasion } from "@/lib/invite";
 import { clock } from "@/lib/sendai";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
+import { PullToRefresh } from "@/components/PullToRefresh";
 
 export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Metadata> {
   const { id } = await props.params;
@@ -38,6 +39,7 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
   const occasion = nextOccasion(monthInJapan(new Date()), party.audience);
 
   return (
+    <PullToRefresh>
     <PageMotion>
       <SiteHeader />
       <div className="mx-auto max-w-xl pb-16">
@@ -81,5 +83,6 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
         </div>
       </div>
     </PageMotion>
+    </PullToRefresh>
   );
 }
