@@ -43,7 +43,7 @@ export async function loadParty(id: string): Promise<(PartyView & { adminHash: s
   };
   // お店が必ず出るように、見つからなければ条件をゆるめる(何をゆるめたかは relaxed で画面に出す)
   const found = ready
-    ? await searchShopsAlways({ ...query, genres }, 10, AUDIENCES[party.audience].budgets)
+    ? await searchShopsAlways({ ...query, genres }, 20, AUDIENCES[party.audience].budgets)
     : { shops: [], otherArea: false, relaxed: null };
   const byLikes = genres.length > 0 && found.shops.length > 0 && found.relaxed === null;
   const basis = ready

@@ -10,8 +10,8 @@ import { AUDIENCES, isAdult, type Audience } from "@/lib/audience";
 import { AVOIDS } from "@/lib/diet";
 import { ANSWER_BUDGETS, GENRES, STAY_CHOICES, UNLIMITED_BUDGET, clock, dateLabel, stayLabel, yen } from "@/lib/sendai";
 import { AddPicker } from "./AddPicker";
-import { Picker } from "./Picker";
 import { StationPicker } from "./StationPicker";
+import { WheelPicker } from "./WheelPicker";
 import type { DateAnswer } from "@/lib/summary";
 import { MAX_AVOID_NOTE, MAX_MEMO, type AnswerInput } from "@/lib/validation";
 import { Required } from "./Required";
@@ -115,7 +115,9 @@ export function AnswerPanel({
   function submit(input: AnswerInput = form, pass = false) {
     setError(null);
     start(async () => {
-      const result = await saveAnswer(partyId, mine ? { answerId: mine.answerId, token: mine.token } : null, input);
+      // 予算は選ばなくてもよい。選んでいなければ「こだわらない」として送る
+      const fixed = { ...input, budget: input.budget || UNLIMITED_BUDGET };
+      const result = await saveAnswer(partyId, mine ? { answerId: mine.answerId, token: mine.token } : null, fixed);
       if (!result.ok) {
         setError(result.error);
         return;
@@ -202,10 +204,8 @@ export function AnswerPanel({
       : partyStart === null && form.arrival === 0
         ? "何時から来られるかを選んでください"
         : form.stay === 0
-          ? "いつまで残れるかを選んでください"
-          : form.budget === 0
-            ? "どのくらいのお店がいいかを選んでください"
-            : null;
+          ? "いつまで残れるかを、回して選んでください"
+          : null;
 
   return (
     <section>
@@ -319,10 +319,11 @@ export function AnswerPanel({
             いつまで残れる?
             <Required />
           </p>
-          {/* 幹事の開始時刻と同じように、30分ごとの細かい時刻から選ぶ */}
-          <Picker
+          {/* 30分ごとの時刻を、くるくる回して選ぶ */}
+          <WheelPicker
             label="残れる時刻"
             value={form.stay}
+            initial={1320}
             options={STAY_CHOICES.map((m) => ({ value: m, label: stayLabel(m) }))}
             onChange={(m) => set({ stay: m })}
           />
@@ -333,16 +334,17 @@ export function AnswerPanel({
           <p className={LABEL} aria-hidden>
             <Wallet className="size-4" />
             どのくらいのお店がいい?
-            <Required />
+            <span className="text-xs font-bold text-muted">(なくてもOK)</span>
           </p>
-          {/* 500円ごとの細かい額から選ぶ(上限なしも選べる) */}
-          <Picker
+          {/* 選ばなければ「こだわらない」。いちばん上が「こだわらない」で、回すと500円ごとの額になる */}
+          <WheelPicker
             label="1人の目安"
             value={form.budget}
-            options={[...ANSWER_BUDGETS.map((b) => ({ value: b, label: `${yen(b)}くらいまで` })), { value: UNLIMITED_BUDGET, label: "どこでもいい" }]}
+            initial={UNLIMITED_BUDGET}
+            options={[{ value: UNLIMITED_BUDGET, label: "こだわらない" }, ...ANSWER_BUDGETS.map((b) => ({ value: b, label: `${yen(b)}くらいまで` }))]}
             onChange={(b) => set({ budget: b })}
           />
-          <p className="mt-3 text-xs text-muted">誰が選んだかは幹事にも非公開</p>
+          <p className="mt-3 text-xs text-muted">誰が選んだかは幹事にも非公開 ・ お店はみんなの真ん中の額で探します</p>
         </fieldset>
 
         <fieldset className="px-5 py-5">

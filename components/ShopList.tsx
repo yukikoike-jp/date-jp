@@ -22,6 +22,7 @@ export function ShopList({
   notice,
   basis,
   relaxed,
+  pick,
   id = "shops",
   children,
   empty,
@@ -40,6 +41,8 @@ export function ShopList({
   basis?: string[];
   /** 合うお店がなく、条件をゆるめて探したときの一言 */
   relaxed?: string | null;
+  /** 幹事の画面で、この一覧からお店を選んで決めるとき。label = ボタンの文字 */
+  pick?: { selectedId: string | null; onPick: (id: string) => void; label: string; disabled?: boolean };
   id?: string;
   /** 説明の下に置くもの(絞り込みのボタンなど) */
   children?: React.ReactNode;
@@ -85,7 +88,13 @@ export function ShopList({
       )}
       <ul className="mt-4 space-y-3">
         {(expanded ? shops : shops.slice(0, initial)).map((s, i) => (
-          <li key={s.id} style={{ "--i": i } as React.CSSProperties} className={`anim-stagger relative rounded-2xl border p-4 ${chosenId === s.id ? "border-match bg-match-soft" : "border-border"}`}>
+          <li
+            key={s.id}
+            style={{ "--i": i } as React.CSSProperties}
+            className={`anim-stagger relative rounded-2xl border p-4 ${
+              chosenId === s.id || pick?.selectedId === s.id ? "border-match bg-match-soft" : "border-border"
+            }`}
+          >
             {/* お気に入り。押すと、この端末の「お気に入りのお店」に入る(見本のお店は実在しないので出さない) */}
             {!s.sample && (() => {
               const fav = favorites.some((f) => f.id === s.id);
@@ -136,6 +145,21 @@ export function ShopList({
                 )}
               </div>
             </div>
+            {/* 幹事の画面: この一覧から、そのままお店を選ぶ */}
+            {pick && !s.sample && (
+              <button
+                type="button"
+                aria-pressed={pick.selectedId === s.id}
+                disabled={pick.disabled}
+                onClick={() => pick.onPick(s.id)}
+                className={`mt-3 flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl text-sm font-black transition active:scale-[0.98] disabled:opacity-50 ${
+                  pick.selectedId === s.id ? "bg-accent text-accent-text" : "bg-white/8 ring-1 ring-white/15"
+                }`}
+              >
+                {pick.selectedId === s.id ? <Check className="size-4" strokeWidth={3} aria-hidden /> : null}
+                {pick.selectedId === s.id ? "このお店を選んでいます" : pick.label}
+              </button>
+            )}
             <a
               href={`/go/${partyId}/${s.id}`}
               className="mt-3 flex min-h-11 items-center justify-center gap-1 rounded-xl border border-border text-sm font-bold"

@@ -66,7 +66,7 @@ export type Summary = {
   firstEnd: number | null;
   /** 一次会のあとも残れる人 */
   secondParty: string[];
-  /** 行ける人全員が出せる額(誰の額かは出さない) */
+  /** 行ける人の予算の真ん中の額(誰の額かは出さない)。いちばん低い人には合わせない */
   budget: number | null;
   area: AreaKey | null;
   areaVotes: { key: AreaKey; votes: number }[];
@@ -106,6 +106,15 @@ export function startTime(arrivals: number[]): number | null {
   return last;
 }
 
+/**
+ * みんなの予算の「真ん中」。いちばん低い人に引っ張られないよう、低い順に並べた真ん中の額にする
+ * (人数が偶数なら、真ん中の2人のうち低いほう。こだわらない人は高いほうに並ぶ)
+ */
+export function middleBudget(budgets: number[]): number {
+  const sorted = [...budgets].sort((a, b) => a - b);
+  return sorted[Math.floor((sorted.length - 1) / 2)];
+}
+
 export function summarize(dates: string[], answers: Answer[], fixedDate?: string | null, must: string[] = []): Summary {
   const ranking = rankDates(dates, answers, must);
   const best = fixedDate ?? (ranking[0] && ranking[0].ok > 0 ? ranking[0].date : null);
@@ -141,7 +150,7 @@ export function summarize(dates: string[], answers: Answer[], fixedDate?: string
     lateJoiners: start === null ? [] : going.filter((a) => a.arrival > start).map((a) => a.name),
     firstEnd,
     secondParty: firstEnd === null ? [] : going.filter((a) => a.stay > firstEnd).map((a) => a.name),
-    budget: going.length > 0 ? Math.min(...going.map((a) => a.budget)) : null,
+    budget: going.length > 0 ? middleBudget(going.map((a) => a.budget)) : null,
     area: topArea?.key ?? null,
     areaVotes: areaVotes.sort((x, y) => y.votes - x.votes),
     meeting: meetingStation(going.flatMap((a) => (a.station ? [a.station] : []))),

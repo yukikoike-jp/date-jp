@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { rankDates, startTime, summarize, type Answer } from "./summary";
+import { middleBudget, rankDates, startTime, summarize, type Answer } from "./summary";
 
 const D1 = "2026-11-13";
 const D2 = "2026-11-14";
@@ -60,7 +60,8 @@ describe("summarize", () => {
     expect(s.lateJoiners).toEqual(["c"]);
     expect(s.firstEnd).toBe(1230);
     expect(s.secondParty).toEqual(["a", "b", "c"]);
-    expect(s.budget).toBe(3000);
+    // 予算は、いちばん低い人ではなく真ん中の額(3000・4000・5000 の真ん中)
+    expect(s.budget).toBe(4000);
     // 同票なら選択肢の並び順で先のもの(仙台駅前)
     expect(s.area).toBe("station");
   });
@@ -145,5 +146,18 @@ describe("誰がいつ行けるかの表", () => {
       { name: "a", dates: { [D2]: "maybe", [D1]: "ok" } },
       { name: "b", dates: { [D2]: "no", [D1]: "no" } },
     ]);
+  });
+});
+
+describe("middleBudget(予算の真ん中)", () => {
+  it("1人だけ低くても、引っ張られない", () => {
+    expect(middleBudget([2000, 5000, 5000, 6000, 5000])).toBe(5000);
+  });
+  it("偶数なら、真ん中の2つのうち低いほう", () => {
+    expect(middleBudget([3000, 6000, 4000, 5000])).toBe(4000);
+  });
+  it("こだわらない人(上限なし)は高い側に並ぶ", () => {
+    expect(middleBudget([1_000_000, 1_000_000, 3000])).toBe(1_000_000);
+    expect(middleBudget([3000])).toBe(3000);
   });
 });

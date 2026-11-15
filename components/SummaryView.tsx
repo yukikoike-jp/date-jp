@@ -4,7 +4,7 @@ import type { Summary } from "@/lib/summary";
 import { RankBars } from "./RankBars";
 import { WhoCanGo } from "./WhoCanGo";
 
-// みんなの回答から決まったこと。予算は「全員が出せる額」だけを出し、誰がいくらと答えたかは出さない
+// みんなの回答から決まったこと。予算は「みんなの真ん中の額」だけを出し、誰がいくらと答えたかは出さない
 
 /** みんなのひとこと。書いた人がいなければ出さない */
 function Notes({ notes }: { notes: Summary["notes"] }) {
@@ -94,7 +94,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
       value: `${clock(summary.start!)}〜${clock(summary.firstEnd!)}`,
       sub: summary.lateJoiners.length > 0 ? `${summary.lateJoiners.join("と")}さんは途中から参加` : "全員そろってスタート",
     },
-    { icon: Wallet, label: "お店", value: budgetLabel(summary.budget!), sub: "行く人みんなに合うお店" },
+    { icon: Wallet, label: "お店", value: budgetLabel(summary.budget!), sub: "行く人の予算の真ん中くらい" },
   ];
   const more = [
     {

@@ -7,7 +7,6 @@ import { AnswerPanel } from "@/components/AnswerPanel";
 import { DecisionCard } from "@/components/DecisionCard";
 import { Fold } from "@/components/Fold";
 import { SecondPartyShops } from "@/components/SecondPartyShops";
-import { ShopList } from "@/components/ShopList";
 import { SiteHeader } from "@/components/SiteHeader";
 import { StepBar } from "@/components/StepBar";
 import { SummaryView } from "@/components/SummaryView";
@@ -49,7 +48,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
       <SiteHeader>
         <StepBar current={party.decision ? 1 : 0} />
       </SiteHeader>
-      <div className="mx-auto max-w-xl pb-16">
+      <div className={`mx-auto max-w-xl ${party.decision ? "pb-16" : "pb-40"}`}>
         <div className="px-4 pt-6 pb-4">
           <p className="text-[11px] font-black tracking-[0.2em] text-stone-400">幹事の画面</p>
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
@@ -80,6 +79,10 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           names={summary.names}
           maybes={summary.maybes.length}
           must={party.must}
+          otherArea={otherArea}
+          notice={dietNotice(summary.diet)}
+          basis={view.basis}
+          relaxed={view.relaxed}
         />
         {created === "1" && (
           <div className="mt-4">
@@ -96,18 +99,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
             <SummaryView summary={summary} />
           </div>
         )}
-        {!party.decision?.shopId && (
-          <ShopList
-            partyId={party.id}
-            shops={shops}
-            otherArea={otherArea}
-            chosenId={party.decision?.shopId}
-            notice={dietNotice(summary.diet)}
-            basis={view.basis}
-            relaxed={view.relaxed}
-            initial={3}
-          />
-        )}
+        {/* お店の一覧は AdminPanel の中に1つだけ出す(選ぶのと予約のリンクを同じ一覧に) */}
         {/* お店まで決まったら、二次会のお店も出す */}
         {party.decision && (
           <SecondPartyShops partyId={party.id} />

@@ -70,7 +70,7 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
             notice={dietNotice(summary.diet)}
             basis={view.basis}
             relaxed={view.relaxed}
-            initial={3}
+            initial={6}
           />
         )}
         {/* お店まで決まったら、二次会のお店も出す */}

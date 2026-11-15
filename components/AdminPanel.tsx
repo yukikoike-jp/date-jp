@@ -2,19 +2,19 @@
 
 import { BottomSheet } from "./BottomSheet";
 import { toast } from "./Toast";
-import { CalendarClock, CalendarDays, Calculator, Check, ChevronDown, ChevronRight, KeyRound, PartyPopper, Store, Users } from "lucide-react";
+import { CalendarClock, CalendarDays, Calculator, Check, ChevronRight, KeyRound, PartyPopper, Store, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { decide } from "@/app/actions";
 import { dateLabel } from "@/lib/sendai";
-import { answerNudgeText, dayBeforeText, decidedText, inviteText } from "@/lib/share";
+import { dayBeforeText, decidedText, inviteText } from "@/lib/share";
 import type { Shop } from "@/lib/shops";
 import type { Decision } from "@/lib/store/types";
 import type { DateRank } from "@/lib/summary";
 import { saveAdminToken } from "./CreateForm";
-import { Fold } from "./Fold";
 import { MustPicker } from "./MustPicker";
 import { SendButtons, useCanShare } from "./SendButtons";
+import { ShopList } from "./ShopList";
 import { SPLIT_NAMES_KEY } from "./SplitClient";
 import { BUTTON_PRIMARY } from "./ui";
 
@@ -36,6 +36,11 @@ type Props = {
   must: string[];
   /** 決めた日に「たぶん」の人の数(予約の人数の目安に使う) */
   maybes: number;
+  /** お店の一覧に添えるもの(lib/view.ts の結果をそのまま渡す) */
+  otherArea: boolean;
+  notice: string | null;
+  basis: string[];
+  relaxed: string | null;
 };
 
 /** 「幹事が決める」の中の小見出し。選ぶものごとに色(tier-*)を変え、アイコンを添える */
@@ -68,7 +73,7 @@ function BoxHead({ icon, title, note, tone }: { icon: React.ReactNode; title: st
   );
 }
 
-export function AdminPanel({ partyId, title, token, created, ranking, bestDate, shops, decision, attendees, start: partyStart, names, must, maybes }: Props) {
+export function AdminPanel({ partyId, title, token, created, ranking, bestDate, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed }: Props) {
   const router = useRouter();
   const [origin, setOrigin] = useState("");
   const canShare = useCanShare();
@@ -78,9 +83,6 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
   const [pending, start] = useTransition();
   // 決定の取り消しは、下から出るシートで確かめる(ブラウザの確認の窓は、ホーム画面のアプリで見づらい)
   const [confirmUndo, setConfirmUndo] = useState(false);
-  // 決めるときのお店の候補は、最初は3軒だけ出す(選んだお店が4軒目より後なら、それも出す)
-  const [allShops, setAllShops] = useState(false);
-  const shownShops = allShops ? shops : shops.filter((s, i) => i < 3 || s.id === shopId);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -93,7 +95,6 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
   const adminNote = `「${title}」の幹事用URL(自分用)`;
   const decidedMessage = decision ? decidedText(title, decision.date, decision.start, decision.shopName, guestUrl) : "";
   const dayBeforeMessage = decision ? dayBeforeText(title, decision.date, decision.start, decision.shopName, guestUrl) : "";
-  const nudgeMessage = answerNudgeText(title, guestUrl, names.length);
 
   function submit(choice: { date: string; shopId: string | null } | null) {
     setError(null);
@@ -122,21 +123,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
           copy={guestUrl}
           canShare={canShare}
         />
-        {/* 返事が来ないのが幹事のいちばんの悩み。答えた人数を添えて、もう一度お願いする(誰がまだかは書かない) */}
-        {!decision && names.length > 0 && (
-          <div className="mt-5 border-t border-border pt-4">
-            <p className="text-sm font-bold">まだの人にもう一度送る</p>
-            <p className="mt-0.5 text-xs text-muted">いま{names.length}人が回答済み ・ 名前は出さない文</p>
-            <SendButtons mainLabel="共有してお願いを送る" share={{ text: nudgeMessage }} copy={nudgeMessage} copyLabel="送る文をコピー" canShare={canShare} />
-          </div>
-        )}
-        {/* 幹事用の URL は、いつも使うものではないのでたたむ */}
-        {/* 作った直後だけは開いておき、幹事用の URL を自分に残してもらう */}
-        <details open={created} className="group mt-4 rounded-2xl bg-surface-2 px-4 py-2">
-          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 text-sm font-bold [&::-webkit-details-marker]:hidden">
-            <span className="flex-1">幹事用のURL</span>
-            <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
-          </summary>
+        {/* 幹事用の URL は、なくすと会を開けなくなるので、たたまずにいつも出しておく */}
         {/* スマホで作ってパソコンでも開く、といった使い方があるので、自分に送る枠は目立たせておく */}
         <div className="mt-5 rounded-2xl border border-accent/40 bg-match-soft p-4">
           <BoxHead
@@ -158,7 +145,6 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
             canShare={canShare}
           />
         </div>
-        </details>
       </section>
   );
 
@@ -279,101 +265,84 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
                   </button>
                 ))}
             </div>
-            {shops.length > 0 && (
-              <>
-                <StepHead tone="orange" icon={<Store className="size-4" aria-hidden />}>
-                  お店
-                </StepHead>
-                {/* 選んでいないお店は色を付けず、選んだお店だけを暖かいオレンジにする */}
-                <div className="tier-orange space-y-1.5">
-                  {/* 「お店はあとで決める」はいちばん前に、お店とは違う点線の枠で出す(日にちだけ先に決めたい幹事が多いため) */}
-                  <button
-                    type="button"
-                    aria-pressed={shopId === null}
-                    onClick={() => setShopId(null)}
-                    className={`flex min-h-14 w-full items-center gap-3 rounded-xl border-2 border-dashed px-4 text-left transition-colors ${
-                      shopId === null ? "border-[var(--tb)] bg-[var(--ts)] text-[var(--tc)]" : "border-white/20 text-white/80 hover:border-white/40"
-                    }`}
-                  >
-                    <CalendarClock className="size-5 shrink-0" aria-hidden />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-black">
-                        {shopId === null && "✓ "}お店はあとで決める
-                      </span>
-                      <span className="mt-0.5 block text-xs font-normal text-muted">日にちだけ先に決定、お店はあとから</span>
-                    </span>
-                  </button>
-                  {/* 写真と目安をここで見せて、下のお店の一覧まで行かなくても、その場で選んで決められるようにする */}
-                  {shownShops.map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      aria-pressed={shopId === s.id}
-                      onClick={() => setShopId(s.id)}
-                      className={`flex w-full items-center gap-3 rounded-xl border p-2 pr-3 text-left transition-colors ${
-                        shopId === s.id ? "border-[var(--tb)] bg-[var(--ts)]" : "border-border bg-surface hover:border-white/30"
-                      }`}
-                    >
-                      {s.photo ? (
-                        // 外のお店の写真。最適化は使わない
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={s.photo} alt="" className="size-16 shrink-0 rounded-lg object-cover" />
-                      ) : (
-                        <span className="grid size-16 shrink-0 place-items-center rounded-lg bg-surface-2">
-                          <Store className="size-6 text-muted" aria-hidden />
-                        </span>
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <span className={`block text-sm font-black ${shopId === s.id ? "text-[var(--tc)]" : ""}`}>{s.name}</span>
-                        <span className="mt-0.5 block truncate text-xs text-muted">
-                          {[s.genre, s.budgetLabel].filter(Boolean).join(" ・ ")}
-                        </span>
-                        {s.access && <span className="block truncate text-xs text-muted">{s.access}</span>}
-                      </span>
-                      <span
-                        aria-hidden
-                        className={`grid size-6 shrink-0 place-items-center rounded-full border ${
-                          shopId === s.id ? "border-[var(--tb)] bg-[var(--tb)] text-black" : "border-white/25"
-                        }`}
-                      >
-                        {shopId === s.id && <Check className="size-4" strokeWidth={3} />}
-                      </span>
-                    </button>
-                  ))}
-                  {!allShops && shops.length > shownShops.length && (
-                    <button
-                      type="button"
-                      onClick={() => setAllShops(true)}
-                      className="min-h-11 w-full text-xs font-bold text-muted underline underline-offset-2 hover:text-text"
-                    >
-                      ほかのお店も見る(あと{shops.length - shownShops.length}軒)
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+            <StepHead tone="orange" icon={<Store className="size-4" aria-hidden />}>
+              お店
+            </StepHead>
+            {/* お店は下の「合いそうなお店」から選ぶ(予約のリンクと同じ一覧で、選ぶのも予約も1か所で済む) */}
+            <div className="tier-orange space-y-1.5">
+              <button
+                type="button"
+                aria-pressed={shopId === null}
+                onClick={() => setShopId(null)}
+                className={`flex min-h-14 w-full items-center gap-3 rounded-xl border-2 border-dashed px-4 text-left transition-colors ${
+                  shopId === null ? "border-[var(--tb)] bg-[var(--ts)] text-[var(--tc)]" : "border-white/20 text-white/80 hover:border-white/40"
+                }`}
+              >
+                <CalendarClock className="size-5 shrink-0" aria-hidden />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-black">
+                    {shopId === null && "✓ "}お店はあとで決める
+                  </span>
+                  <span className="mt-0.5 block text-xs font-normal text-muted">日にちだけ先に決定、お店はあとから</span>
+                </span>
+              </button>
+              {shopId !== null && (
+                <p className="flex items-center gap-2 rounded-xl border border-[var(--tb)] bg-[var(--ts)] px-4 py-3 text-sm font-black text-[var(--tc)]">
+                  <Check className="size-4 shrink-0" strokeWidth={3} aria-hidden />
+                  <span className="min-w-0 flex-1 truncate">{shops.find((x) => x.id === shopId)?.name ?? "選んだお店"}</span>
+                </p>
+              )}
+              {shops.length > 0 && (
+                <a href="#shops" className="block py-1 text-center text-xs font-bold text-muted underline underline-offset-2">
+                  下の一覧から、ほかのお店も選べます({shops.length}軒)
+                </a>
+              )}
+            </div>
             {error && (
               <p role="alert" className="mt-3 text-sm font-bold text-danger">
                 {error}
               </p>
             )}
-            <button
-              type="button"
-              disabled={pending || date === null}
-              onClick={() => date && submit({ date, shopId })}
-              className={`${BUTTON_PRIMARY} mt-5 w-full`}
-            >
-              {pending ? "決めています…" : "これで決定する"}
-            </button>
           </section>
         )
       )}
-      {/* 決まったあとは、招待と幹事用の URL はたたんでおく(途中から入る人に送るときに開く) */}
-      {decision && (
-        <Fold title="招待の URL・幹事用の URL" note="あとから入る人に送るときに">
-          {invite}
-        </Fold>
+
+      {/* お店の一覧はここだけに出す。選ぶのも、予約のページを開くのも同じ一覧で */}
+      {!decision?.shopId && (
+        <ShopList
+          partyId={partyId}
+          shops={shops}
+          otherArea={otherArea}
+          notice={notice}
+          basis={basis}
+          relaxed={relaxed}
+          initial={8}
+          pick={
+            decision
+              ? // 日にちだけ決めたあとは、押したお店でそのまま決める
+                { selectedId: null, label: "このお店に決定する", disabled: pending, onPick: (id) => submit({ date: decision.date, shopId: id }) }
+              : { selectedId: shopId, label: "このお店を選ぶ", onPick: (id) => setShopId(id) }
+          }
+        />
       )}
+
+      {/* 決定のボタンは、長い一覧の下まで行かなくても押せるよう、画面の下に置いておく */}
+      {!decision && ranking.some((r) => r.ok > 0) && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-bg/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur">
+          <div className="mx-auto max-w-xl">
+            <p className="mb-2 truncate text-xs font-bold text-muted">
+              {date ? dateLabel(date) : "日にちを選んでください"}
+              {" ・ "}
+              {shopId ? shops.find((x) => x.id === shopId)?.name ?? "選んだお店" : "お店はあとで"}
+            </p>
+            <button type="button" disabled={pending || date === null} onClick={() => date && submit({ date, shopId })} className={`${BUTTON_PRIMARY} w-full`}>
+              {pending ? "決めています…" : "これで決定する"}
+            </button>
+          </div>
+        </div>
+      )}
+      {/* 決まったあとも、招待と幹事用の URL はたたまずに出しておく(あとから入る人に送るとき・自分用に残すとき) */}
+      {decision && invite}
     </>
   );
 }
