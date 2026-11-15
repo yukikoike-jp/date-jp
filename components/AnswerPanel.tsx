@@ -319,12 +319,12 @@ export function AnswerPanel({
             いつまで残れる?
             <Required />
           </p>
-          {/* 30分ごとの時刻を、くるくる回して選ぶ */}
+          {/* いちばん上が「いつでもOK」(最後までいられる)。回すと30分ごとの時刻になる */}
           <WheelPicker
             label="残れる時刻"
             value={form.stay}
-            initial={1320}
-            options={STAY_CHOICES.map((m) => ({ value: m, label: stayLabel(m) }))}
+            initial={1800}
+            options={[{ value: 1800, label: "いつでもOK" }, ...STAY_CHOICES.filter((m) => m !== 1800).map((m) => ({ value: m, label: stayLabel(m) }))]}
             onChange={(m) => set({ stay: m })}
           />
         </fieldset>

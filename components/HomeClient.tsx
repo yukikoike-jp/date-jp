@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Hourglass, ListChecks, Shuffle, Store, Wrench } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Hourglass, Store, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
@@ -77,9 +77,12 @@ function PartyGroup({
   const [all, setAll] = useState(false);
   return (
     <section>
-      <SectionTitle icon={icon}>
-        {title} <span className="tracking-normal text-stone-500">{items.length}</span>
-      </SectionTitle>
+      {/* 見出しは、たたむ行(「あなたの会」)が兼ねるので、title が空なら出さない */}
+      {title && (
+        <SectionTitle icon={icon}>
+          {title} <span className="tracking-normal text-stone-500">{items.length}</span>
+        </SectionTitle>
+      )}
       <div className="space-y-2">
         {(all ? items : items.slice(0, 2)).map(({ party: p, icon: rowIcon, sub }) => (
           <SwipeRow key={p.id} onAction={() => onRemove(p)}>
@@ -101,39 +104,26 @@ function PartyGroup({
 }
 
 /**
- * 学生・プライベート・会社で変えるところ。見出しの一言、2つの道具の説明、その下の小さな道具。
- * 会社だけの道具(役職の順の席次)は、会社のときだけ出す
+ * 学生・プライベート・会社で変えるところ。見出しの一言と、2つの道具(お店・会計)の説明
  */
 const HOME_BY_AUDIENCE: Record<
   Audience,
-  { lead: string; shops: string; split: string; extras: { href: string; label: string; sub: string; icon: "collect" | "seats" }[] }
+  { lead: string; shops: string; split: string }
 > = {
   student: {
     lead: "サークル・ゼミの飲み会を、URLひとつで",
     shops: "学割・飲み放題のお店",
     split: "先輩多めの傾斜も割り勘も",
-    extras: [
-      { href: "/collect", label: "集金のチェック", sub: "誰が払ったかを確かめる", icon: "collect" },
-      { href: "/seats", label: "席をくじで決める", sub: "くじで公平に", icon: "seats" },
-    ],
   },
   private: {
     lead: "友達との飲み会を、URLひとつで",
     shops: "飲み放題・個室のお店",
     split: "割り勘も、年上多めも",
-    extras: [
-      { href: "/collect", label: "集金のチェック", sub: "誰が払ったかを確かめる", icon: "collect" },
-      { href: "/seats", label: "席をくじで決める", sub: "くじで公平に", icon: "seats" },
-    ],
   },
   worker: {
     lead: "歓送迎会・忘年会を、URLひとつで",
     shops: "個室・喫煙できるお店も",
     split: "会社の補助も、上司多めも",
-    extras: [
-      { href: "/collect", label: "集金のチェック", sub: "誰が払ったかを確かめる", icon: "collect" },
-      { href: "/seats", label: "役職の順に席次", sub: "上座から順に", icon: "seats" },
-    ],
   },
 };
 
@@ -150,6 +140,8 @@ export function HomeClient() {
   const [parties, setParties] = useState<MyParty[]>([]);
   // 会ごとの、決まったかどうかと答えた人数。読み終えるまでは「あなたの会」を出さない
   const [statuses, setStatuses] = useState<Record<string, PartyStatus> | null>(null);
+  // あなたの会は、ふだんはたたんでおく(見たいときだけ開く)
+  const [showParties, setShowParties] = useState(false);
   // 日本時間の今日(終わった会かどうかに使う)。描画のたびに時計を読まないよう、開いたときに決める
   const [today, setToday] = useState("");
 
@@ -251,6 +243,8 @@ export function HomeClient() {
       .sort((x, y) => statuses![x.id].decision!.date.localeCompare(statuses![y.id].decision!.date)),
   ];
   const past = known.filter((p) => statuses![p.id].decision && statuses![p.id].decision!.date < today).length;
+  const adjusting = active.filter((p) => !statuses![p.id].decision).length;
+  const upcoming = active.length - adjusting;
   const tierIcon = (
     // 傾斜の区分の色を、高さの違う棒で並べる(多めの人ほど高い)
     <span aria-hidden className="flex h-6 items-end gap-[3px]">
@@ -292,15 +286,40 @@ export function HomeClient() {
         </div>
       </Link>
 
-      {/* あなたの会。調整中と、これからの会だけを出す。終わった会は「これまでの会」へ */}
-      {/* 会の様子を読み込むあいだは、行の形だけを先に出す */}
-      {parties.length > 0 && statuses === null && (
+      {/* あなたの会。ふだんは1行にたたみ、見たいときだけ開く(調整中・これからの会・完了した会) */}
+      {parties.length > 0 && (
         <section>
-          <SectionTitle icon={<CalendarDays className="size-3.5" aria-hidden />}>あなたの会</SectionTitle>
-          <SkeletonRows count={Math.min(2, parties.length)} label="あなたの会を読み込んでいます" />
+          <button
+            type="button"
+            aria-expanded={showParties}
+            onClick={() => setShowParties((v) => !v)}
+            className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 text-left ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
+          >
+            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/6 text-accent">
+              <CalendarDays className="size-4" aria-hidden />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-black tracking-tight text-white/90">あなたの会</span>
+              <span className="mt-0.5 block truncate text-xs font-medium text-white/60">
+                {statuses === null
+                  ? "読み込んでいます…"
+                  : [
+                      adjusting > 0 && `調整中 ${adjusting}`,
+                      upcoming > 0 && `決定 ${upcoming}`,
+                      past > 0 && `完了 ${past}`,
+                    ]
+                      .filter(Boolean)
+                      .join(" ・ ") || "まだありません"}
+              </span>
+            </span>
+            <ChevronDown className={`size-4 shrink-0 text-white/40 transition-transform ${showParties ? "rotate-180" : ""}`} aria-hidden />
+          </button>
         </section>
       )}
-      {active.length > 0 && (
+      {showParties && parties.length > 0 && statuses === null && (
+        <SkeletonRows count={Math.min(2, parties.length)} label="あなたの会を読み込んでいます" />
+      )}
+      {showParties && active.length > 0 && (
         <PartyGroup
           onRemove={(p) => {
             // 幹事の URL はこの端末にしか残っていないので、すぐ元に戻せるようにする
@@ -314,7 +333,7 @@ export function HomeClient() {
               },
             });
           }}
-          title="あなたの会"
+          title=""
           icon={<CalendarDays className="size-3.5" aria-hidden />}
           items={active.map((p) => {
             const st = statuses![p.id];
@@ -327,29 +346,18 @@ export function HomeClient() {
           })}
         />
       )}
+      {showParties && past > 0 && (
+        <HomeRow href="/history" icon={<CircleCheck className="size-4" aria-hidden />} title="完了した会" sub={`${past}件 ・ お店・人数・金額`} />
+      )}
 
       <section>
+        {/* ツールは「お店」と「会計」の2つだけ。集金は会計の中から開く */}
         <SectionTitle icon={<Wrench className="size-3.5" aria-hidden />}>ツール</SectionTitle>
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店を探す" sub={home.shops} />
           <ToolTile href="/split" icon={tierIcon} title="会計をする" sub={home.split} />
-          {/* 4つとも同じ大きさで並べる。会社のときだけ、役職の順の席次になる */}
-          {home.extras.map((x) => (
-            <ToolTile
-              key={x.href}
-              href={x.href}
-              icon={x.icon === "collect" ? <ListChecks className="size-6" aria-hidden /> : <Shuffle className="size-6" aria-hidden />}
-              title={x.label}
-              sub={x.sub}
-            />
-          ))}
         </div>
       </section>
-
-      {/* もとにした KANJI の「完了済みの会を見る」と同じ、横長の1行 */}
-      {past > 0 && (
-        <HomeRow href="/history" icon={<CircleCheck className="size-4" aria-hidden />} title="これまでの会を見る" sub={`${past}件 ・ お店・人数・金額`} />
-      )}
 
       <InstallHint />
 
