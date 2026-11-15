@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetFromRange, budgetFromText, mergeShops, pickSamples, smokeFriendly, smokingFromText, type Shop } from "./shops";
+import { budgetFromRange, budgetFromText, mergeShops, pickSamples, searchShopsAlways, smokeFriendly, smokingFromText, type Shop } from "./shops";
 
 describe("budgetFromRange", () => {
   it("予算の区分名から上限を読む", () => {
@@ -59,5 +59,26 @@ describe("pickSamples のタバコの条件", () => {
   });
   it("prefer なら吸えるお店を先に出す", () => {
     expect(smokeFriendly(pickSamples({ ...q, smoking: "prefer" }, 10).shops[0])).toBe(true);
+  });
+});
+
+
+describe("searchShopsAlways(お店が必ず出る)", () => {
+  const steps = [2000, 3000, 4000, 5000, 6000];
+  it("予算が低すぎても、予算を上げてお店を出し、何をゆるめたかを返す", async () => {
+    delete process.env.HOTPEPPER_API_KEY;
+    const r = await searchShopsAlways({ area: "station", budget: 1000, size: 4 }, 10, steps);
+    expect(r.shops.length).toBeGreaterThan(0);
+    expect(r.relaxed).toContain("予算");
+  });
+  it("条件に合えば、ゆるめない", async () => {
+    const r = await searchShopsAlways({ area: "station", budget: 5000, size: 4 }, 10, steps);
+    expect(r.shops.length).toBeGreaterThan(0);
+    expect(r.relaxed).toBeNull();
+  });
+  it("人数が多すぎる・個室・タバコのような厳しい条件でも、最後は出す", async () => {
+    const r = await searchShopsAlways({ area: "station", budget: 1000, size: 500, privateRoom: true, smoking: "only", genres: ["yoshoku"] }, 10, steps);
+    expect(r.shops.length).toBeGreaterThan(0);
+    expect(r.relaxed).not.toBeNull();
   });
 });

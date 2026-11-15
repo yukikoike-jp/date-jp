@@ -21,6 +21,7 @@ export function ShopList({
   lead,
   notice,
   basis,
+  relaxed,
   id = "shops",
   children,
   empty,
@@ -37,6 +38,8 @@ export function ShopList({
   notice?: string | null;
   /** 何に合わせて選んだか(人数・予算・場所など)。チップで並べる */
   basis?: string[];
+  /** 合うお店がなく、条件をゆるめて探したときの一言 */
+  relaxed?: string | null;
   id?: string;
   /** 説明の下に置くもの(絞り込みのボタンなど) */
   children?: React.ReactNode;
@@ -55,6 +58,9 @@ export function ShopList({
       <p className="mt-1 text-sm text-muted">
         {lead ?? (otherArea ? "その場所に合うお店がなく、近くのエリアから" : "みんなの答えから自動で選んだお店")}
       </p>
+      {relaxed && (
+        <p className="mt-3 rounded-2xl border border-accent/50 bg-surface px-3 py-2 text-xs font-bold">ⓘ {relaxed}</p>
+      )}
       {basis && basis.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="おすすめの条件">
           {basis.map((b) => (

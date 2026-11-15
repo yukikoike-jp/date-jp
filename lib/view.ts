@@ -1,7 +1,7 @@
 import "server-only";
 import { AUDIENCES } from "./audience";
 import { UNLIMITED_BUDGET, areaLabel } from "./sendai";
-import { searchShops, type Shop } from "./shops";
+import { searchShopsAlways, type Shop } from "./shops";
 import { getStore } from "./store";
 import type { Party } from "./store/types";
 import { summarize, type Summary } from "./summary";
@@ -11,6 +11,8 @@ export type PartyView = {
   summary: Summary;
   shops: Shop[];
   otherArea: boolean;
+  /** 合うお店がなく、条件をゆるめて探したときの一言(ゆるめていなければ null) */
+  relaxed: string | null;
   /** おすすめのお店を、何に合わせて選んだか(人数・予算・場所・食べたいもの・タバコ) */
   basis: string[];
 };
@@ -39,9 +41,11 @@ export async function loadParty(id: string): Promise<(PartyView & { adminHash: s
     // タバコを吸う人がいれば、吸えるお店を先に出す
     ...(summary.diet.smokers > 0 ? { smoking: "prefer" as const } : {}),
   };
-  let found = ready ? await searchShops({ ...query, genres }, 10) : { shops: [], otherArea: false };
-  const byLikes = genres.length > 0 && found.shops.length > 0;
-  if (ready && genres.length > 0 && found.shops.length === 0) found = await searchShops(query, 10);
+  // お店が必ず出るように、見つからなければ条件をゆるめる(何をゆるめたかは relaxed で画面に出す)
+  const found = ready
+    ? await searchShopsAlways({ ...query, genres }, 10, AUDIENCES[party.audience].budgets)
+    : { shops: [], otherArea: false, relaxed: null };
+  const byLikes = genres.length > 0 && found.shops.length > 0 && found.relaxed === null;
   const basis = ready
     ? [
         `${summary.attendees.length}人`,
@@ -56,5 +60,5 @@ export async function loadParty(id: string): Promise<(PartyView & { adminHash: s
       ]
     : [];
   const { adminHash, ...rest } = party;
-  return { party: rest, adminHash, summary, shops: found.shops, otherArea: found.otherArea, basis };
+  return { party: rest, adminHash, summary, shops: found.shops, otherArea: found.otherArea, relaxed: found.relaxed, basis };
 }

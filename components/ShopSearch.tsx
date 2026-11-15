@@ -68,7 +68,7 @@ export function ShopSearch() {
   const [privateRoom, setPrivateRoom] = useState(false);
   // 社会人の会は、上司がタバコを吸えるかどうかが大事なので、吸えるお店だけに絞れるようにする
   const [smoking, setSmoking] = useState(false);
-  const [result, setResult] = useState<{ shops: Shop[]; otherArea: boolean; raisedTo: number | null } | null>(null);
+  const [result, setResult] = useState<{ shops: Shop[]; otherArea: boolean; relaxed: string | null } | null>(null);
   const [pending, start] = useTransition();
 
   useEffect(() => {
@@ -197,13 +197,7 @@ export function ShopSearch() {
         {station && result &&
           (result.shops.length > 0 ? (
             <>
-              {result.raisedTo !== null && budget !== null && (
-                <p className="mx-4 mb-3 rounded-2xl border border-accent/50 bg-surface px-4 py-3 text-sm">
-                  {yen(budget)}までのお店はなかったので、
-                  {yen(result.raisedTo)}までのお店を表示中
-                </p>
-              )}
-              <ShopList partyId="search" shops={result.shops} otherArea={result.otherArea} />
+              <ShopList partyId="search" shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} />
             </>
           ) : (
             <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">

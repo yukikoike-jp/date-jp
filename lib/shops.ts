@@ -47,7 +47,8 @@ export type ShopQuery = {
   privateRoom?: boolean;
   audience?: Audience;
   /** only = 吸えるお店だけ、prefer = 吸えるお店を先に出す(タバコを吸う人がいる会) */
-  smoking?: "only" | "prefer";
+  smoking?: "only" | "prefer";  /** 近くで見つからないときに、3km まで広げて探す */
+  wide?: boolean;
 };
 
 // 見本のお店。実在しない
@@ -262,6 +263,10 @@ export async function searchShops(q: ShopQuery, limit = 3): Promise<{ shops: Sho
       otherArea = shops.length === 0 && extra.length > 0;
       shops = [...shops, ...extra];
     }
+    if (shops.length === 0 && q.wide) {
+      shops = fits(await callHotpepper(key, { ...params, range: "5" }));
+      otherArea = shops.length > 0;
+    }
     shops = shops.map((s, i) => ({ s, i })).sort((a, b) => smokeScore(b.s, q) - smokeScore(a.s, q) || a.i - b.i).map((x) => x.s);
     return { shops: shops.slice(0, limit), otherArea };
   } catch (e) {
@@ -340,4 +345,35 @@ export function referralUrl(shopUrl: string): string {
   const template = process.env.AFFILIATE_URL_TEMPLATE?.trim();
   if (!template || !template.includes("{url}")) return shopUrl;
   return template.replace("{url}", encodeURIComponent(shopUrl));
+}
+
+/**
+ * お店が必ず出るように、合うお店が見つかるまで条件を1つずつゆるめて探す。
+ * ゆるめる順: 食べたいもの → 予算を1段ずつ上げる → 予算を問わない → 人数・個室・タバコの条件を外す → 3km まで広げる。
+ * relaxed = 何をゆるめたか(画面に一言で出す)。ゆるめていなければ null
+ */
+export async function searchShopsAlways(
+  q: ShopQuery,
+  limit: number,
+  budgetSteps: readonly number[],
+): Promise<{ shops: Shop[]; otherArea: boolean; relaxed: string | null }> {
+  const plain: ShopQuery = { ...q, genres: [], genre: null };
+  const steps: { q: ShopQuery; relaxed: string | null }[] = [{ q, relaxed: null }];
+  if (genresOf(q).length > 0) steps.push({ q: plain, relaxed: "食べたいものに合うお店がなかったので、料理を問わずに選んでいます" });
+  if (q.budget !== null) {
+    for (const b of budgetSteps.filter((b) => b > q.budget!)) {
+      steps.push({ q: { ...plain, budget: b }, relaxed: `予算に合うお店がなかったので、1人${b.toLocaleString("ja-JP")}円くらいまで広げています` });
+    }
+    steps.push({ q: { ...plain, budget: null }, relaxed: "予算に合うお店がなかったので、予算を問わずに選んでいます" });
+  }
+  const loose: ShopQuery = { ...plain, budget: null, size: 1, privateRoom: false, smoking: q.smoking === "only" ? undefined : q.smoking };
+  steps.push({ q: loose, relaxed: "条件に合うお店がなかったので、人数などの条件を外して選んでいます" });
+  steps.push({ q: { ...loose, wide: true }, relaxed: "近くにお店が少ないので、少し離れたお店も出しています" });
+
+  let last = { shops: [] as Shop[], otherArea: false };
+  for (const step of steps) {
+    last = await searchShops(step.q, limit);
+    if (last.shops.length > 0) return { ...last, relaxed: step.relaxed };
+  }
+  return { ...last, relaxed: null };
 }

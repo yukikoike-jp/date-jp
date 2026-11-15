@@ -67,6 +67,7 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
             chosenId={party.decision?.shopId}
             notice={dietNotice(summary.diet)}
             basis={view.basis}
+            relaxed={view.relaxed}
             initial={3}
           />
         )}

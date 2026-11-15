@@ -5,7 +5,7 @@ import { AUDIENCES, isAudience } from "@/lib/audience";
 import { billingEnabled, createProCheckout, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
-import { findShop, searchSecondShops, searchShops, type Shop } from "@/lib/shops";
+import { findShop, searchSecondShops, searchShopsAlways, type Shop } from "@/lib/shops";
 import { getStore } from "@/lib/store";
 import type { Decision } from "@/lib/store/types";
 import { findSponsor } from "@/lib/sponsors";
@@ -132,37 +132,29 @@ export async function findShops(input: {
   /** タバコが吸えるお店だけにする(社会人の画面だけで出す) */
   smoking?: boolean;
   audience: string;
-}): Promise<{ shops: Shop[]; otherArea: boolean; raisedTo: number | null }> {
-  if (!isStation(input.station)) return { shops: [], otherArea: false, raisedTo: null };
+}): Promise<{ shops: Shop[]; otherArea: boolean; relaxed: string | null }> {
+  if (!isStation(input.station)) return { shops: [], otherArea: false, relaxed: null };
   const point = { lat: input.station.lat, lng: input.station.lng };
   const genres = [...new Set(Array.isArray(input.genres) ? input.genres : [])].filter(isGenreKey);
   const audience = isAudience(input.audience) ? input.audience : "student";
   const budgets = AUDIENCES[audience].budgets;
-  // 予算を「決めない」にしても、学生なら6,000円、社会人なら8,000円までのお店にとどめる
+  // 予算を「決めない」にしても、学生なら6,000円、社会人なら8,000円までのお店を先に探す
   const asked = isBudget(input.budget) ? input.budget : Math.max(...budgets);
-  // 選んだ駅の近く(500m、足りなければ1km)で探す
-  const search = (budget: number) =>
-    searchShops(
-      {
-        area: "station",
-        point,
-        genres,
-        budget,
-        privateRoom: input.privateRoom === true,
-        ...(input.smoking === true ? { smoking: "only" as const } : {}),
-        size: 2,
-        audience,
-      },
-      10,
-    );
-  const first = await search(asked);
-  if (first.shops.length > 0) return { ...first, raisedTo: null };
-  // 1軒もなければ、見つかるまで予算を1段ずつ上げる
-  for (const higher of budgets.filter((b) => b > asked)) {
-    const next = await search(higher);
-    if (next.shops.length > 0) return { ...next, raisedTo: higher };
-  }
-  return { ...first, raisedTo: null };
+  // 選んだ駅の近くで探し、合うお店がなければ条件を1つずつゆるめる(お店が必ず出るように)
+  return searchShopsAlways(
+    {
+      area: "station",
+      point,
+      genres,
+      budget: asked,
+      privateRoom: input.privateRoom === true,
+      ...(input.smoking === true ? { smoking: "only" as const } : {}),
+      size: 2,
+      audience,
+    },
+    10,
+    budgets,
+  );
 }
 
 /** 傾斜会計から集金のページを作る。金額はサーバーで計算し直す */
