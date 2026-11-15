@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // すべてのページ: よそのサイトに埋め込ませない(クリックジャッキング対策)、
+        // 幹事の URL(?token=…)が、外のサイトへのリンクの Referer で漏れないようにする、ファイルの種類を推測させない
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        ],
+      },
+      {
         // 飲み会のページは検索エンジンに載せない
         source: "/p/:path*",
         headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
