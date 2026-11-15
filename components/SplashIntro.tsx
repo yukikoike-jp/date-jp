@@ -2,7 +2,7 @@ import { CheersArt } from "./Logo";
 
 // 起動の演出(約3.2秒)
 // 左右から金の線で描いたグラスが勢いよく飛んできて、真ん中で乾杯する。
-// ぶつかった瞬間に画面が揺れて光り、ジョッキの絵(ロゴと同じ)がぽんと出る。
+// ぶつかった瞬間に画面が揺れて光り、切り絵のグラスの絵(ロゴと同じ)がぽんと出る。
 // グラスが下に退くと、線の下から「つどろ」がせり上がる。
 // 動きは globals.css の .intro-* に置く。動きを減らす設定の人には出さない(HomeClient で判定)
 
@@ -42,7 +42,7 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
       <span aria-hidden className="intro-flash pointer-events-none absolute inset-0" />
 
       <span className="intro-stage absolute inset-0 flex flex-col items-center justify-center">
-        {/* 乾杯の線画と、ジョッキの絵は同じ場所で重ねる */}
+        {/* 乾杯の線画と、切り絵のグラスは同じ場所で重ねる */}
         <span className="relative grid h-36 w-72 place-items-center">
           <span aria-hidden className="absolute top-1/2 left-1/2">
             {LINES.map((deg) => (
@@ -55,7 +55,7 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
           <span className="intro-glass-right absolute">
             <Glass side="right" />
           </span>
-          <svg viewBox="0 0 512 512" className="intro-cheers absolute w-44" aria-hidden>
+          <svg viewBox="0 0 200 200" className="intro-cheers absolute w-44" aria-hidden>
             <CheersArt />
           </svg>
         </span>

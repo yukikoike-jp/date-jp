@@ -150,7 +150,7 @@ h3 {
   box-shadow: 0 30px 90px -30px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
-/* 起動の演出(components/SplashIntro.tsx)。グラスで乾杯した衝撃から、ジョッキの絵がぽんと出て、名前がせり上がる。約3.2秒で消える */
+/* 起動の演出(components/SplashIntro.tsx)。グラスで乾杯した衝撃から、切り絵のグラスがぽんと出て、名前がせり上がる。約3.2秒で消える */
 .intro-root { animation: intro-out 0.45s ease-in 2.75s forwards; }
 .intro-flash {
   background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--accent) 55%, transparent) 0%, transparent 55%);
@@ -167,7 +167,7 @@ h3 {
 .intro-letter { transform: translateY(110%); animation: intro-rise 0.55s cubic-bezier(0.2, 0.9, 0.2, 1) forwards; }
 .intro-sub { opacity: 0; transform: translateY(6px); animation: intro-sub 0.5s ease-out 1.85s forwards; }
 
-/* グラスは真ん中でぶつかって少し跳ね返り、ジョッキの絵が出たら下へ退く */
+/* グラスは真ん中でぶつかって少し跳ね返り、切り絵が出たら下へ退く */
 @keyframes intro-glass-left {
   0% { opacity: 0; transform: translate(-180px, 10px) rotate(-25deg); }
   15% { opacity: 1; }
