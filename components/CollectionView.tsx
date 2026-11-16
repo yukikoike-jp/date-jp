@@ -254,7 +254,7 @@ export function CollectionView({
               <SendButtons mainLabel="共有して催促を送る" share={{ text: remind }} copy={remind} copyLabel="催促の文をコピー" canShare={canShare} />
             </section>
           )}
-          {/* 払い方(PayPay のリンク)をのせる(無料)と、催促をアプリにまかせる(有料パック。買う前はデモ版) */}
+          {/* 払い方(PayPay のリンク)をのせる(無料)と、催促をアプリにまかせる(有料プレミアム。買う前はデモ版) */}
           {token && (
             <AutoRemindPanel
               collectionId={c.id}

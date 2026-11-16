@@ -2,13 +2,13 @@
 
 import { Bell, BellOff, Check, Lock } from "lucide-react";
 import { useState, useTransition } from "react";
-import { saveCollectionSettings } from "@/app/actions";
+import { openBillingPortal, saveCollectionSettings } from "@/app/actions";
 import { cleanPayLink } from "@/lib/reminder";
 import { notificationText } from "@/lib/pushRemind";
 import { ProPaywall, loadLicense, useFunAccess } from "./ProGate";
 import { INPUT } from "./ui";
 
-// 集金のページ(幹事の画面)の「集金のお知らせを、アプリにまかせる」(有料パック)。
+// 集金のページ(幹事の画面)の「集金のお知らせを、アプリにまかせる」(有料プレミアム)。
 // 催促の気まずさは、幹事が頼む側になることから来る。「自動でお知らせ」をオンにすると、払っていない人に、幹事ではなく Tsudoro が通知で知らせる。
 // 受け取れるのは、集金のページで自分の名前を選んで「通知をオン」にした人だけ。PayPay のリンクを貼るところは無料
 
@@ -103,7 +103,7 @@ export function AutoRemindPanel({
           催促は、アプリにまかせる
           <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-accent/50 px-1.5 py-0.5 text-[10px] font-black leading-none text-accent">
             <Lock className="size-3" aria-hidden />
-            {access.loading ? "有料パック" : locked ? "デモ版" : "有料パック"}
+            {access.loading ? "有料プレミアム" : locked ? "デモ版" : "有料プレミアム"}
           </span>
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-white/75">
@@ -138,7 +138,7 @@ export function AutoRemindPanel({
           <>
             {!showBuy && (
               <button type="button" onClick={() => setShowBuy(true)} className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-accent px-4 text-sm font-black text-accent-text active:scale-95">
-                有料パックのくわしく
+                有料プレミアムのくわしく
               </button>
             )}
             {showBuy && <ProPaywall feature="自動でお知らせ" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
@@ -174,6 +174,22 @@ export function AutoRemindPanel({
           >
             <Bell className="size-4" aria-hidden />
             自動でお知らせをオンにする
+          </button>
+        )}
+        {!locked && !access.loading && loadLicense() && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              start(async () => {
+                const r = await openBillingPortal(loadLicense(), location.pathname);
+                if (r.ok) location.href = r.url;
+                else setError(r.error);
+              })
+            }
+            className="mt-3 flex min-h-11 items-center text-xs font-bold text-muted underline underline-offset-2"
+          >
+            契約の確認・解約
           </button>
         )}
         {note && (

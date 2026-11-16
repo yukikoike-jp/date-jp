@@ -35,7 +35,7 @@ function HomeRow({ href, icon, title, sub }: { href: string; icon: React.ReactNo
   );
 }
 
-/** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料パックの入口) */
+/** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料プレミアムの入口) */
 function ToolTile({ href, icon, title, sub, badge, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; badge?: string; wide?: boolean }) {
   return (
     <Link
@@ -372,13 +372,13 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店を探す" sub={home.shops} />
           <ToolTile href="/split" icon={tierIcon} title="会計をする" sub={home.split} />
-          {/* 有料パックの入口。何が有料かが、ホームですぐ分かるようにする */}
+          {/* 有料プレミアムの入口。何が有料かが、ホームですぐ分かるようにする */}
           <ToolTile
-            href="/split"
+            href="/split?mode=collect#collect"
             icon={<Bell className="size-6" aria-hidden />}
             title="集金の催促を、アプリにまかせる"
             sub="払っていない人に、あなたの代わりにアプリが通知。集金の表づくりは無料"
-            badge="有料パック 500円"
+            badge="有料プレミアム 月500円"
             wide
           />
         </div>

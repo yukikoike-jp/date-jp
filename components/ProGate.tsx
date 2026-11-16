@@ -7,7 +7,7 @@ import { buyPro, funStatus, proStatus, restorePro } from "@/app/actions";
 import { yen } from "@/lib/sendai";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
-// 買い切りの「会計・集金の全部の機能」(傾斜で割る・集金のページ)。割り勘は無料のまま。
+// 月額の有料プレミアム(催促をアプリにまかせる + 会社の会の傾斜で割る)。割り勘と集金の表づくりは無料のまま。
 // 買った鍵はこの端末に保存する(ログインなし)。別の端末では、買ったときのメールアドレスで戻せる
 
 const KEY = "date:pro";
@@ -42,7 +42,7 @@ export function useProAccess(): ProAccess {
 
 export type FunAccess = { loading: boolean; purchasable: boolean; unlocked: boolean; price: number; license: string | null };
 
-/** 有料パックの機能(ひとりずつ催促)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
+/** 有料プレミアムの機能(催促をアプリにまかせる)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
 export function useFunAccess(): FunAccess {
   const [state, setState] = useState<FunAccess>({ loading: true, purchasable: false, unlocked: false, price: 500, license: null });
   useEffect(() => {
@@ -90,9 +90,9 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
         <Lock className="size-5 text-accent" aria-hidden />
         {feature}は有料の機能
       </p>
-      <p className="mt-1 text-sm text-muted">{fun ? "有料パックに入っています ・ 一度買えばずっと使える" : "会社の会だけ有料 ・ 学生とプライベートの会は無料 ・ 一度買えばずっと使える"}</p>
+      <p className="mt-1 text-sm text-muted">{fun ? "有料プレミアム(月額) ・ いつでも解約できます" : "会社の会の傾斜だけ有料 ・ 学生とプライベートの会は無料 ・ いつでも解約できます"}</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {["集金の催促をアプリにまかせる(払っていない人に、幹事の代わりに通知)", "会社の会の傾斜で割る(先輩・上司は多め)", "これからふえる道具もずっと"].map((t) => (
+        {["集金の催促をアプリにまかせる(払っていない人に、幹事の代わりに通知)", "会社の会の傾斜で割る(先輩・上司は多め)", "これからふえる機能も、契約中はずっと"].map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}
@@ -105,7 +105,7 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
         </p>
       )}
       <button type="button" onClick={buy} disabled={pending || !purchasable} className={`${BUTTON_PRIMARY} mt-5 w-full disabled:opacity-60`}>
-        {!purchasable ? `${yen(price)}の買い切り ・ 購入の受付はもうすぐ始まります` : pending && !restoring ? "お会計のページを開いています…" : `${yen(price)}で買う(買い切り)`}
+        {!purchasable ? `月${yen(price)} ・ 申し込みの受付はもうすぐ始まります` : pending && !restoring ? "お支払いのページを開いています…" : `月${yen(price)}で始める(いつでも解約)`}
       </button>
       <p className="mt-2 text-center text-xs text-muted">
         お支払いは Stripe のページで ・ カードの番号は Tsudoro に届かない ・{" "}
@@ -116,8 +116,8 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
       {restoring ? (
         <div className="mt-4 flex gap-2">
           <label className="min-w-0 flex-1">
-            <span className="sr-only">買ったときのメールアドレス</span>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="買ったときのメールアドレス" className={INPUT} />
+            <span className="sr-only">契約したときのメールアドレス</span>
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="契約したときのメールアドレス" className={INPUT} />
           </label>
           <button type="button" onClick={restore} disabled={pending || !email.trim()} className="shrink-0 rounded-2xl bg-white/8 px-4 text-sm font-bold ring-1 ring-white/12 disabled:opacity-40">
             戻す
@@ -125,7 +125,7 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
         </div>
       ) : (
         <button type="button" onClick={() => setRestoring(true)} className="mx-auto mt-3 flex min-h-11 items-center px-3 text-xs font-bold text-muted underline underline-offset-2">
-          ほかの端末で買った人はこちら
+          ほかの端末で契約した人はこちら
         </button>
       )}
       {onClose && (

@@ -71,7 +71,7 @@ export type Collection = {
   subsidy?: number;
   /** 幹事の PayPay の送金リンク(lib/reminder.ts の cleanPayLink を通したもの)。参加する人の画面に「払う」ボタンを出す */
   payLink?: string;
-  /** 「自動でお知らせ」(有料パック)をオンにした時刻(ミリ秒)。この日から数えて、翌日・3日後・7日後に通知する。オフなら入っていない */
+  /** 「自動でお知らせ」(有料プレミアム)をオンにした時刻(ミリ秒)。この日から数えて、翌日・3日後・7日後に通知する。オフなら入っていない */
   autoRemindAt?: number;
 };
 

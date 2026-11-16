@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience } from "@/lib/audience";
-import { billingEnabled, createProCheckout, hasFun, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
+import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { parsePushSub } from "@/lib/pushRemind";
 import { cleanPayLink } from "@/lib/reminder";
@@ -161,7 +161,7 @@ export async function findShops(input: {
 }
 
 /** 傾斜会計から集金のページを作る。金額はサーバーで計算し直す */
-/** 集金のページは無料(2026-11-17 から。有料パックにするのは、傾斜で割ると、ひとりずつ催促) */
+/** 集金のページは無料(2026-11-17 から。有料プレミアムにするのは、傾斜で割ると、催促をアプリにまかせること) */
 export async function startCollection(input: CollectionInput): Promise<{ ok: true; id: string; adminToken: string } | Fail> {
   const parsed = parseCollection(input);
   if (!parsed.ok) return parsed;
@@ -200,7 +200,7 @@ export async function setCollectionPayment(
 /**
  * 集金の設定。幹事(鍵が合う)だけが変えられる。
  * payLink = 幹事の PayPay のリンク(空で消す。参加する人の画面に「払う」ボタンが出る)。
- * autoRemind = 自動でお知らせ(有料パック。オンにするには、買った端末の鍵 license が要る)
+ * autoRemind = 自動でお知らせ(有料プレミアム。オンにするには、契約中の端末の鍵 license が要る)
  */
 export async function saveCollectionSettings(
   collectionId: string,
@@ -219,7 +219,7 @@ export async function saveCollectionSettings(
 
   let autoRemindAt: number | null = c.autoRemindAt ?? null;
   if (input?.autoRemind === true) {
-    if (!hasFun(license)) return { ok: false, error: "自動でお知らせは、有料パックの機能です" };
+    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは、有料プレミアムの機能です" };
     if (!pushReady()) return { ok: false, error: "通知の準備がまだできていません" };
     autoRemindAt = autoRemindAt ?? Date.now();
   } else if (input?.autoRemind === false) {
@@ -377,17 +377,17 @@ export async function partyAttendees(
   return { title: party.title, date: party.decision.date, attendees: summary.attendees.map((a) => ({ name: a.name, soft: a.soft })) };
 }
 
-/** 買い切りの機能が使えるか。有料にしていなければ、いつでも使える(enabled = false) */
+/** 有料プレミアム(傾斜で割る)が使えるか。有料にしていなければ、いつでも使える(enabled = false) */
 export async function proStatus(license: string | null): Promise<{ enabled: boolean; unlocked: boolean; price: number }> {
-  return { enabled: billingEnabled(), unlocked: hasPro(license), price: proPrice() };
+  return { enabled: billingEnabled(), unlocked: await hasPro(license), price: proPrice() };
 }
 
-/** 有料パックの機能(ひとりずつ催促)が使えるか。unlocked = false なら見本だけのデモ版。purchasable = いま買えるか(支払いの準備ができているか) */
+/** 有料プレミアムの機能(催促をアプリにまかせる)が使えるか。unlocked = false なら見本だけのデモ版。purchasable = いま買えるか(支払いの準備ができているか) */
 export async function funStatus(license: string | null): Promise<{ purchasable: boolean; unlocked: boolean; price: number }> {
-  return { purchasable: billingEnabled(), unlocked: hasFun(license), price: proPrice() };
+  return { purchasable: billingEnabled(), unlocked: await hasFun(license), price: proPrice() };
 }
 
-/** 買い切りのお会計のページを開く。back = 買ったあとに戻るページ(このサイトの中だけ) */
+/** 月額のお会計のページを開く。back = 買ったあとに戻るページ(このサイトの中だけ) */
 export async function buyPro(back: string): Promise<{ ok: true; url: string } | Fail> {
   if (!billingEnabled()) return { ok: false, error: "いまは支払いを受け付けていません" };
   const path = typeof back === "string" && /^\/[A-Za-z0-9/_?=&.-]*$/.test(back) && !back.startsWith("//") ? back : "/split";
@@ -413,5 +413,21 @@ export async function restorePro(email: string): Promise<{ ok: true; license: st
   } catch (err) {
     console.error("[billing] 購入を確かめられませんでした", err);
     return { ok: false, error: "確かめられませんでした。少し待ってからもう一度お試しください" };
+  }
+}
+
+/** 契約の確認・解約のページ(Stripe のカスタマーポータル)を開く。契約中の端末の鍵 license が要る */
+export async function openBillingPortal(license: string | null, back: string): Promise<{ ok: true; url: string } | Fail> {
+  if (!billingEnabled()) return { ok: false, error: "いまは支払いを受け付けていません" };
+  const path = typeof back === "string" && /^\/[A-Za-z0-9/_?=&.-]*$/.test(back) && !back.startsWith("//") ? back : "/";
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  try {
+    const url = await billingPortalUrl(license, `${proto}://${host}${path}`);
+    return url ? { ok: true, url } : { ok: false, error: "契約が見つかりません" };
+  } catch (e) {
+    console.error("[billing] 契約のページを開けませんでした", e);
+    return { ok: false, error: "契約のページを開けませんでした。少し待ってからもう一度お試しください" };
   }
 }
