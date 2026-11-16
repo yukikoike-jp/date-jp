@@ -94,6 +94,15 @@ export function createSupabaseStore(url: string, serviceRoleKey: string): Store 
       const ids = check<{ shop_id: string }[]>(clickRows).map((r) => r.shop_id);
       return { parties, decided, answers, clicks: ids.length, topShops: countShops(ids), totalParties, totalClicks, fromGuests };
     },
+    async getTimeline(since) {
+      const at = since.toISOString();
+      const times = async (table: string) =>
+        check<{ created_at: string }[]>(await db.from(table).select("created_at").gte("created_at", at).limit(50000)).map((r) =>
+          new Date(r.created_at).getTime(),
+        );
+      const [parties, answers, clicks] = await Promise.all([times("nomi_parties"), times("nomi_answers"), times("nomi_shop_clicks")]);
+      return { parties, answers, clicks };
+    },
     async logAdEvent(sponsorId, kind) {
       check(await db.from("nomi_ad_events").insert({ sponsor_id: sponsorId, kind }));
     },

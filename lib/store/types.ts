@@ -22,6 +22,8 @@ export type Party = {
 export type StoredAnswer = Answer & { tokenHash: string };
 
 /** 使われ方の数(自分だけが見る集計の画面で使う)。誰が何をしたかは出さない */
+export type Timeline = { parties: number[]; answers: number[]; clicks: number[] };
+
 export type Stats = {
   /** since より後に作られた会 */
   parties: number;
@@ -86,6 +88,8 @@ export interface Store {
   /** お店のページへ飛んだ数(誰が押したかは残さない)。「お店を探す」から来たときは partyId が null */
   logShopClick(partyId: string | null, shopId: string): Promise<void>;
   getStats(since: Date): Promise<Stats>;
+  /** since より後に、会が作られた・回答された・お店が押された時刻(ミリ秒)。週ごとのグラフに使う */
+  getTimeline(since: Date): Promise<Timeline>;
   /** 広告が見られた・押された(誰かは残さない) */
   logAdEvent(sponsorId: string, kind: AdEventKind): Promise<void>;
   /** since より後の、広告ごとの見られた数と押された数 */

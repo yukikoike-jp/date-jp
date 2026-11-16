@@ -66,14 +66,17 @@ export function ShopList({
   const isSample = shops.some((s) => s.sample);
   // ほかの予約サイトは、バリューコマースの審査が済んでから出す(next.config.ts の OTHER_SITES_ON)
   const showOthers = others && !isSample && process.env.OTHER_SITES_ON === "1";
-  const placed = placeOtherSites(shops.map((x) => stationFromAccess(x.access)).find(Boolean) ?? null, scene);
+  const station = shops.map((x) => stationFromAccess(x.access)).find(Boolean) ?? null;
+  const placed = placeOtherSites(station, scene);
   const visible = expanded ? shops : shops.slice(0, initial);
   // 会社の会・予算が高めの会は2軒目の後、ほかは一覧の最後
   const insertAt = placed.top ? 2 : visible.length;
-  const candidates = placed.sites.map((x) => <OtherSiteCandidate key={x.key} site={x} />);
+  const candidates = placed.sites.map((x) => <OtherSiteCandidate key={x.key} site={x} station={station} partyId={partyId} />);
   return (
     <section id={id} className="mt-4 mx-4 rounded-3xl border panel px-4 py-6">
       <h2 className="text-lg font-black">{heading}</h2>
+      {/* 提携リンクだと、一覧の上でも分かるようにする(ホットペッパーの決まり: ページの上部に書く) */}
+      {!isSample && <PrNote className="mt-1" />}
       <p className="mt-1 text-sm text-muted">
         {lead ?? (otherArea ? "その場所に合うお店がなく、近くのエリアから" : "みんなの答えから自動で選んだお店")}
       </p>

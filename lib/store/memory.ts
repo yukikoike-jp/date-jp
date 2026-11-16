@@ -56,6 +56,14 @@ export const memoryStore: Store = {
   async logShopClick(partyId, shopId) {
     db.clicks.push({ partyId, shopId, at: Date.now() });
   },
+  async getTimeline(since) {
+    const t = since.getTime();
+    return {
+      parties: [...db.parties.values()].map((p) => p.createdAt).filter((x) => x >= t),
+      answers: [...db.answers.values()].flat().map((a) => a.createdAt).filter((x) => x >= t),
+      clicks: db.clicks.map((c) => c.at).filter((x) => x >= t),
+    };
+  },
   async getStats(since) {
     const t = since.getTime();
     const parties = [...db.parties.values()].filter((p) => p.createdAt >= t);

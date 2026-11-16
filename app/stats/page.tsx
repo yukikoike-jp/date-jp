@@ -7,6 +7,7 @@ import { cleanEnv } from "@/lib/env";
 import { findShop } from "@/lib/shops";
 import { activeSponsors } from "@/lib/sponsors";
 import { getStore } from "@/lib/store";
+import { timelineSince, weeklyCounts } from "@/lib/weekly";
 
 // 使われ方の画面。作った本人だけが見る。STATS_TOKEN と同じ token を付けて開く。
 // 数えるのは件数だけで、誰が何をしたかは出さない
@@ -15,8 +16,16 @@ export const metadata: Metadata = { title: "使われ方", robots: { index: fals
 
 /** アフィリエイトを始める目安。月にこれだけお店が押されたら、紹介料でサーバー代をまかなえる */
 const AFFILIATE_SIGNAL = 60;
-/** 1回の会で入る紹介料の見込み(100円 × ホットペッパーで予約 40% × 来店 90%) */
-const YEN_PER_DECIDED_PARTY = 36;
+/**
+ * 1回の決まった会で入る紹介料の見込み(2026-11-17 に見直し)。
+ * ホットペッパー: 100円 × 予約 30% × アプリでなくブラウザで予約 30% × 来店 90% ≒ 8円。
+ * 一休・オズモール: 1つの会で 0.5回押される × 1回あたり 3〜5円 ≒ 2円
+ */
+const YEN_PER_DECIDED_PARTY = 10;
+/** 週ごとのグラフに出す週の数 */
+const WEEKS = 8;
+/** ほかの予約サイトの、押された数を数えるときの名前(app/out) */
+const SITE_NAMES: Record<string, string> = { "site:ikyu": "高級店の予約サイト(一休)", "site:ozmall": "宴会プランの予約サイト(オズモール)" };
 
 function allowed(token: unknown): boolean {
   const expected = cleanEnv(process.env.STATS_TOKEN);
@@ -39,14 +48,23 @@ export default async function StatsPage(props: PageProps<"/stats">) {
   if (!allowed(token)) notFound();
 
   const now = new Date();
-  const [stats, ads] = await Promise.all([getStore().getStats(monthStart(now)), getStore().getAdStats(monthStart(now))]);
+  const [stats, ads, timeline] = await Promise.all([
+    getStore().getStats(monthStart(now)),
+    getStore().getAdStats(monthStart(now)),
+    getStore().getTimeline(timelineSince(now.getTime(), WEEKS)),
+  ]);
+  const weekly = (["parties", "answers", "clicks"] as const).map((k) => ({
+    key: k,
+    label: { parties: "作られた会", answers: "回答", clicks: "お店が押された" }[k],
+    weeks: weeklyCounts(timeline[k], now.getTime(), WEEKS),
+  }));
   // 広告主に見せる実績。載せている広告は、まだ数がなくても0回で出す
   const adRows = [
     ...activeSponsors().map((s) => ({ ...(ads.find((a) => a.sponsorId === s.id) ?? { sponsorId: s.id, views: 0, clicks: 0 }), name: s.name })),
     ...ads.filter((a) => !activeSponsors().some((s) => s.id === a.sponsorId)).map((a) => ({ ...a, name: `${a.sponsorId}(掲載終了)` })),
   ];
   const shops = await Promise.all(
-    stats.topShops.map(async (s) => ({ ...s, name: (await findShop(s.shopId))?.name ?? s.shopId })),
+    stats.topShops.map(async (s) => ({ ...s, name: SITE_NAMES[s.shopId] ?? (await findShop(s.shopId))?.name ?? s.shopId })),
   );
   const month = now.toLocaleDateString("ja-JP", { timeZone: "Asia/Tokyo", month: "long" });
   const left = Math.max(0, AFFILIATE_SIGNAL - stats.clicks);
@@ -81,6 +99,36 @@ export default async function StatsPage(props: PageProps<"/stats">) {
           ))}
         </div>
 
+        <h2 className="mt-9 mb-3 px-1 text-sm font-bold text-muted">週ごとの数(直近{WEEKS}週)</h2>
+        <section className="grid gap-3">
+          {weekly.map((w) => {
+            const max = Math.max(1, ...w.weeks.map((x) => x.count));
+            return (
+              <div key={w.key} className="rounded-3xl border panel px-4 py-4">
+                <p className="flex items-baseline justify-between text-xs font-bold text-muted">
+                  {w.label}
+                  <span className="tabular-nums">今週 {w.weeks[w.weeks.length - 1].count}</span>
+                </p>
+                <div className="mt-3 flex h-20 items-end gap-1.5">
+                  {w.weeks.map((x) => (
+                    <div key={x.start} className="flex flex-1 flex-col items-center gap-1">
+                      <span className="text-[10px] tabular-nums text-muted">{x.count}</span>
+                      <div className="w-full rounded-t bg-accent" style={{ height: `${Math.max(2, (x.count / max) * 56)}px` }} />
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-1 flex gap-1.5">
+                  {w.weeks.map((x) => (
+                    <span key={x.start} className="flex-1 text-center text-[9px] text-muted">
+                      {new Date(x.start + 9 * 3600_000).getUTCMonth() + 1}/{new Date(x.start + 9 * 3600_000).getUTCDate()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </section>
+
         <section className="mt-4 rounded-3xl border border-accent/40 bg-surface px-5 py-5">
           <h2 className="font-black">アフィリエイトを始める目安</h2>
           <p className="mt-1 text-sm text-muted">
@@ -93,8 +141,8 @@ export default async function StatsPage(props: PageProps<"/stats">) {
             {left === 0 ? "目安に届きました。始める準備をしてよさそうです" : `今月はあと${left}回で目安に届きます`}
           </p>
           <p className="mt-3 text-xs text-muted">
-            今月の会が全部アフィリエイトのリンクを通っていたら、紹介料はおよそ
-            {(stats.decided * YEN_PER_DECIDED_PARTY).toLocaleString("ja-JP")}円になっていた見込みです(決まった会 × {YEN_PER_DECIDED_PARTY}円で計算)
+            今月の紹介料の見込みは、およそ
+            {(stats.decided * YEN_PER_DECIDED_PARTY).toLocaleString("ja-JP")}円です(決まった会 × {YEN_PER_DECIDED_PARTY}円で計算。アプリでの予約は数えない)
           </p>
         </section>
 
@@ -117,7 +165,7 @@ export default async function StatsPage(props: PageProps<"/stats">) {
           )}
         </section>
 
-        <h2 className="mt-9 mb-3 px-1 text-sm font-bold text-muted">今月よく押されたお店</h2>
+        <h2 className="mt-9 mb-3 px-1 text-sm font-bold text-muted">今月よく押されたお店・予約サイト</h2>
         <section className="overflow-hidden rounded-3xl border panel">
           {shops.length === 0 ? (
             <p className="px-5 py-5 text-sm text-muted">今月はまだお店が押されていません</p>
