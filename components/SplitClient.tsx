@@ -243,10 +243,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
   /** 集金のページを作る。金額はサーバーで計算し直し、幹事の画面へ移る */
   function makeCollection() {
     setCollectError(null);
-    if (locked) {
-      setPaywall("集金のページ");
-      return;
-    }
     startCollecting(async () => {
       const r = await startCollection({
         title,
@@ -259,7 +255,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
           const w = weightOf(p);
           return { name: nameOf(p, i), tenths: w.tenths, label: w.label, mark: w.mark, tone: w.tone };
         }),
-      }, pro.license);
+      });
       if (!r.ok) {
         setCollectError(r.error);
         return;

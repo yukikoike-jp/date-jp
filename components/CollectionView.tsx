@@ -9,6 +9,7 @@ import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText, reminderText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
+import { PerPersonReminders } from "./PerPersonReminders";
 import { SendButtons, useCanShare } from "./SendButtons";
 
 // 集金のページ。払ったかどうかは幹事だけが記録する(本人が押せるとごまかせるため)。色だけでなく ✓ と文字でも分かるようにする
@@ -234,6 +235,15 @@ export function CollectionView({
               <SendButtons mainLabel="共有して催促を送る" share={{ text: remind }} copy={remind} copyLabel="催促の文をコピー" canShare={canShare} />
             </section>
           )}
+          {/* 有料パック: ひとりずつ、名前・金額・PayPay リンク入りの文を送る。買う前は見本だけのデモ版 */}
+          <PerPersonReminders
+            collectionId={c.id}
+            title={c.title}
+            audience={c.audience}
+            total={c.total}
+            unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount }))}
+            pageUrl={url}
+          />
           <p className="mx-4 mt-3 text-xs text-muted">
             現金で受け取ったら「受け取った」
           </p>

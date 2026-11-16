@@ -92,7 +92,7 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
       </p>
       <p className="mt-1 text-sm text-muted">{fun ? "有料パックに入っています ・ 一度買えばずっと使える" : "会社の会だけ有料 ・ 学生とプライベートの会は無料 ・ 一度買えばずっと使える"}</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {["席替え・チーム分け・王様ゲーム・ルーレット", "会社の会の傾斜で割る(先輩・上司は多め)", "会社の会の集金のページ(まだの人にだけ催促)", "これからふえる道具もずっと"].map((t) => (
+        {["ひとりずつ催促(名前・金額・PayPayのリンク入りの文を、言い方を変えながら)", "席替え・チーム分け・王様ゲーム・ルーレット", "会社の会の傾斜で割る(先輩・上司は多め)", "これからふえる道具もずっと"].map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}
