@@ -31,7 +31,9 @@ URL を LINE に貼ると、みんなが30秒で行ける日と予算を答え�
   - バリューコマースのサイト審査が済むまでは出さない(`OTHER_SITES_ON=1` で出る)
 - 提携リンクには、ステルスマーケティングにならないよう「PR」または「#アフィリエイト広告」をはっきり見える形で付ける(`components/PrNote.tsx`)
 - 紹介料を出す前に、Vercel を有料プラン(Pro)にする(無料プランはお金を得るサイトに使えない)。手順は `docs/launch-checklist.md`
-- 有料パック(買い切り 500円、Stripe): **ひとりずつ催促**(集金のページで、名前・金額・幹事の PayPay の送金リンク入りの文を1人ずつ、回数に合わせて言い方を変えて送る。`components/PerPersonReminders.tsx`、`lib/reminder.ts`)が中心。ほかに、会社の会の傾斜で割る。(席替え・ゲームの「もりあげ道具」は、2026-11-17 に作ったあと、ユーザーの判断でやめた)集金のページそのものは、学生・会社とも無料。Tsudoro はお金を預からない(リンクは PayPay のものだけ通す)
+- 有料パック(買い切り 500円、Stripe): **催促をアプリにまかせる(自動でお知らせ)**が中心。払っていない人に、幹事ではなく Tsudoro がブラウザの通知(Web Push)で知らせる(翌日・3日後・7日後)。気まずさの原因は「幹事が頼む側になること」なので、頼む側をアプリにする(`components/AutoRemindPanel.tsx`、`PushOptIn.tsx`、`lib/pushRemind.ts`、`app/api/cron/remind`)。ほかに、会社の会の傾斜で割る。集金の表づくりと、PayPay のリンクをのせること、ひとりずつ文を作って送ることは無料。Tsudoro はお金を預からない(リンクは PayPay のものだけ通す)
+  - 通知には、環境変数 `VAPID_PUBLIC_KEY` `VAPID_PRIVATE_KEY`(`npx web-push generate-vapid-keys`)と `CRON_SECRET`、マイグレーション `20261117000000_push_subs.sql` が要る。`vercel.json` の crons が1日1回 `/api/cron/remind` を呼ぶ。iPhone は、ホーム画面に追加したアプリからだけ通知を受け取れる
+  - 席替え・ゲームの「もりあげ道具」と、「ひとりずつ催促」の有料化は、ユーザーの判断でやめた
   - 催促は、決済の鍵がそろっていなくても鍵をかけたまま(`hasFun`)。買う前は「デモ版」(最初の1人ぶんの見本だけ)。ホームのタイルと各道具に「有料パック」「デモ版」の印を付ける
   - 持ち主が全部を試すときは、環境変数 `FUN_UNLOCK=1`(`.claude/launch.json` の `Date-fun-unlocked`)
 

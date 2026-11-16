@@ -15,7 +15,7 @@ type AnswerRow = { id: string; name: string; token_hash: string; data: Omit<Answ
 export function createSupabaseStore(url: string, serviceRoleKey: string): Store {
   const db = createClient(url, serviceRoleKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
-  return {
+  const store: Store = {
     async createParty(party) {
       check(
         await db.from("nomi_parties").insert({
@@ -140,5 +140,71 @@ export function createSupabaseStore(url: string, serviceRoleKey: string): Store 
         check(await db.from("nomi_collection_payments").delete().eq("collection_id", collectionId).eq("person_id", personId));
       }
     },
+    async setCollectionSettings(collectionId, patch) {
+      // 設定は data(jsonb)の中に入れている。読んで、変えて、書き戻す
+      const row = check<{ data: Record<string, unknown> } | null>(await db.from("nomi_collections").select("data").eq("id", collectionId).maybeSingle());
+      if (!row) return;
+      const data = { ...row.data };
+      if (patch.payLink !== undefined) {
+        if (patch.payLink === null) delete data.payLink;
+        else data.payLink = patch.payLink;
+      }
+      if (patch.autoRemindAt !== undefined) {
+        if (patch.autoRemindAt === null) delete data.autoRemindAt;
+        else data.autoRemindAt = patch.autoRemindAt;
+      }
+      check(await db.from("nomi_collections").update({ data }).eq("id", collectionId));
+    },
+    async listAutoRemind() {
+      const rows = check<{ id: string }[]>(await db.from("nomi_collections").select("id").not("data->autoRemindAt", "is", null).limit(500));
+      const out: Collection[] = [];
+      for (const r of rows) {
+        const c = await store.getCollection(r.id);
+        if (c) out.push(c);
+      }
+      return out;
+    },
+    async addPushSub(sub) {
+      check(
+        await db.from("nomi_push_subs").upsert({
+          collection_id: sub.collectionId,
+          person_id: sub.personId,
+          endpoint: sub.endpoint,
+          p256dh: sub.p256dh,
+          auth: sub.auth,
+        }),
+      );
+    },
+    async listPushSubs(collectionId) {
+      const rows = check<{ collection_id: string; person_id: number; endpoint: string; p256dh: string; auth: string; sent_count: number; last_sent_at: string | null }[]>(
+        await db.from("nomi_push_subs").select("collection_id, person_id, endpoint, p256dh, auth, sent_count, last_sent_at").eq("collection_id", collectionId),
+      );
+      return rows.map((r) => ({
+        collectionId: r.collection_id,
+        personId: r.person_id,
+        endpoint: r.endpoint,
+        p256dh: r.p256dh,
+        auth: r.auth,
+        sentCount: r.sent_count,
+        lastSentAt: r.last_sent_at ? new Date(r.last_sent_at).getTime() : null,
+      }));
+    },
+    async markPushSent(collectionId, personId, endpoint, at) {
+      const row = check<{ sent_count: number } | null>(
+        await db.from("nomi_push_subs").select("sent_count").eq("collection_id", collectionId).eq("endpoint", endpoint).maybeSingle(),
+      );
+      if (!row) return;
+      check(
+        await db
+          .from("nomi_push_subs")
+          .update({ sent_count: row.sent_count + 1, last_sent_at: new Date(at).toISOString(), person_id: personId })
+          .eq("collection_id", collectionId)
+          .eq("endpoint", endpoint),
+      );
+    },
+    async removePushSub(collectionId, _personId, endpoint) {
+      check(await db.from("nomi_push_subs").delete().eq("collection_id", collectionId).eq("endpoint", endpoint));
+    },
   };
+  return store;
 }

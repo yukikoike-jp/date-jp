@@ -9,7 +9,9 @@ import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText, reminderText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
+import { AutoRemindPanel } from "./AutoRemindPanel";
 import { PerPersonReminders } from "./PerPersonReminders";
+import { PushOptIn } from "./PushOptIn";
 import { SendButtons, useCanShare } from "./SendButtons";
 
 // 集金のページ。払ったかどうかは幹事だけが記録する(本人が押せるとごまかせるため)。色だけでなく ✓ と文字でも分かるようにする
@@ -41,9 +43,15 @@ function Burst() {
 export function CollectionView({
   collection: c,
   hostToken,
+  pushKey,
+  subscribedIds,
 }: {
   collection: Omit<Collection, "adminHash">;
   hostToken: string | null;
+  /** 通知を送る準備ができているときの公開鍵(なければ null) */
+  pushKey: string | null;
+  /** 通知をオンにした人の番号 */
+  subscribedIds: number[];
 }) {
   const router = useRouter();
   const canShare = useCanShare();
@@ -90,7 +98,8 @@ export function CollectionView({
     });
   }
 
-  const askText = collectText(c.title, url, c.audience);
+  const autoOn = c.autoRemindAt !== undefined;
+  const askText = collectText(c.title, url, c.audience, autoOn);
   const remind = `${reminderText(c.audience, c.title, unpaid.map((p) => ({ name: p.name, amount: p.amount })))}\n${url}`;
 
   return (
@@ -134,6 +143,16 @@ export function CollectionView({
           </p>
         )}
       </section>
+
+      {/* 参加する人: 自分の金額と、払い方(PayPay)、払うまでの通知(幹事が自動でお知らせをオンにしているとき) */}
+      {!isHost && unpaid.length > 0 && (c.payLink || (autoOn && pushKey)) && (
+        <PushOptIn
+          collectionId={c.id}
+          payers={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount }))}
+          pushKey={autoOn ? pushKey : null}
+          payLink={c.payLink ?? null}
+        />
+      )}
 
       <ul className="mx-4 mt-3 divide-y divide-border overflow-hidden rounded-3xl border panel">
         {c.people.map((p, i) => {
@@ -235,7 +254,21 @@ export function CollectionView({
               <SendButtons mainLabel="共有して催促を送る" share={{ text: remind }} copy={remind} copyLabel="催促の文をコピー" canShare={canShare} />
             </section>
           )}
-          {/* 有料パック: ひとりずつ、名前・金額・PayPay リンク入りの文を送る。買う前は見本だけのデモ版 */}
+          {/* 払い方(PayPay のリンク)をのせる(無料)と、催促をアプリにまかせる(有料パック。買う前はデモ版) */}
+          {token && (
+            <AutoRemindPanel
+              collectionId={c.id}
+              hostToken={token}
+              title={c.title}
+              initialPayLink={c.payLink ?? null}
+              initialAutoRemindAt={c.autoRemindAt ?? null}
+              pushReady={pushKey !== null}
+              subscribed={unpaid.filter((p) => subscribedIds.includes(p.id)).length}
+              unpaid={unpaid.length}
+              sampleAmount={unpaid[0]?.amount ?? payers[0]?.amount ?? 0}
+            />
+          )}
+          {/* ひとりずつ文を作って送る(無料) */}
           <PerPersonReminders
             collectionId={c.id}
             title={c.title}
@@ -243,6 +276,7 @@ export function CollectionView({
             total={c.total}
             unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount }))}
             pageUrl={url}
+            payLink={c.payLink ?? null}
           />
           <p className="mx-4 mt-3 text-xs text-muted">
             現金で受け取ったら「受け取った」

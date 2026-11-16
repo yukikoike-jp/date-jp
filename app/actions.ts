@@ -4,6 +4,9 @@ import { headers } from "next/headers";
 import { AUDIENCES, isAudience } from "@/lib/audience";
 import { billingEnabled, createProCheckout, hasFun, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
+import { parsePushSub } from "@/lib/pushRemind";
+import { cleanPayLink } from "@/lib/reminder";
+import { pushReady } from "@/lib/webpush";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
 import { findShop, searchSecondShops, searchShopsAlways, type Shop } from "@/lib/shops";
 import { getStore } from "@/lib/store";
@@ -191,6 +194,60 @@ export async function setCollectionPayment(
   const isHost = verifyToken(adminToken, c.adminHash);
   if (!canSetPayment(isHost)) return { ok: false, error: "受け取りの記録は、幹事だけができます" };
   await store.setPayment(collectionId, personId, paid === true ? { by: "host" } : null);
+  return { ok: true };
+}
+
+/**
+ * 集金の設定。幹事(鍵が合う)だけが変えられる。
+ * payLink = 幹事の PayPay のリンク(空で消す。参加する人の画面に「払う」ボタンが出る)。
+ * autoRemind = 自動でお知らせ(有料パック。オンにするには、買った端末の鍵 license が要る)
+ */
+export async function saveCollectionSettings(
+  collectionId: string,
+  adminToken: string | null,
+  input: { payLink: string; autoRemind: boolean },
+  license: string | null,
+): Promise<{ ok: true; payLink: string | null; autoRemindAt: number | null } | Fail> {
+  const store = getStore();
+  const c = await store.getCollection(collectionId);
+  if (!c) return { ok: false, error: "集金のページが見つかりません" };
+  if (!verifyToken(adminToken, c.adminHash)) return { ok: false, error: "設定を変えられるのは、幹事だけです" };
+
+  const raw = typeof input?.payLink === "string" ? input.payLink.trim() : "";
+  const payLink = raw === "" ? null : cleanPayLink(raw);
+  if (raw !== "" && payLink === null) return { ok: false, error: "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" };
+
+  let autoRemindAt: number | null = c.autoRemindAt ?? null;
+  if (input?.autoRemind === true) {
+    if (!hasFun(license)) return { ok: false, error: "自動でお知らせは、有料パックの機能です" };
+    if (!pushReady()) return { ok: false, error: "通知の準備がまだできていません" };
+    autoRemindAt = autoRemindAt ?? Date.now();
+  } else if (input?.autoRemind === false) {
+    autoRemindAt = null;
+  }
+  await store.setCollectionSettings(collectionId, { payLink, autoRemindAt });
+  return { ok: true, payLink, autoRemindAt };
+}
+
+/**
+ * 払うまで、この端末にお知らせを送ってよいと登録する。「自動でお知らせ」がオンの集金で、払っていない人だけ。
+ * 名前の確認はしない(ログインがないため)。ほかの人の名前で登録しても、通知が届くのはその端末だけ
+ */
+export async function subscribePush(
+  collectionId: string,
+  personId: number,
+  subscription: unknown,
+): Promise<{ ok: true } | Fail> {
+  const sub = parsePushSub(subscription);
+  if (!sub) return { ok: false, error: "通知の登録に失敗しました" };
+  const store = getStore();
+  const c = await store.getCollection(collectionId);
+  if (!c || c.autoRemindAt === undefined) return { ok: false, error: "この集金は、自動でお知らせを使っていません" };
+  const person = c.people.find((p) => p.id === personId);
+  if (!person || person.organizer || isConfirmed(c.payments[person.id])) return { ok: false, error: "この人には、お知らせは要りません" };
+  const subs = await store.listPushSubs(collectionId);
+  if (subs.length >= 200) return { ok: false, error: "登録できる数をこえました" };
+  await store.addPushSub({ collectionId, personId, ...sub });
   return { ok: true };
 }
 

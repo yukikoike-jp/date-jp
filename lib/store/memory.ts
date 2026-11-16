@@ -1,5 +1,5 @@
 import { countAds, countShops } from "./stats";
-import type { AdEventKind, Collection, Party, Stats, StoredAnswer, Store } from "./types";
+import type { AdEventKind, Collection, Party, PushSub, Stats, StoredAnswer, Store } from "./types";
 import type { Via } from "../invite";
 
 // 開発用の仮DB。再起動で消える。本番では使わない
@@ -9,13 +9,15 @@ type Db = {
   clicks: { partyId: string | null; shopId: string; at: number }[];
   ads?: { sponsorId: string; kind: AdEventKind; at: number }[];
   collections: Map<string, Collection>;
+  pushSubs: PushSub[];
 };
 
 // 開発サーバーの再読み込みで消えないよう、globalThis に置く
 const g = globalThis as unknown as { __nomi?: Db };
-const db: Db = (g.__nomi ??= { parties: new Map(), answers: new Map(), clicks: [], collections: new Map() });
+const db: Db = (g.__nomi ??= { parties: new Map(), answers: new Map(), clicks: [], collections: new Map(), pushSubs: [] });
 // 集金を足す前から動いている開発サーバーでも使えるようにする
 db.collections ??= new Map();
+db.pushSubs ??= [];
 
 export const memoryStore: Store = {
   async createParty(party) {
@@ -97,5 +99,37 @@ export const memoryStore: Store = {
     if (!c) return;
     if (payment) c.payments[personId] = payment;
     else delete c.payments[personId];
+  },
+  async setCollectionSettings(collectionId, patch) {
+    const c = db.collections.get(collectionId);
+    if (!c) return;
+    if (patch.payLink !== undefined) {
+      if (patch.payLink === null) delete c.payLink;
+      else c.payLink = patch.payLink;
+    }
+    if (patch.autoRemindAt !== undefined) {
+      if (patch.autoRemindAt === null) delete c.autoRemindAt;
+      else c.autoRemindAt = patch.autoRemindAt;
+    }
+  },
+  async listAutoRemind() {
+    return [...db.collections.values()].filter((c) => c.autoRemindAt !== undefined).map((c) => structuredClone(c));
+  },
+  async addPushSub(sub) {
+    db.pushSubs = db.pushSubs.filter((s) => !(s.collectionId === sub.collectionId && s.endpoint === sub.endpoint));
+    db.pushSubs.push({ ...sub, sentCount: 0, lastSentAt: null });
+  },
+  async listPushSubs(collectionId) {
+    return db.pushSubs.filter((s) => s.collectionId === collectionId).map((s) => ({ ...s }));
+  },
+  async markPushSent(collectionId, personId, endpoint, at) {
+    const s = db.pushSubs.find((x) => x.collectionId === collectionId && x.personId === personId && x.endpoint === endpoint);
+    if (s) {
+      s.sentCount += 1;
+      s.lastSentAt = at;
+    }
+  },
+  async removePushSub(collectionId, personId, endpoint) {
+    db.pushSubs = db.pushSubs.filter((x) => !(x.collectionId === collectionId && x.personId === personId && x.endpoint === endpoint));
   },
 };

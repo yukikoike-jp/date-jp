@@ -50,11 +50,12 @@ export function reminderText(
 }
 
 /** 集金のページを送る文。会社の会は敬語にする */
-export function collectText(title: string, url: string, audience: Audience = "student"): string {
+export function collectText(title: string, url: string, audience: Audience = "student", autoRemind = false): string {
   const what = title ? `「${title}」の` : "";
+  // 自動でお知らせをオンにしているときは、通知のオンを一言そえる(払い忘れを、幹事ではなくアプリが知らせる)
   return isFormal(audience)
-    ? [`${what}お会計のご案内です。`, "ご自身の金額をご確認のうえ、幹事までお支払いください。", url].join("\n")
-    : [`${what}お会計です`, "自分の金額を見て、幹事に払ってね", url].join("\n");
+    ? [`${what}お会計のご案内です。`, "ご自身の金額をご確認のうえ、幹事までお支払いください。", ...(autoRemind ? ["ページで「通知をオンにする」を押すと、お支払いまでの間、アプリがお知らせします。"] : []), url].join("\n")
+    : [`${what}お会計です`, "自分の金額を見て、幹事に払ってね", ...(autoRemind ? ["ページで「通知をオン」にすると、払い忘れをアプリが教えてくれるよ"] : []), url].join("\n");
 }
 
 export function decidedText(title: string, date: string, start: number, shopName: string | null, url: string): string {
