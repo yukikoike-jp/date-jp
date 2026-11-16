@@ -15,8 +15,9 @@ function escapeHtml(s: string): string {
   return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-function bridgePage(target: string, shopName: string): string {
+function bridgePage(target: string, shopName: string, back: string): string {
   const href = escapeHtml(target);
+  const backHref = escapeHtml(back);
   // スクリプトの中では、文字列として安全に埋め込む(</script> で閉じられないよう < も逃がす)
   const js = JSON.stringify(target).replace(/</g, "\\u003c");
   return `<!doctype html>
@@ -36,9 +37,15 @@ function bridgePage(target: string, shopName: string): string {
   h1 { font-size: 17px; margin: 0; }
   p { font-size: 13px; color: #a99c8a; margin: 10px 0 0; line-height: 1.7; }
   a { color: #f5b83d; }
+  .back { position: fixed; top: max(12px, env(safe-area-inset-top)); left: 12px; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 16px 0 10px; border-radius: 999px; background: #1f1c18; color: #f5efe6; font-size: 14px; font-weight: 700; text-decoration: none; border: 1px solid rgba(245,239,230,0.14); }
+  .back svg { width: 18px; height: 18px; }
 </style>
 </head>
 <body>
+<a class="back" id="back" href="${backHref}">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+  Tsudoro に戻る
+</a>
 <main>
   <div>
     <svg class="glass" viewBox="0 0 44 56" aria-hidden="true">
@@ -47,9 +54,14 @@ function bridgePage(target: string, shopName: string): string {
     </svg>
     <h1>${escapeHtml(shopName)} の予約ページを開いています</h1>
     <p>そのまま、このブラウザで予約できます。<br>開かないときは <a href="${href}" rel="nofollow noopener">こちら</a></p>
+    <p>ホットペッパーのアプリが開いたあとは、左上の「Tsudoro に戻る」で元の画面に戻れます</p>
   </div>
 </main>
 <script>
+  // 戻るボタン。前の画面があればそこへ(選んだ条件などが残る)、なければ会やお店探しのページへ
+  document.getElementById("back").addEventListener("click", function (e) {
+    if (history.length > 1) { e.preventDefault(); history.back(); }
+  });
   // 押した瞬間ではなく、少しあとにプログラムから移動する(アプリが勝手に開かないように)。
   // replace にして、戻るボタンでこの画面に戻ってこないようにする
   setTimeout(function () { location.replace(${js}); }, 400);
@@ -68,7 +80,7 @@ export async function GET(request: Request, ctx: RouteContext<"/go/[partyId]/[sh
 
   await store.logShopClick(party?.id ?? null, shop.id).catch((e) => console.error("[go] 数えられませんでした", e));
   if (!shop.url) return NextResponse.redirect(back);
-  return new Response(bridgePage(referralUrl(browserShopUrl(shop.url)), shop.name), {
+  return new Response(bridgePage(referralUrl(browserShopUrl(shop.url)), shop.name, back.pathname + back.hash), {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
