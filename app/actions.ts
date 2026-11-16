@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience, needsPro } from "@/lib/audience";
-import { billingEnabled, createProCheckout, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
+import { billingEnabled, createProCheckout, hasFun, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
 import { findShop, searchSecondShops, searchShopsAlways, type Shop } from "@/lib/shops";
@@ -323,6 +323,11 @@ export async function partyAttendees(
 /** 買い切りの機能が使えるか。有料にしていなければ、いつでも使える(enabled = false) */
 export async function proStatus(license: string | null): Promise<{ enabled: boolean; unlocked: boolean; price: number }> {
   return { enabled: billingEnabled(), unlocked: hasPro(license), price: proPrice() };
+}
+
+/** もりあげ道具が使えるか。unlocked = false なら見本の名前のデモ版。purchasable = いま買えるか(支払いの準備ができているか) */
+export async function funStatus(license: string | null): Promise<{ purchasable: boolean; unlocked: boolean; price: number }> {
+  return { purchasable: billingEnabled(), unlocked: hasFun(license), price: proPrice() };
 }
 
 /** 買い切りのお会計のページを開く。back = 買ったあとに戻るページ(このサイトの中だけ) */

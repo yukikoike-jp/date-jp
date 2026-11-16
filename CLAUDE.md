@@ -31,7 +31,9 @@ URL を LINE に貼ると、みんなが30秒で行ける日と予算を答え�
   - バリューコマースのサイト審査が済むまでは出さない(`OTHER_SITES_ON=1` で出る)
 - 提携リンクには、ステルスマーケティングにならないよう「PR」または「#アフィリエイト広告」をはっきり見える形で付ける(`components/PrNote.tsx`)
 - 紹介料を出す前に、Vercel を有料プラン(Pro)にする(無料プランはお金を得るサイトに使えない)。手順は `docs/launch-checklist.md`
-- 会計・集金の買い切り(Stripe)は作ってあるが、鍵がそろうまでは誰でも全部使える
+- 有料パック(買い切り 980円、Stripe): 会社の会の傾斜で割る・集金のページ + もりあげ道具(席替え・チーム分け・王様ゲーム・ルーレット。`/fun`)。決済の鍵(`STRIPE_SECRET_KEY` と `LICENSE_SECRET`)がそろうまで、会計・集金は誰でも使える
+  - もりあげ道具は、鍵がそろっていなくても鍵をかけたまま(`hasFun`)。買う前は、見本の名前で動く「デモ版」で、自分たちの名前は入れられない。ホームのタイルと各道具に「有料パック」「デモ版」の印を付ける
+  - 持ち主が全部を試すときは、環境変数 `FUN_UNLOCK=1`(`.claude/launch.json` の `Date-fun-unlocked`)
 
 ## 技術
 - Next.js 16(App Router、`cacheComponents`)+ TypeScript、Tailwind CSS、Supabase(Postgres)、Vercel
