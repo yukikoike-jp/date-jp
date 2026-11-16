@@ -1,13 +1,20 @@
 // 起動の演出(約3.2秒)
 // 左右から金の線で描いたグラスが勢いよく飛んできて、真ん中で乾杯する。
-// ぶつかった瞬間に画面が揺れて光り、グラスは乾杯したところで止まる(止まった姿がアイコンと同じ)。
-// その下から「Tsudoro」がせり上がる。
+// ぶつかった瞬間に画面が揺れて光り、輪が広がり、ビールのしずくが飛び散る。中のビールは揺れる。
+// グラスは跳ね返ってから「乾杯!」と持ち上がり、乾杯した姿で止まる(止まった姿がアイコンと同じ)。
+// その下から「Tsudoro」が弾むようにせり上がる。
 // 動きは globals.css の .intro-* に置く。動きを減らす設定の人には出さない(HomeClient で判定)
 
 const NAME = "Tsudoro";
 
 // 乾杯の瞬間の集中線。角度だけ決めておく
 const LINES = [-150, -120, -90, -60, -30, 30, 150];
+
+// 乾杯の瞬間に飛び散るビールのしずく。飛ぶ向き(px)と大きさ
+const DROPS: [number, number, number][] = [
+  [-70, -60, 9], [-40, -90, 7], [-10, -105, 6], [20, -95, 8], [55, -75, 7],
+  [85, -40, 6], [-95, -30, 6], [70, -110, 5], [-60, -115, 5], [100, -80, 5],
+];
 
 function Glass({ side }: { side: "left" | "right" }) {
   return (
@@ -45,6 +52,18 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
           <span aria-hidden className="absolute top-1/2 left-1/2">
             {LINES.map((deg) => (
               <span key={deg} className="intro-line absolute h-[3px] w-20 origin-left rounded-full bg-text" style={{ rotate: `${deg}deg` }} />
+            ))}
+          </span>
+          {/* 乾杯の瞬間に広がる光の輪 */}
+          <span aria-hidden className="intro-ring absolute top-[30%] left-1/2 size-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-accent" />
+          {/* 飛び散るビールのしずく */}
+          <span aria-hidden className="absolute top-[30%] left-1/2">
+            {DROPS.map(([dx, dy, r], i) => (
+              <span
+                key={i}
+                className="intro-drop absolute rounded-full bg-accent"
+                style={{ width: r, height: r, "--dx": `${dx}px`, "--dy": `${dy}px` } as React.CSSProperties}
+              />
             ))}
           </span>
           {/* 乾杯の瞬間に出て、そのまま残る金の「カチン」の線(アイコンと同じ) */}
