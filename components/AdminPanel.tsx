@@ -7,11 +7,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { decide } from "@/app/actions";
 import { dateLabel } from "@/lib/sendai";
-import { dayBeforeText, decidedText, inviteText } from "@/lib/share";
+import { decidedText, inviteText } from "@/lib/share";
 import type { Shop } from "@/lib/shops";
 import type { Decision } from "@/lib/store/types";
 import type { DateRank } from "@/lib/summary";
 import { saveAdminToken } from "./CreateForm";
+import { Fold } from "./Fold";
 import { MustPicker } from "./MustPicker";
 import { SendButtons, useCanShare } from "./SendButtons";
 import { ShopList } from "./ShopList";
@@ -94,7 +95,6 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
   const adminUrl = `${origin}/p/${partyId}/admin?token=${token}`;
   const adminNote = `「${title}」の幹事用URL(自分用)`;
   const decidedMessage = decision ? decidedText(title, decision.date, decision.start, decision.shopName, guestUrl) : "";
-  const dayBeforeMessage = decision ? dayBeforeText(title, decision.date, decision.start, decision.shopName, guestUrl) : "";
 
   function submit(choice: { date: string; shopId: string | null } | null) {
     setError(null);
@@ -172,11 +172,6 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
             copyLabel="送る文をコピー"
             canShare={canShare}
           />
-          <div className="mt-5 border-t border-border pt-4">
-            <p className="text-sm font-bold">前日のお知らせ</p>
-            <p className="mt-0.5 text-xs text-muted">会の前の日に、グループへ</p>
-            <SendButtons mainLabel="共有して前日のお知らせを送る" share={{ text: dayBeforeMessage }} copy={dayBeforeMessage} copyLabel="送る文をコピー" canShare={canShare} />
-          </div>
           <div className="mt-5 border-t border-border pt-4" />
           <button
             type="button"
@@ -341,8 +336,12 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
           </div>
         </div>
       )}
-      {/* 決まったあとも、招待と幹事用の URL はたたまずに出しておく(あとから入る人に送るとき・自分用に残すとき) */}
-      {decision && invite}
+      {/* 決まったあとは、招待と幹事用の URL はたたんでおく(あとから入る人に送るとき・自分用に残すときに開く) */}
+      {decision && (
+        <Fold title="みんなに送る・幹事用のURL" note="あとから入る人に送るとき、自分用に残すとき">
+          {invite}
+        </Fold>
+      )}
     </>
   );
 }

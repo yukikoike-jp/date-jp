@@ -5,15 +5,14 @@ import { connection } from "next/server";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { DecisionCard } from "@/components/DecisionCard";
 import { Fold } from "@/components/Fold";
-import { NextHost } from "@/components/NextHost";
 import { SecondPartyShops } from "@/components/SecondPartyShops";
 import { ShopList } from "@/components/ShopList";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SummaryView } from "@/components/SummaryView";
 import { getStore } from "@/lib/store";
 import { dietNotice } from "@/lib/diet";
-import { monthInJapan, nextOccasion } from "@/lib/invite";
 import { clock } from "@/lib/sendai";
+import { findShop } from "@/lib/shops";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -32,11 +31,12 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
   const view = await loadParty(id);
   if (!view) notFound();
   const { party, summary, shops, otherArea } = view;
+  // 決まったお店の写真(「決まりました!」のカードに出す)
+  const decidedPhoto = party.decision?.shopId ? ((await findShop(party.decision.shopId))?.photo ?? null) : null;
   // カレンダーの予定に入れる、この会のページの URL
   const h = await headers();
   const pageUrl = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}/p/${party.id}`;
   // 答えた人を次の幹事に誘うときの、その時期の会の呼び方(忘年会・新歓など)
-  const occasion = nextOccasion(monthInJapan(new Date()), party.audience);
 
   return (
     <PullToRefresh>
@@ -47,9 +47,9 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
           <p className="text-sm font-bold text-muted">飲み会の日程とお店{party.start !== null ? ` ・ ${clock(party.start)}から` : ""}</p>
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
         </div>
-        {party.decision && <DecisionCard decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />}
+        {party.decision && <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />}
         <div className={party.decision ? "mt-4" : ""}>
-          <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} occasion={occasion} />
+          <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
         </div>
         {/* 決まったあとは、みんなの答えはたたんでおく。お店まで決まったら、ほかの候補のお店は出さない */}
         {party.decision ? (
@@ -75,12 +75,10 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
         )}
         {/* お店まで決まったら、二次会のお店も出す */}
         {party.decision && (
-          <SecondPartyShops partyId={party.id} />
+          <Fold title="二次会のお店" note="一次会のお店の近くで、遅くまで開いているお店">
+            <SecondPartyShops partyId={party.id} />
+          </Fold>
         )}
-        {/* 答えた人を、次の会の幹事にする */}
-        <div className="mx-4 mt-4">
-          <NextHost occasion={occasion} />
-        </div>
       </div>
     </PageMotion>
     </PullToRefresh>

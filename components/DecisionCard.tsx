@@ -11,8 +11,8 @@ import { PrNote } from "./PrNote";
 /** 見本のお店(s1, s2…)は実在しないので、予約や地図のリンクを出さない */
 const isSampleShop = (id: string) => /^s\d+$/.test(id);
 
-/** title = 会の名前、url = 会のページ(カレンダーの予定に入れる) */
-export function DecisionCard({ decision, partyId, title, url }: { decision: Decision; partyId: string; title: string; url: string }) {
+/** title = 会の名前、url = 会のページ(カレンダーの予定に入れる)、photo = 決まったお店の写真(ホットペッパー) */
+export function DecisionCard({ decision, partyId, title, url, photo = null }: { decision: Decision; partyId: string; title: string; url: string; photo?: string | null }) {
   const calendar = { title, date: decision.date, start: decision.start, location: decision.shopName, url };
   const shop = decision.shopId && decision.shopName ? { id: decision.shopId, name: decision.shopName } : null;
   return (
@@ -26,6 +26,15 @@ export function DecisionCard({ decision, partyId, title, url }: { decision: Deci
       </p>
       {shop ? (
         <>
+          {/* 決まったお店の写真。ホットペッパーの規約で、写真を使うときは「画像提供」を添える */}
+          {photo && !isSampleShop(shop.id) && (
+            <figure className="mt-4">
+              {/* 外のお店の写真。最適化は使わない */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={photo} alt={`${shop.name}の写真`} className="aspect-[16/10] w-full rounded-2xl object-cover" />
+              <figcaption className="mt-1 text-right text-[10px] text-muted">画像提供:ホットペッパー グルメ</figcaption>
+            </figure>
+          )}
           <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-lg font-bold">
             <Store className="size-5 shrink-0" aria-hidden />
             {shop.name}

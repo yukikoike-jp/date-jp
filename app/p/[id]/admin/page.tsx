@@ -12,6 +12,7 @@ import { StepBar } from "@/components/StepBar";
 import { SummaryView } from "@/components/SummaryView";
 import { verifyToken } from "@/lib/tokens";
 import { dietNotice } from "@/lib/diet";
+import { findShop } from "@/lib/shops";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
 import { PullToRefresh } from "@/components/PullToRefresh";
@@ -25,6 +26,8 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
   const view = await loadParty(id);
   if (!view) notFound();
   const { party, summary, shops, otherArea, adminHash } = view;
+  // 決まったお店の写真(「決まりました!」のカードに出す)
+  const decidedPhoto = party.decision?.shopId ? ((await findShop(party.decision.shopId))?.photo ?? null) : null;
   // カレンダーの予定に入れる、この会のページの URL
   const h = await headers();
   const pageUrl = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}/p/${party.id}`;
@@ -55,13 +58,13 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
         </div>
         {party.decision && (
           <div className="mb-4">
-            <DecisionCard decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />
+            <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />
           </div>
         )}
         {/* 幹事も自分の予定を入れたり直したりできるように、ここに置く(日にちを決めたあとも、お酒を飲むかなどを直せる)。
             作った直後は、みんなに送る欄の下に、入力欄を開いた形で出す */}
         {created !== "1" && <div className="mb-4">
-          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} occasion="" />
+          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
         </div>}
         <AdminPanel
           // 必ず来てほしい人を変えたら、いちばん良い日を選び直す
@@ -86,7 +89,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
         />
         {created === "1" && (
           <div className="mt-4">
-            <AnswerPanel host hostOpen partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} occasion="" />
+            <AnswerPanel host hostOpen partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
           </div>
         )}
         {/* 決まったあとは、みんなの答えはたたんでおく。お店まで決まったら、ほかの候補のお店は出さない */}
@@ -102,7 +105,9 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
         {/* お店の一覧は AdminPanel の中に1つだけ出す(選ぶのと予約のリンクを同じ一覧に) */}
         {/* お店まで決まったら、二次会のお店も出す */}
         {party.decision && (
-          <SecondPartyShops partyId={party.id} />
+          <Fold title="二次会のお店" note="一次会のお店の近くで、遅くまで開いているお店">
+            <SecondPartyShops partyId={party.id} />
+          </Fold>
         )}
       </div>
     </PageMotion>

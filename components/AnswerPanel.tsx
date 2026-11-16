@@ -2,7 +2,6 @@
 
 import { toast } from "./Toast";
 import { ArrowRight, CalendarDays, Check, Cigarette, Clock, Heart, MapPin, MessageSquareText, Moon, Pencil, UserRound, UtensilsCrossed, Wallet, Wine } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { getMyAnswer, saveAnswer } from "@/app/actions";
@@ -52,7 +51,6 @@ function Choice({ on, onClick, children }: { on: boolean; onClick: () => void; c
 }
 
 /** start = 幹事が決めた開始時刻(分)。あれば「何時から来られる?」は聞かない(前の会は null) */
-/** occasion = 答えたあとに次の幹事に誘うときの、その時期の会の呼び方(忘年会など) */
 /**
  * host = 幹事の画面に置くとき。まだ答えていなければ、大きな入力欄の代わりに「自分の予定を入れる」ボタンを出し、押すとその場で開く。
  * hostOpen = 最初から開いておく(会を作った直後)
@@ -62,7 +60,6 @@ export function AnswerPanel({
   dates,
   audience,
   start: partyStart,
-  occasion,
   host = false,
   hostOpen = false,
 }: {
@@ -70,7 +67,6 @@ export function AnswerPanel({
   dates: string[];
   audience: Audience;
   start: number | null;
-  occasion: string;
   host?: boolean;
   hostOpen?: boolean;
 }) {
@@ -168,16 +164,6 @@ export function AnswerPanel({
           <Pencil className="size-4" aria-hidden />
           {pending ? "読み込み中…" : "回答を直す"}
         </button>
-        {/* 答えた直後がいちばん目に入るので、ここで次の幹事に誘う */}
-        {saved && !passed && !host && (
-          <Link href="/" className="mt-3 flex items-center gap-2 rounded-2xl bg-white/5 px-3 py-3 text-sm ring-1 ring-white/10 transition-colors hover:bg-white/10">
-            <span className="min-w-0 flex-1">
-              <span className="font-bold">{occasion}の幹事になったら</span>
-              <span className="text-muted">、Tsudoroなら3分で決定</span>
-            </span>
-            <ArrowRight className="size-4 shrink-0 text-accent" aria-hidden />
-          </Link>
-        )}
       </section>
     );
   }
