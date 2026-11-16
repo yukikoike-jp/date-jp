@@ -31,7 +31,7 @@ URL を LINE に貼ると、みんなが30秒で行ける日と予算を答え�
   - バリューコマースのサイト審査が済むまでは出さない(`OTHER_SITES_ON=1` で出る)
 - 提携リンクには、ステルスマーケティングにならないよう「PR」または「#アフィリエイト広告」をはっきり見える形で付ける(`components/PrNote.tsx`)
 - 紹介料を出す前に、Vercel を有料プラン(Pro)にする(無料プランはお金を得るサイトに使えない)。手順は `docs/launch-checklist.md`
-- **有料プレミアム(月額 500円のサブスク、Stripe)**: **催促をアプリにまかせる(自動でお知らせ)**が中心。払っていない人に、幹事ではなく Tsudoro がブラウザの通知(Web Push)で知らせる(翌日・3日後・7日後)。気まずさの原因は「幹事が頼む側になること」なので、頼む側をアプリにする(`components/AutoRemindPanel.tsx`、`PushOptIn.tsx`、`lib/pushRemind.ts`、`app/api/cron/remind`)。ほかに、会社の会の傾斜で割る。集金の表づくり・PayPay のリンクをのせる・ひとりずつ文を作って送る、は無料。Tsudoro はお金を預からない(リンクは PayPay のものだけ通す)。ホームのタイルは「集金の催促を、アプリにまかせる」(`/split?mode=collect`)
+- **有料プレミアム(月額 500円のサブスク、Stripe)**: **催促をアプリにまかせる(自動でお知らせ)**が中心。払っていない人に、幹事ではなく Tsudoro がブラウザの通知(Web Push)で知らせる(翌日・3日後・7日後)。気まずさの原因は「幹事が頼む側になること」なので、頼む側をアプリにする(`components/AutoRemindPanel.tsx`、`PushOptIn.tsx`、`lib/pushRemind.ts`、`app/api/cron/remind`)。ほかに、会社の会の傾斜で割る。集金の表づくり・PayPay のリンクをのせる・ひとりずつ文を作って送る、は無料。Tsudoro はお金を預からない(リンクは PayPay のものだけ通す)。ホームのタイルは「集金の催促を、アプリにまかせる」(右上は鍵のマークだけ。`/collect/new` で、合計と名前だけですぐ集金のページを作る)。集金のページは、すっきり保つ(「みんなに送る」「まだの人に催促」の欄は置かない。送るのは右上の「URLを送る」だけ)。有料の印は鍵のマークだけ
   - 月額の契約: Stripe Checkout(mode=subscription)。鍵は Stripe のお会計の id の署名で、**使うたびに Stripe で契約が続いているか(active / trialing)を確かめる**(10分は覚える。`lib/billing.ts` の `proActive`)。解約・確認は Stripe のカスタマーポータル(Stripe のダッシュボードで、ポータルを有効にしておく)。特定商取引法の表記(`/legal`)は月額の自動更新・解約の書き方になっている
   - 通知には、環境変数 `VAPID_PUBLIC_KEY` `VAPID_PRIVATE_KEY`(`npx web-push generate-vapid-keys`)と `CRON_SECRET`、マイグレーション `20261117000000_push_subs.sql` が要る。`vercel.json` の crons が1日1回 `/api/cron/remind` を呼ぶ。iPhone は、ホーム画面に追加したアプリからだけ通知を受け取れる
   - 席替え・ゲームの「もりあげ道具」と、「ひとりずつ催促」の有料化は、ユーザーの判断でやめた(買い切りから月額に変えたのも、ユーザーの判断。2026-11-17)

@@ -1,16 +1,17 @@
 "use client";
 
-import { Bell, BellOff, Check, Lock } from "lucide-react";
+import { Bell, BellOff, Check, Lock, LockOpen } from "lucide-react";
 import { useState, useTransition } from "react";
 import { openBillingPortal, saveCollectionSettings } from "@/app/actions";
-import { cleanPayLink } from "@/lib/reminder";
 import { notificationText } from "@/lib/pushRemind";
+import { cleanPayLink } from "@/lib/reminder";
 import { ProPaywall, loadLicense, useFunAccess } from "./ProGate";
 import { INPUT } from "./ui";
 
-// 集金のページ(幹事の画面)の「集金のお知らせを、アプリにまかせる」(有料プレミアム)。
-// 催促の気まずさは、幹事が頼む側になることから来る。「自動でお知らせ」をオンにすると、払っていない人に、幹事ではなく Tsudoro が通知で知らせる。
-// 受け取れるのは、集金のページで自分の名前を選んで「通知をオン」にした人だけ。PayPay のリンクを貼るところは無料
+// 集金のページ(幹事の画面)の「払い方」と「催促は、アプリにまかせる」。
+// 催促の気まずさは、幹事が頼む側になることから来る。有料プレミアムで「自動でお知らせ」をオンにすると、
+// 払っていない人に、幹事ではなく Tsudoro が通知で知らせる(受け取れるのは、集金のページで「通知をオンにする」を押した人だけ)。
+// 有料の印は、右上の鍵のボタンだけ(押すと、くわしい案内)。PayPay のリンクを貼るところは無料
 
 export function AutoRemindPanel({
   collectionId,
@@ -48,8 +49,10 @@ export function AutoRemindPanel({
   const link = cleanPayLink(linkText);
   const linkBad = linkText.trim() !== "" && link === null;
   const linkChanged = (link ?? "") !== (savedLink ?? "");
+  const autoOn = autoAt !== null;
+  const sample = notificationText(0, title, sampleAmount);
 
-  function save(next: { payLink: string; autoRemind: boolean }, done: (r: { payLink: string | null; autoRemindAt: number | null }) => void) {
+  function save(next: { payLink: string; autoRemind: boolean }, done: () => void) {
     setError(null);
     setNote(null);
     start(async () => {
@@ -60,73 +63,66 @@ export function AutoRemindPanel({
       }
       setSavedLink(r.payLink);
       setAutoAt(r.autoRemindAt);
-      done(r);
+      done();
     });
   }
 
-  const autoOn = autoAt !== null;
-
   return (
-    <section className="mx-4 mt-4 rounded-3xl border panel px-5 py-5" aria-label="集金のお知らせ">
-      <h2 className="text-lg font-black">払い方をのせる</h2>
-      <p className="mt-1 text-sm text-muted">あなたの PayPay の送金リンクを貼ると、みんなの画面に「PayPay で払う」ボタンが出ます。</p>
-      <input
-        inputMode="url"
-        value={linkText}
-        onChange={(e) => setLinkText(e.target.value)}
-        placeholder="https://paypay.ne.jp/…"
-        aria-label="あなたの PayPay の送金リンク"
-        aria-invalid={linkBad}
-        className={`${INPUT} mt-3`}
-      />
+    <section className="mx-4 mt-4 rounded-3xl border panel px-5 py-5" aria-label="払い方と催促">
+      <h2 className="text-lg font-black">払い方</h2>
+      <div className="mt-3 flex gap-2">
+        <input
+          inputMode="url"
+          value={linkText}
+          onChange={(e) => setLinkText(e.target.value)}
+          placeholder="PayPay の送金リンク https://paypay.ne.jp/…"
+          aria-label="あなたの PayPay の送金リンク"
+          aria-invalid={linkBad}
+          className={`${INPUT} min-w-0 flex-1`}
+        />
+        <button
+          type="button"
+          disabled={pending || linkBad || !linkChanged}
+          onClick={() => save({ payLink: linkText, autoRemind: autoOn }, () => setNote("保存しました"))}
+          className="inline-flex min-h-14 shrink-0 items-center rounded-2xl bg-white/8 px-4 text-sm font-bold ring-1 ring-white/12 active:scale-95 disabled:opacity-40"
+        >
+          {savedLink && !linkChanged ? <Check className="size-4" aria-label="保存済み" /> : "保存"}
+        </button>
+      </div>
       <p className={`mt-1.5 text-xs ${linkBad ? "font-bold text-danger" : "text-muted"}`}>
-        {linkBad ? "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" : "PayPay アプリの「送る・受け取る」で作ったリンクを貼ります(空でも使えます)"}
+        {linkBad ? "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" : "貼ると、みんなの画面に「PayPay で払う」が出ます(空でもOK)"}
       </p>
-      <button
-        type="button"
-        disabled={pending || linkBad || !linkChanged}
-        onClick={() => save({ payLink: linkText, autoRemind: autoOn }, () => setNote("保存しました"))}
-        className="mt-2 inline-flex min-h-11 items-center rounded-xl bg-white/8 px-4 text-sm font-bold ring-1 ring-white/12 active:scale-95 disabled:opacity-40"
-      >
-        {savedLink && !linkChanged ? (
-          <>
-            <Check className="mr-1 size-4" aria-hidden />
-            保存済み
-          </>
-        ) : (
-          "リンクを保存"
-        )}
-      </button>
 
-      <div className="mt-6 border-t border-border pt-5">
+      <div className="mt-5 border-t border-border pt-5">
         <h2 className="flex items-center justify-between gap-2 text-lg font-black">
           催促は、アプリにまかせる
-          <span className="inline-flex shrink-0 items-center gap-1 rounded-md border border-accent/50 px-1.5 py-0.5 text-[10px] font-black leading-none text-accent">
-            <Lock className="size-3" aria-hidden />
-            {access.loading ? "有料プレミアム" : locked ? "デモ版" : "有料プレミアム"}
-          </span>
+          {access.loading ? null : locked ? (
+            // 有料の印は、鍵のボタンだけ。押すと、くわしい案内が開く
+            <button
+              type="button"
+              onClick={() => setShowBuy((v) => !v)}
+              aria-expanded={showBuy}
+              aria-label="有料プレミアムの案内"
+              className="grid size-10 shrink-0 place-items-center rounded-full border border-accent/50 text-accent active:scale-95"
+            >
+              <Lock className="size-4" aria-hidden />
+            </button>
+          ) : (
+            <span className="grid size-10 shrink-0 place-items-center rounded-full text-accent" role="img" aria-label="有料プレミアムを契約中">
+              <LockOpen className="size-4" aria-hidden />
+            </span>
+          )}
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-white/75">
-          「払って」と言うのは、幹事のあなたではなく Tsudoro です。払っていない人にだけ、翌日・3日後・7日後に、アプリから通知が届きます。
+          払っていない人に、あなたではなく Tsudoro が通知します。翌日・3日後・7日後に、言い方を変えて届きます。
         </p>
-
-        {/* 届く通知の見本。何が起きるかを、買う前に見せる */}
-        <ol className="mt-3 space-y-2" aria-label="届く通知の見本">
-          {[0, 1, 2].map((n) => {
-            const t = notificationText(n, title, sampleAmount);
-            return (
-              <li key={n} className="rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-white/10">
-                <p className="text-[11px] font-bold text-muted">{["翌日", "3日後", "7日後"][n]}に届く通知</p>
-                <p className="mt-0.5 flex items-center gap-1.5 text-sm font-black">
-                  <Bell className="size-3.5 shrink-0 text-accent" aria-hidden />
-                  <span className="min-w-0 truncate">Tsudoro ・ {t.title}</span>
-                </p>
-                <p className="mt-0.5 text-sm text-white/80">{t.body}</p>
-              </li>
-            );
-          })}
-        </ol>
-        <p className="mt-2 text-xs text-muted">通知を受け取るには、参加する人が集金のページで「通知をオンにする」を押します(払い終わると止まります)。</p>
+        <div className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-white/10" aria-label="届く通知の見本">
+          <p className="flex items-center gap-1.5 text-sm font-black">
+            <Bell className="size-3.5 shrink-0 text-accent" aria-hidden />
+            <span className="min-w-0 truncate">Tsudoro ・ {sample.title}</span>
+          </p>
+          <p className="mt-0.5 text-sm text-white/80">{sample.body}</p>
+        </div>
 
         {error && (
           <p role="alert" className="mt-3 text-sm font-bold text-danger">
@@ -134,25 +130,15 @@ export function AutoRemindPanel({
           </p>
         )}
 
-        {access.loading ? null : locked ? (
-          <>
-            {!showBuy && (
-              <button type="button" onClick={() => setShowBuy(true)} className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-accent px-4 text-sm font-black text-accent-text active:scale-95">
-                有料プレミアムのくわしく
-              </button>
-            )}
-            {showBuy && <ProPaywall feature="自動でお知らせ" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
-          </>
-        ) : !pushReady ? (
+        {locked ? (
+          showBuy && <ProPaywall feature="催促をアプリにまかせる" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+        ) : access.loading ? null : !pushReady ? (
           <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">通知の準備がまだできていません。しばらく待ってからお試しください。</p>
         ) : autoOn ? (
           <div className="mt-3 rounded-2xl border border-accent/40 px-4 py-3">
             <p className="flex items-center gap-1.5 text-sm font-black text-accent">
               <Bell className="size-4" aria-hidden />
-              自動でお知らせ: オン
-            </p>
-            <p className="mt-1 text-sm text-white/80">
-              通知をオンにした人 {subscribed}人 ・ まだ払っていない人 {unpaid}人
+              オン ・ 通知を受け取る人 {subscribed}人 / まだの人 {unpaid}人
             </p>
             {subscribed < unpaid && <p className="mt-1 text-xs text-muted">集金のページを送るとき、「通知をオンにしてね」と一言そえると、受け取る人が増えます。</p>}
             <button
@@ -169,11 +155,11 @@ export function AutoRemindPanel({
           <button
             type="button"
             disabled={pending}
-            onClick={() => save({ payLink: linkText, autoRemind: true }, () => setNote("オンにしました。集金のページを、みんなに送りましょう"))}
+            onClick={() => save({ payLink: linkText, autoRemind: true }, () => setNote("オンにしました。右上の「URLを送る」で、みんなに送りましょう"))}
             className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 text-base font-black text-accent-text active:scale-[0.97] disabled:opacity-50"
           >
             <Bell className="size-4" aria-hidden />
-            自動でお知らせをオンにする
+            アプリにまかせる(オンにする)
           </button>
         )}
         {!locked && !access.loading && loadLicense() && (

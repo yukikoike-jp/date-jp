@@ -1,18 +1,17 @@
 "use client";
 
-import { Check, Crown, RotateCcw, Users, Wallet } from "lucide-react";
+import { Check, Crown, RotateCcw, Share2, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCollectionPayment } from "@/app/actions";
 import { isConfirmed } from "@/lib/collection";
 import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
-import { collectText, reminderText } from "@/lib/share";
+import { collectText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
 import { AutoRemindPanel } from "./AutoRemindPanel";
-import { PerPersonReminders } from "./PerPersonReminders";
 import { PushOptIn } from "./PushOptIn";
-import { SendButtons, useCanShare } from "./SendButtons";
+import { toast } from "./Toast";
 
 // 集金のページ。払ったかどうかは幹事だけが記録する(本人が押せるとごまかせるため)。色だけでなく ✓ と文字でも分かるようにする
 
@@ -54,7 +53,6 @@ export function CollectionView({
   subscribedIds: number[];
 }) {
   const router = useRouter();
-  const canShare = useCanShare();
   const [token, setToken] = useState<string | null>(hostToken);
   const [origin, setOrigin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -100,12 +98,35 @@ export function CollectionView({
 
   const autoOn = c.autoRemindAt !== undefined;
   const askText = collectText(c.title, url, c.audience, autoOn);
-  const remind = `${reminderText(c.audience, c.title, unpaid.map((p) => ({ name: p.name, amount: p.amount })))}\n${url}`;
+
+  /** このページを送る(共有の画面があれば開き、なければ文をコピーする) */
+  async function shareThis() {
+    if (typeof navigator.share === "function") {
+      await navigator.share({ text: askText }).catch(() => {});
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(askText);
+      toast("コピーしました。LINE などに貼り付けてください");
+    } catch {}
+  }
 
   return (
     <>
       <div className="px-4 pt-6 pb-4">
-        <p className="text-sm font-bold text-muted">{isHost ? "幹事の集金ページ" : "集金"}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-bold text-muted">{isHost ? "幹事の集金ページ" : "集金"}</p>
+          {isHost && (
+            <button
+              type="button"
+              onClick={shareThis}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-white/8 px-3.5 text-xs font-bold ring-1 ring-white/12 active:scale-95"
+            >
+              <Share2 className="size-3.5" aria-hidden />
+              URLを送る
+            </button>
+          )}
+        </div>
         <h1 className="mt-1 text-[22px] font-black tracking-tight">{heading}</h1>
         <p className="mt-1 text-sm text-muted">
           合計 {yen(c.total)}・{c.people.length}人{host ? `・幹事は${host.name}さん` : ""}
@@ -237,23 +258,6 @@ export function CollectionView({
 
       {isHost && (
         <>
-          <section className="mx-4 mt-4 rounded-3xl border panel px-5 py-5">
-            <h2 className="flex items-center gap-2 text-lg font-black">
-              <Users className="size-5" aria-hidden />
-              みんなにこのページを送る
-            </h2>
-            <p className="mt-1 text-sm text-muted">一人ずつの金額入りの案内文</p>
-            <SendButtons mainLabel="共有してみんなに送る" share={{ text: askText }} copy={askText} copyLabel="送る文をコピー" canShare={canShare} />
-          </section>
-
-          {unpaid.length > 0 && (
-            <section className="mx-4 mt-4 rounded-3xl border panel px-5 py-5">
-              <h2 className="text-lg font-black">まだの人に催促する</h2>
-              <p className="mt-1 text-xs text-muted">まだの{unpaid.length}人の名前と金額だけ</p>
-              <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm leading-relaxed break-all whitespace-pre-wrap">{remind}</p>
-              <SendButtons mainLabel="共有して催促を送る" share={{ text: remind }} copy={remind} copyLabel="催促の文をコピー" canShare={canShare} />
-            </section>
-          )}
           {/* 払い方(PayPay のリンク)をのせる(無料)と、催促をアプリにまかせる(有料プレミアム。買う前はデモ版) */}
           {token && (
             <AutoRemindPanel
@@ -268,16 +272,6 @@ export function CollectionView({
               sampleAmount={unpaid[0]?.amount ?? payers[0]?.amount ?? 0}
             />
           )}
-          {/* ひとりずつ文を作って送る(無料) */}
-          <PerPersonReminders
-            collectionId={c.id}
-            title={c.title}
-            audience={c.audience}
-            total={c.total}
-            unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount }))}
-            pageUrl={url}
-            payLink={c.payLink ?? null}
-          />
           <p className="mx-4 mt-3 text-xs text-muted">
             現金で受け取ったら「受け取った」
           </p>

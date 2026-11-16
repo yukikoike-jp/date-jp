@@ -36,7 +36,7 @@ function HomeRow({ href, icon, title, sub }: { href: string; icon: React.ReactNo
 }
 
 /** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料プレミアムの入口) */
-function ToolTile({ href, icon, title, sub, badge, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; badge?: string; wide?: boolean }) {
+function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; lockOnly?: boolean; wide?: boolean }) {
   return (
     <Link
       href={href}
@@ -44,14 +44,14 @@ function ToolTile({ href, icon, title, sub, badge, wide = false }: { href: strin
         wide ? "col-span-2 gap-4 border border-accent/40 px-4 py-4 text-left" : "flex-col gap-3 px-3 py-5"
       }`}
     >
-      {badge && (
-        <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-md bg-accent px-1.5 py-0.5 text-[10px] font-black leading-none text-accent-text">
-          <Lock className="size-3" aria-hidden />
-          {badge}
+      {/* 有料の印は、鍵のマークだけ */}
+      {lockOnly && (
+        <span className="absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-full bg-accent text-accent-text" role="img" aria-label="有料プレミアム">
+          <Lock className="size-3.5" aria-hidden />
         </span>
       )}
       <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-accent/40 text-accent">{icon}</span>
-      <span className={wide ? "pr-12" : ""}>
+      <span className={wide ? "pr-8" : ""}>
         <span className="block text-[15px] font-black tracking-tight text-white/90">{title}</span>
         <span className="mt-1 block text-xs font-medium text-white/60">{sub}</span>
       </span>
@@ -374,11 +374,11 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           <ToolTile href="/split" icon={tierIcon} title="会計をする" sub={home.split} />
           {/* 有料プレミアムの入口。何が有料かが、ホームですぐ分かるようにする */}
           <ToolTile
-            href="/split?mode=collect#collect"
+            href="/collect/new"
             icon={<Bell className="size-6" aria-hidden />}
             title="集金の催促を、アプリにまかせる"
             sub="払っていない人に、あなたの代わりにアプリが通知。集金の表づくりは無料"
-            badge="有料プレミアム 月500円"
+            lockOnly
             wide
           />
         </div>
