@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { middleBudget, rankDates, startTime, summarize, type Answer } from "./summary";
+import { middleBudget, rankDates, startTime, summarize, topDates, type Answer } from "./summary";
 
 const D1 = "2026-11-13";
 const D2 = "2026-11-14";
@@ -159,5 +159,62 @@ describe("middleBudget(予算の真ん中)", () => {
   it("こだわらない人(上限なし)は高い側に並ぶ", () => {
     expect(middleBudget([1_000_000, 1_000_000, 3000])).toBe(1_000_000);
     expect(middleBudget([3000])).toBe(3000);
+  });
+});
+
+describe("同じ人数の日は、全部おすすめにする", () => {
+  const D3 = "2026-11-15";
+  // 5人。D1 は ○3・△1、D2 は ○3・△2、D3 は ○2
+  const people = [
+    answer("a", { dates: { [D1]: "ok", [D2]: "ok", [D3]: "ok" } }),
+    answer("b", { dates: { [D1]: "ok", [D2]: "ok", [D3]: "ok" } }),
+    answer("c", { dates: { [D1]: "ok", [D2]: "ok", [D3]: "no" } }),
+    answer("d", { dates: { [D1]: "maybe", [D2]: "maybe", [D3]: "no" } }),
+    answer("e", { dates: { [D1]: "no", [D2]: "maybe", [D3]: "no" } }),
+  ];
+
+  it("○の数が同じでいちばん多い日を、△の数が違っても全部返す", () => {
+    expect(topDates(rankDates([D1, D2, D3], people))).toEqual([D1, D2]);
+    const s = summarize([D1, D2, D3], people);
+    expect(s.bestDates).toEqual([D1, D2]);
+    // 時間とお店は、同じ ○ の中で △ が多い日(D2)の答えから決める
+    expect(s.date).toBe(D2);
+  });
+
+  it("1つだけいちばん多ければ、その日だけ", () => {
+    expect(topDates(rankDates([D1, D2], [answer("a"), answer("b"), answer("c", { dates: { [D1]: "no", [D2]: "ok" } })]))).toEqual([D1]);
+  });
+
+  it("誰も行けない日しかなければ、空", () => {
+    expect(topDates(rankDates([D1], [answer("a", { dates: { [D1]: "no" } })]))).toEqual([]);
+  });
+
+  it("必ず来てほしい人が来られる日を先にし、その中で ○ が同じ日だけを返す", () => {
+    const r = rankDates([D1, D2], [answer("boss", { dates: { [D1]: "no", [D2]: "ok" } }), answer("x", { dates: { [D1]: "ok", [D2]: "ok" } }), answer("y", { dates: { [D1]: "ok", [D2]: "no" } })], ["boss"]);
+    expect(topDates(r)).toEqual([D2]);
+  });
+});
+
+describe("△の人も、お店選びに反映する", () => {
+  const base = { arrival: 1140, stay: 1320, areas: ["station" as const] };
+  const answers: Answer[] = [
+    { ...base, id: "1", name: "A", dates: { [D1]: "ok" }, budget: 5000, likes: ["izakaya"] },
+    { ...base, id: "2", name: "B", dates: { [D1]: "ok" }, budget: 5000, likes: ["izakaya"] },
+    { ...base, id: "3", name: "C", dates: { [D1]: "maybe" }, budget: 2000, likes: ["yakiniku"], avoids: ["egg"], smokes: true },
+    { ...base, id: "4", name: "D", dates: { [D1]: "maybe" }, budget: 2000, likes: ["yakiniku"] },
+  ];
+  const s = summarize([D1], answers);
+
+  it("行ける人の一覧と開始時刻は ○ の人だけ", () => {
+    expect(s.attendees.map((a) => a.name)).toEqual(["A", "B"]);
+    expect(s.maybes).toEqual(["C", "D"]);
+  });
+  it("予算・人数・食べたいもの・苦手なもの・タバコは、○と△の人を合わせて数える", () => {
+    expect(s.considered).toBe(4);
+    // 2000・2000・5000・5000 の真ん中(低いほう)= 2000
+    expect(s.budget).toBe(2000);
+    expect(s.likes.map((l) => [l.key, l.votes])).toEqual([["izakaya", 2], ["yakiniku", 2]]);
+    expect(s.diet.smokers).toBe(1);
+    expect(s.diet.avoids.map((a) => [a.key, a.count])).toEqual([["egg", 1]]);
   });
 });

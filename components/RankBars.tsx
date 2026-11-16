@@ -57,7 +57,7 @@ function Row({ r, total, best, i, go }: { r: DateRank; total: number; best: bool
   );
 }
 
-export function RankBars({ ranking, total, best }: { ranking: DateRank[]; total: number; best: string | null }) {
+export function RankBars({ ranking, total, bests }: { ranking: DateRank[]; total: number; bests: string[] }) {
   // 画面に見えたときに伸び始める(「くわしく見る」を開いたときなど)
   const ref = useRef<HTMLUListElement>(null);
   const [go, setGo] = useState(false);
@@ -77,7 +77,7 @@ export function RankBars({ ranking, total, best }: { ranking: DateRank[]; total:
   return (
     <ul ref={ref} className="space-y-3" aria-label={`候補の日ごとの、行ける人の数(${total}人中)`}>
       {ranking.map((r, i) => (
-        <Row key={r.date} r={r} total={total} best={r.date === best} i={i} go={go} />
+        <Row key={r.date} r={r} total={total} best={bests.includes(r.date)} i={i} go={go} />
       ))}
     </ul>
   );

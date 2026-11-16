@@ -87,14 +87,28 @@ export function SummaryView({ summary }: { summary: Summary }) {
 
   // いつも出すのは、日にち・時間・予算の3つだけ。場所と二次会は「くわしく」の中に入れる
   const rows = [
-    { icon: CalendarDays, label: "日にち", value: dateLabel(summary.date), sub: `行ける人 ${summary.attendees.length}人` },
+    {
+      icon: CalendarDays,
+      label: "日にち",
+      // ○の数が同じ日が複数あれば、全部出す(5人で ○3 の日が2つなら、2つとも)
+      value: summary.bestDates.length > 1 ? summary.bestDates.map(dateLabel).join(" ・ ") : dateLabel(summary.date),
+      sub:
+        summary.bestDates.length > 1
+          ? `どの日も ○${summary.ranking[0].ok}人で同じ。時間とお店は ${dateLabel(summary.date)} の答えから`
+          : `行ける人 ${summary.attendees.length}人${summary.maybes.length > 0 ? ` ・ たぶん ${summary.maybes.length}人` : ""}`,
+    },
     {
       icon: Clock,
       label: "時間",
       value: `${clock(summary.start!)}〜${clock(summary.firstEnd!)}`,
       sub: summary.lateJoiners.length > 0 ? `${summary.lateJoiners.join("と")}さんは途中から参加` : "全員そろってスタート",
     },
-    { icon: Wallet, label: "お店", value: budgetLabel(summary.budget!), sub: "行く人の予算の真ん中くらい" },
+    {
+      icon: Wallet,
+      label: "お店",
+      value: budgetLabel(summary.budget!),
+      sub: summary.maybes.length > 0 ? "○と△の人の予算の真ん中くらい" : "行く人の予算の真ん中くらい",
+    },
   ];
   const more = [
     {
@@ -157,7 +171,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
         <Diet diet={summary.diet} />
         <Notes notes={summary.notes} />
         <div className="mt-3">
-          <RankBars ranking={summary.ranking} total={summary.who.length} best={summary.date} />
+          <RankBars ranking={summary.ranking} total={summary.who.length} bests={summary.bestDates} />
         </div>
         <ul className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
           {summary.attendees.map((a) => (

@@ -36,7 +36,8 @@ export async function loadParty(id: string): Promise<(PartyView & { adminHash: s
     point: summary.meeting,
     // 全員が「上限なし」なら、予算で絞らない
     budget,
-    size: summary.attendees.length,
+    // お店の広さは、○の人と△の人の合計に合わせる(来るかもしれない人の席もあるお店を選ぶ)
+    size: summary.considered,
     audience: party.audience,
     // タバコを吸う人がいれば、吸えるお店を先に出す
     ...(summary.diet.smokers > 0 ? { smoking: "prefer" as const } : {}),
@@ -48,7 +49,7 @@ export async function loadParty(id: string): Promise<(PartyView & { adminHash: s
   const byLikes = genres.length > 0 && found.shops.length > 0 && found.relaxed === null;
   const basis = ready
     ? [
-        `${summary.attendees.length}人`,
+        summary.maybes.length > 0 ? `${summary.considered}人(○${summary.attendees.length}・△${summary.maybes.length})` : `${summary.attendees.length}人`,
         budget === null ? "金額はどこでもOK" : `1人${budget.toLocaleString("ja-JP")}円くらいまで`,
         summary.meeting
           ? `${summary.meeting.name}駅の近く`

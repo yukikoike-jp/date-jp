@@ -27,6 +27,8 @@ type Props = {
   created: boolean;
   ranking: DateRank[];
   bestDate: string | null;
+  /** ○の数が同じでいちばん多い日(同率なら全部) */
+  bestDates: string[];
   shops: Shop[];
   decision: Decision | null;
   /** その日に行く人の名前と、お酒を飲まないか。会計に持っていく */
@@ -77,7 +79,7 @@ function BoxHead({ icon, title, note, tone }: { icon: React.ReactNode; title: st
   );
 }
 
-export function AdminPanel({ partyId, title, token, created, ranking, bestDate, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed, scene }: Props) {
+export function AdminPanel({ partyId, title, token, created, ranking, bestDate, bestDates, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed, scene }: Props) {
   const router = useRouter();
   const [origin, setOrigin] = useState("");
   const canShare = useCanShare();
@@ -235,6 +237,9 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
             <StepHead tone="blue" icon={<CalendarDays className="size-4" aria-hidden />}>
               日にち
             </StepHead>
+            {bestDates.length > 1 && (
+              <p className="mb-2 text-xs text-muted">★ のついた日は、行ける人(○)の数が同じでいちばん多い日です。どれを選んでもOK</p>
+            )}
             <div className="tier-blue grid grid-cols-2 gap-1.5">
               {ranking
                 .filter((r) => r.ok > 0)
@@ -249,7 +254,8 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
                     }`}
                   >
                     {date === r.date && "✓ "}
-                    {dateLabel(r.date)} ・ ○{r.ok}人
+                    {bestDates.includes(r.date) && "★ "}
+                    {dateLabel(r.date)} ・ ○{r.ok}人{r.maybe > 0 ? ` △${r.maybe}人` : ""}
                     {/* 必ず来てほしい人を選んだときだけ、その人たちが来られるかを添える(色だけでなく記号と文字で) */}
                     {must.length > 0 && (
                       <span

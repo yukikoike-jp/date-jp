@@ -50,8 +50,10 @@ export type Summary = {
   dates: string[];
   who: { name: string; dates: Record<string, DateAnswer> }[];
   ranking: DateRank[];
-  /** 行ける人がいちばん多い日。誰も行けなければ null */
+  /** 行ける人がいちばん多い日(同じ人数の日があれば、その中で △ が多く、早い日)。誰も行けなければ null */
   date: string | null;
+  /** いちばん多い日が同じ人数(○の数が同じ)で並ぶ日を、すべて(日付の順)。誰も行けなければ空 */
+  bestDates: string[];
   /** その日に行ける人。soft = お酒を飲まない(会計で「飲まない」の区分に入れる) */
   attendees: { name: string; arrival: number; stay: number; soft: boolean }[];
   /** 行く人の苦手なものと、お酒を飲まない人の数(名前は持たない) */
@@ -66,11 +68,13 @@ export type Summary = {
   firstEnd: number | null;
   /** 一次会のあとも残れる人 */
   secondParty: string[];
-  /** 行ける人の予算の真ん中の額(誰の額かは出さない)。いちばん低い人には合わせない */
+  /** 行ける人(○)とたぶん(△)の人の予算の真ん中の額(誰の額かは出さない)。いちばん低い人には合わせない */
   budget: number | null;
+  /** お店・予算・場所の見積もりに入れた人数(○の人 + △の人) */
+  considered: number;
   area: AreaKey | null;
   areaVotes: { key: AreaKey; votes: number }[];
-  /** 行く人の駅から決めた、みんなが集まりやすい駅。誰も駅を選んでいなければ null */
+  /** ○と△の人の駅から決めた、みんなが集まりやすい駅。誰も駅を選んでいなければ null */
   meeting: Station | null;
   /** 駅ごとの人数(誰かは持たない) */
   stationVotes: { station: Station; votes: number }[];
@@ -92,6 +96,20 @@ export function rankDates(dates: string[], answers: Answer[], must: string[] = [
       mustOk: keyPeople.every((a) => a.dates[date] === "ok"),
     }))
     .sort((x, y) => Number(y.mustOk) - Number(x.mustOk) || y.ok - x.ok || y.maybe - x.maybe || x.date.localeCompare(y.date));
+}
+
+/**
+ * いちばん上の日と同じ(○の数が同じ、必ず来てほしい人の都合も同じ)日を、すべて返す(日付の順)。
+ * 5人で ○3 の日が2つあれば、2つとも「いちばん良い日」として出す(△の数が違っても同じ扱い)。
+ * 誰も行けない(いちばん上が ○0)ときは空
+ */
+export function topDates(ranking: DateRank[]): string[] {
+  const top = ranking[0];
+  if (!top || top.ok === 0) return [];
+  return ranking
+    .filter((r) => r.ok === top.ok && r.mustOk === top.mustOk)
+    .map((r) => r.date)
+    .sort();
 }
 
 /**
@@ -119,12 +137,15 @@ export function summarize(dates: string[], answers: Answer[], fixedDate?: string
   const ranking = rankDates(dates, answers, must);
   const best = fixedDate ?? (ranking[0] && ranking[0].ok > 0 ? ranking[0].date : null);
   const going = best ? answers.filter((a) => a.dates[best] === "ok") : [];
+  // お店・予算・場所・食べたいもの・苦手なものは、○の人だけでなく △(たぶん)の人も入れて決める。
+  // 来るかもしれない人の予算や苦手なものも、お店選びに反映するため。行ける人の一覧と開始時刻は ○ の人だけ
+  const joiners = best ? answers.filter((a) => a.dates[best] === "ok" || a.dates[best] === "maybe") : [];
   const start = startTime(going.map((a) => a.arrival));
   const firstEnd = start === null ? null : start + FIRST_PARTY_MINUTES;
 
   const areaVotes = AREAS.map((a) => ({
     key: a.key,
-    votes: going.filter((g) => g.areas.includes(a.key)).length,
+    votes: joiners.filter((g) => g.areas.includes(a.key)).length,
   })).filter((v) => v.votes > 0);
   // 同じ票数なら、選択肢の並び順(集まりやすい順)で先のもの
   const topArea = areaVotes.reduce<{ key: AreaKey; votes: number } | null>(
@@ -142,20 +163,22 @@ export function summarize(dates: string[], answers: Answer[], fixedDate?: string
     mustMissing: best ? answers.filter((a) => must.includes(a.name) && a.dates[best] !== "ok").map((a) => a.name) : [],
     ranking,
     date: best,
+    bestDates: topDates(ranking),
     attendees: going.map((a) => ({ name: a.name, arrival: a.arrival, stay: a.stay, soft: a.drinks === false })),
-    diet: summarizeDiet(going),
+    diet: summarizeDiet(joiners),
     maybes: best ? answers.filter((a) => a.dates[best] === "maybe").map((a) => a.name) : [],
     notes: answers.filter((a) => a.memo).map((a) => ({ name: a.name, memo: a.memo! })),
     start,
     lateJoiners: start === null ? [] : going.filter((a) => a.arrival > start).map((a) => a.name),
     firstEnd,
     secondParty: firstEnd === null ? [] : going.filter((a) => a.stay > firstEnd).map((a) => a.name),
-    budget: going.length > 0 ? middleBudget(going.map((a) => a.budget)) : null,
+    budget: joiners.length > 0 ? middleBudget(joiners.map((a) => a.budget)) : null,
+    considered: joiners.length,
     area: topArea?.key ?? null,
     areaVotes: areaVotes.sort((x, y) => y.votes - x.votes),
-    meeting: meetingStation(going.flatMap((a) => (a.station ? [a.station] : []))),
-    stationVotes: stationVotes(going.flatMap((a) => (a.station ? [a.station] : []))),
-    likes: GENRES.map((g) => ({ key: g.key, label: g.label, votes: going.filter((a) => a.likes?.includes(g.key)).length }))
+    meeting: meetingStation(joiners.flatMap((a) => (a.station ? [a.station] : []))),
+    stationVotes: stationVotes(joiners.flatMap((a) => (a.station ? [a.station] : []))),
+    likes: GENRES.map((g) => ({ key: g.key, label: g.label, votes: joiners.filter((a) => a.likes?.includes(g.key)).length }))
       .filter((g) => g.votes > 0)
       .sort((x, y) => y.votes - x.votes),
   };

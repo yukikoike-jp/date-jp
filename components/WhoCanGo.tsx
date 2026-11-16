@@ -37,7 +37,7 @@ export function WhoCanGo({ summary }: { summary: Summary }) {
           <tbody>
             {dates.map((d) => {
               const r = count(d);
-              const best = d === summary.date;
+              const best = summary.bestDates.includes(d);
               return (
                 <tr key={d} className={`border-b border-border last:border-b-0 ${best ? "bg-accent/10" : ""}`}>
                   <th scope="row" className={`sticky left-0 z-10 px-3 py-2 text-left whitespace-nowrap ${best ? "bg-[#2a2310]" : "bg-surface"}`}>
@@ -72,7 +72,7 @@ export function WhoCanGo({ summary }: { summary: Summary }) {
         </table>
       </div>
       <p className="mt-1.5 text-[11px] text-muted">
-        ○ 行ける ・ △ たぶん ・ × 無理{summary.date ? " ・ ★ いちばん行ける人が多い日" : ""}
+        ○ 行ける ・ △ たぶん ・ × 無理{summary.bestDates.length > 0 ? " ・ ★ いちばん行ける人(○)が多い日" : ""}
         {must.length > 0 ? " ・ 冠は必ず来てほしい人" : ""}
       </p>
     </div>
