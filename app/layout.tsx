@@ -17,7 +17,7 @@ const logo = Poppins({ weight: "700", subsets: ["latin"], display: "swap", varia
 
 export const metadata: Metadata = {
   // LINE のプレビュー画像などの絶対 URL は、正式なアドレス(独自ドメイン)で作る
-  metadataBase: new URL(process.env.SITE_URL || "https://tsudoro.com"),
+  metadataBase: new URL(process.env.SITE_URL || "https://www.tsudoro.com"),
   title: { default: "Tsudoro | 飲み会の日程とお店がすぐ決まる", template: "%s | Tsudoro" },
   description:
     "URLをLINEに貼ってみんなが30秒で答えるだけで、飲み会の日にちと予算とお店が決まります",

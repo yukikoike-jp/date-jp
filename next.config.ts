@@ -12,10 +12,7 @@ const nextConfig: NextConfig = {
     BILLING_ON: process.env.STRIPE_SECRET_KEY && process.env.LICENSE_SECRET ? "1" : "",
   },
   images: { remotePatterns: [{ protocol: "https", hostname: "imgfp.hotp.jp" }] },
-  async redirects() {
-    // www 付きで開かれたら、正式なアドレス(tsudoro.com)へ移す
-    return [{ source: "/:path*", has: [{ type: "host", value: "www.tsudoro.com" }], destination: "https://tsudoro.com/:path*", permanent: true }];
-  },
+  // tsudoro.com → www.tsudoro.com の移動は、Vercel のドメインの設定で行う(ここで逆向きに移すと、行ったり来たりになる)
   async headers() {
     return [
       {

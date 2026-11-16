@@ -2,7 +2,7 @@
 // ブラウザの保存はアドレスごとに別々なので、前のアドレスで作った会(幹事の鍵)や回答の記録を、そのままでは新しいアドレスで使えない。
 // 引き継ぐのは、このアプリが使う名前(nomi: / date: で始まるもの)だけ。新しいアドレスに同じものがあれば、消さずにまぜる
 
-export const NEW_ORIGIN = "https://tsudoro.com";
+export const NEW_ORIGIN = "https://www.tsudoro.com";
 
 /** 引き継ぐ保存の名前か */
 export function isOurKey(key: string): boolean {
