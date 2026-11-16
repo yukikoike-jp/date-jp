@@ -1,5 +1,6 @@
 "use client";
 
+import { openShopInPlace } from "@/lib/openShop";
 import { ExternalLink, Heart, MapPin } from "lucide-react";
 import { toggleFavorite, useFavorites } from "@/lib/favorites";
 import { mapsUrl } from "@/lib/maps";
@@ -37,6 +38,7 @@ export function FavoriteShops() {
             </a>
             <a
               href={`/go/search/${f.id}`}
+              onClick={openShopInPlace}
               target="_blank"
               rel="nofollow noopener"
               aria-label={`${f.name}のお店のページ`}

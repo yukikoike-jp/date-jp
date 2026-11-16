@@ -1,4 +1,5 @@
 import { CalendarPlus, ExternalLink, MapPin, PartyPopper, Store } from "lucide-react";
+import { ShopPageLink } from "./ShopPageLink";
 import { googleCalendarUrl } from "@/lib/calendar";
 import { mapsUrl } from "@/lib/maps";
 import { clock, dateLabel } from "@/lib/sendai";
@@ -41,7 +42,7 @@ export function DecisionCard({ decision, partyId, title, url, photo = null }: { 
           </p>
           {!isSampleShop(shop.id) && (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <a
+              <ShopPageLink
                 href={`/go/${partyId}/${shop.id}`}
                 target="_blank"
                 rel="nofollow noopener"
@@ -49,7 +50,7 @@ export function DecisionCard({ decision, partyId, title, url, photo = null }: { 
               >
                 お店のページ
                 <ExternalLink className="size-4" aria-hidden />
-              </a>
+              </ShopPageLink>
               <a
                 href={mapsUrl(shop.name)}
                 target="_blank"

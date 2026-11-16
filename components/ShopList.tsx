@@ -1,5 +1,6 @@
 "use client";
 
+import { openShopInPlace } from "@/lib/openShop";
 import { Check, ChevronDown, Cigarette, CigaretteOff, ExternalLink, Heart, MapPin, Store } from "lucide-react";
 import { toggleFavorite, useFavorites } from "@/lib/favorites";
 import { useState } from "react";
@@ -162,6 +163,7 @@ export function ShopList({
             )}
             <a
               href={`/go/${partyId}/${s.id}`}
+              onClick={openShopInPlace}
               className="mt-3 flex min-h-11 items-center justify-center gap-1 rounded-xl border border-border text-sm font-bold"
               // お店のページは新しいタブで開き、Tsudoro の画面(選んだ条件や回答)をそのまま残す
               target="_blank"
