@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { HomeClient } from "@/components/HomeClient";
 import { PageMotion } from "@/components/PageMotion";
+import Link from "next/link";
+import { GUIDES } from "@/lib/guides";
 import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
@@ -47,6 +49,16 @@ export default function Home() {
         <p className="mt-3 text-xs leading-relaxed">
           サークルや学生の飲み会、友達との集まり、会社の忘年会・新年会・歓送迎会まで。アカウント登録もアプリのインストールもいりません。
         </p>
+        <h2 className="mt-5 text-sm font-black text-white/85">幹事のガイド</h2>
+        <ul className="mt-2 grid gap-1.5 text-xs">
+          {GUIDES.map((g) => (
+            <li key={g.slug}>
+              <Link href={`/guide/${g.slug}`} className="underline underline-offset-2">
+                {g.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
     </PageMotion>
