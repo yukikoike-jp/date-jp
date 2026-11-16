@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_JP, Poppins } from "next/font/google";
+import { MoveBanner } from "@/components/MoveBanner";
 import { ToastHost } from "@/components/Toast";
 import "./globals.css";
 
@@ -34,6 +35,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ja" className={`${jp.variable} ${logo.variable} h-full antialiased`}>
       <body className="min-h-full">
+        {/* 前のアドレス(〜.vercel.app)で開いたときだけ、新しいアドレスへの引き継ぎを出す */}
+        <MoveBanner />
         <main>{children}</main>
         <ToastHost />
       </body>
