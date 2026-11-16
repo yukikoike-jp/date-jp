@@ -134,7 +134,7 @@ const HOME_BY_AUDIENCE: Record<
 let introPlayed = false;
 
 /** 起動画面 → 学生・プライベート・会社のどれか → ホーム。起動画面はアプリを開いたときだけ出す(タップで飛ばせる) */
-export function HomeClient() {
+export function HomeClient({ about }: { about?: React.ReactNode }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [audience, setAudience] = useState<Audience | null>(null);
   const [parties, setParties] = useState<MyParty[]>([]);
@@ -181,7 +181,14 @@ export function HomeClient() {
     setPhase("home");
   }
 
-  if (phase === "loading") return <div className="min-h-dvh bg-bg" />;
+  // 読み込み中(サーバーが最初に返す HTML)は、画面は真っ黒のまま。説明は見えない形で入れておき、検索エンジンには読めるようにする
+  if (phase === "loading") {
+    return (
+      <div className="min-h-dvh bg-bg">
+        <div className="sr-only">{about}</div>
+      </div>
+    );
+  }
 
   if (phase === "splash") {
     return (
@@ -376,19 +383,21 @@ export function HomeClient() {
           </a>
         </p>
       )}
-      <p className="text-center text-xs">
-        <Link href="/privacy" className="inline-flex min-h-11 items-center text-white/60 underline underline-offset-2 hover:text-white/80">
-          プライバシーポリシー
-        </Link>
-      </p>
-      {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く */}
-      {process.env.BILLING_ON === "1" && (
-        <p className="text-center text-xs">
-          <Link href="/legal" className="inline-flex min-h-11 items-center text-white/60 underline underline-offset-2 hover:text-white/80">
-            特定商取引法に基づく表記
+      {/* いちばん下。方針へのリンクと説明は小さくまとめ、ホームの上にだけ出す(起動の演出や選ぶ画面には出さない) */}
+      <div className="space-y-1.5 pt-1">
+        <p className="flex items-center justify-center gap-4 text-[11px]">
+          <Link href="/privacy" className="inline-flex min-h-9 items-center text-white/55 underline underline-offset-2 hover:text-white/80">
+            プライバシーポリシー
           </Link>
+          {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く */}
+          {process.env.BILLING_ON === "1" && (
+            <Link href="/legal" className="inline-flex min-h-9 items-center text-white/55 underline underline-offset-2 hover:text-white/80">
+              特定商取引法に基づく表記
+            </Link>
+          )}
         </p>
-      )}
+        {about}
+      </div>
     </div>
   );
 }

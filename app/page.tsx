@@ -30,46 +30,48 @@ const FEATURES = [
 export default function Home() {
   return (
     <PageMotion>
-      <HomeClient />
-      {/* アプリの説明と幹事のガイド。画面のいちばん下に、閉じた形で置く(押すと開く)。
-          閉じていても中身はページに入っているので、検索エンジンには読める */}
-      <section className="mx-auto grid max-w-xl gap-2 px-4 pt-4 pb-12">
-        <details className="group rounded-2xl border panel px-4 [&_summary::-webkit-details-marker]:hidden">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between text-sm font-bold text-white/85">
-            Tsudoro について
-            <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
-          </summary>
-          <div className="pb-4 text-white/70">
-            <h2 className="text-sm font-black text-white/85">Tsudoro は、飲み会の幹事を楽にする無料のアプリです</h2>
-            <dl className="mt-3 grid gap-3 text-xs leading-relaxed">
-              {FEATURES.map(([t, d]) => (
-                <div key={t}>
-                  <dt className="font-bold text-white/80">{t}</dt>
-                  <dd className="mt-0.5">{d}</dd>
-                </div>
-              ))}
-            </dl>
-            <p className="mt-3 text-xs leading-relaxed">
-              サークルや学生の飲み会、友達との集まり、会社の忘年会・新年会・歓送迎会まで。アカウント登録もアプリのインストールもいりません。
-            </p>
+      <HomeClient
+        about={
+          // アプリの説明と幹事のガイド。閉じた小さな行で置き、押すと開く。閉じていても中身はページに入っているので、検索エンジンには読める
+          <div className="grid gap-1.5">
+            <details className="group rounded-xl border panel px-3.5 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between text-xs font-bold text-white/70">
+                Tsudoro について
+                <ChevronDown className="size-3.5 text-muted transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <div className="pb-3.5 text-white/70">
+                <h2 className="text-xs font-black text-white/85">Tsudoro は、飲み会の幹事を楽にする無料のアプリです</h2>
+                <dl className="mt-2.5 grid gap-2.5 text-xs leading-relaxed">
+                  {FEATURES.map(([t, d]) => (
+                    <div key={t}>
+                      <dt className="font-bold text-white/80">{t}</dt>
+                      <dd className="mt-0.5">{d}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="mt-2.5 text-xs leading-relaxed">
+                  サークルや学生の飲み会、友達との集まり、会社の忘年会・新年会・歓送迎会まで。アカウント登録もアプリのインストールもいりません。
+                </p>
+              </div>
+            </details>
+            <details className="group rounded-xl border panel px-3.5 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between text-xs font-bold text-white/70">
+                幹事のガイド
+                <ChevronDown className="size-3.5 text-muted transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <ul className="grid gap-2 pb-3.5 text-xs text-white/70">
+                {GUIDES.map((g) => (
+                  <li key={g.slug}>
+                    <Link href={`/guide/${g.slug}`} className="underline underline-offset-2">
+                      {g.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </details>
           </div>
-        </details>
-        <details className="group rounded-2xl border panel px-4 [&_summary::-webkit-details-marker]:hidden">
-          <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between text-sm font-bold text-white/85">
-            幹事のガイド
-            <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
-          </summary>
-          <ul className="grid gap-2 pb-4 text-xs text-white/70">
-            {GUIDES.map((g) => (
-              <li key={g.slug}>
-                <Link href={`/guide/${g.slug}`} className="underline underline-offset-2">
-                  {g.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </details>
-      </section>
+        }
+      />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
     </PageMotion>
   );
