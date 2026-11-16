@@ -44,12 +44,12 @@ export type FunAccess = { loading: boolean; purchasable: boolean; unlocked: bool
 
 /** 有料パックの機能(ひとりずつ催促)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
 export function useFunAccess(): FunAccess {
-  const [state, setState] = useState<FunAccess>({ loading: true, purchasable: false, unlocked: false, price: 980, license: null });
+  const [state, setState] = useState<FunAccess>({ loading: true, purchasable: false, unlocked: false, price: 500, license: null });
   useEffect(() => {
     const license = loadLicense();
     funStatus(license)
       .then((s) => setState({ loading: false, ...s, license }))
-      .catch(() => setState({ loading: false, purchasable: false, unlocked: false, price: 980, license }));
+      .catch(() => setState({ loading: false, purchasable: false, unlocked: false, price: 500, license }));
   }, []);
   return state;
 }
