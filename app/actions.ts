@@ -283,8 +283,8 @@ export async function logAdView(sponsorId: string): Promise<void> {
     .catch((e) => console.error("[ad] 数えられませんでした", e));
 }
 
-/** going = 決まった日に行く人の数(決まっていなければ 0) */
-export type PartyStatus = { decision: Decision | null; answered: number; going: number };
+/** going = 決まった日に行く人の数(決まっていなければ 0)。audience = 学生・プライベート・会社のどれの会か */
+export type PartyStatus = { decision: Decision | null; answered: number; going: number; audience: string };
 
 /**
  * ホームの「あなたの会」を、決まった会と調整中の会に分けるのに使う。
@@ -299,7 +299,7 @@ export async function partyStatuses(ids: string[]): Promise<Record<string, Party
       if (!party) return null;
       const answers = await store.listAnswers(id);
       const going = party.decision ? summarize(party.dates, answers, party.decision.date).attendees.length : 0;
-      return [id, { decision: party.decision, answered: answers.length, going }] as const;
+      return [id, { decision: party.decision, answered: answers.length, going, audience: party.audience }] as const;
     }),
   );
   return Object.fromEntries(rows.filter((r) => r !== null));

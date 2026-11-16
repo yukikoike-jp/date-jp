@@ -233,7 +233,8 @@ export function HomeClient() {
   }
 
   const tiers = WEIGHTS[audience];
-  const known = statuses ? parties.filter((p) => statuses[p.id]) : [];
+  // 学生・プライベート・会社で、会の一覧を分ける(いま選んでいるものの会だけを出す)
+  const known = statuses ? parties.filter((p) => statuses[p.id] && statuses[p.id].audience === audience) : [];
   const home = HOME_BY_AUDIENCE[audience];
   // 調整中の会を先に、次にこれからの会を日が近い順に。終わった会は「これまでの会」に回す
   const active = [
@@ -287,7 +288,7 @@ export function HomeClient() {
       </Link>
 
       {/* あなたの会。ふだんは1行にたたみ、見たいときだけ開く(調整中・これからの会・完了した会) */}
-      {parties.length > 0 && (
+      {parties.length > 0 && (statuses === null || known.length > 0) && (
         <section>
           <button
             type="button"

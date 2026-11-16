@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
 import { mapsUrl } from "@/lib/maps";
 import { loadMyCollections, type MyCollection } from "@/lib/myCollections";
+import { loadAudience } from "@/lib/audience";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { clock, dateLabel, yen } from "@/lib/sendai";
 import { SkeletonRows } from "./Skeleton";
@@ -22,6 +23,7 @@ export function HistoryClient() {
 
   useEffect(() => {
     const mine = loadMyParties();
+    const audience = loadAudience();
     if (mine.length === 0) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setRows([]);
@@ -32,7 +34,8 @@ export function HistoryClient() {
       .then((st) =>
         setRows(
           mine
-            .filter((p) => st[p.id]?.decision)
+            // 学生・プライベート・会社で分ける(いま選んでいるものの会だけ)
+            .filter((p) => st[p.id]?.decision && (!audience || st[p.id].audience === audience))
             .map((p) => ({ party: p, status: st[p.id], collection: collections.find((c) => c.partyId === p.id) ?? null }))
             .sort((a, b) => b.status.decision!.date.localeCompare(a.status.decision!.date)),
         ),

@@ -28,7 +28,7 @@ export const GENRES = [
   { key: "yakiniku", label: "焼肉・韓国", hotpepper: ["G008", "G017"] },
   { key: "bar", label: "ダイニングバー", hotpepper: ["G002"] },
   { key: "sosaku", label: "創作料理", hotpepper: ["G003"] },
-  { key: "ethnic", label: "アジア・各国料理", hotpepper: ["G009", "G010"] },
+  { key: "ethnic", label: "アジア・各国", hotpepper: ["G009", "G010"] },
   { key: "okonomiyaki", label: "お好み焼き", hotpepper: ["G016"] },
 ] as const;
 export type GenreKey = (typeof GENRES)[number]["key"];

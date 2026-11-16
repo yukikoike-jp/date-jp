@@ -10,7 +10,6 @@ import { isFormal, loadAudience, type Audience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
-import { NextHost } from "./NextHost";
 import { SendButtons, useCanShare } from "./SendButtons";
 import { ROUND_UNITS, WEIGHTS, splitBill, subsidyTotal, tenthsFromInput, type Weight } from "@/lib/split";
 import { BUTTON_PRIMARY, BUTTON_SUB, PILL, PILL_OFF, PILL_ON } from "./ui";
@@ -581,14 +580,17 @@ export function SplitClient({ from = null }: { from?: string | null }) {
       </section>
 
       {/* 集金。一人ずつの金額のページを作ってみんなに送り、幹事はそこで受け取りの記録と催促をする */}
-      {/* トップの「集金のチェック」からはここへ来る(#collect) */}
+      {/* 集金はここ1か所にまとめる。作った集金の「誰が払ったか」も、ここから開く */}
       <section id="collect" className="mx-4 mt-4 scroll-mt-20 rounded-3xl border panel px-5 py-5">
           <h2 className="flex items-center gap-2 text-lg font-black">
             <Wallet className="size-5" aria-hidden />
-            集金のチェック
+            集金
           </h2>
           <p className="mt-1 text-sm text-muted">
-            まだの人にだけ催促できる集金のページ
+            まだの人にだけ催促できる集金のページ ・{" "}
+            <Link href="/collect" className="font-bold text-text underline underline-offset-2">
+              作った集金を見る
+            </Link>
           </p>
           {collectError && (
             <p role="alert" className="mt-3 text-sm font-bold text-danger">
@@ -621,11 +623,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
           新しい会計を始める
         </button>
       </div>
-      {result && (
-        <div className="mx-4 mt-4">
-          <NextHost />
-        </div>
-      )}
     </>
   );
 }
