@@ -2,7 +2,7 @@ import "server-only";
 import { cleanEnv } from "./env";
 import { signLicense, verifyLicense } from "./license";
 
-// 買い切りの有料パック(会社の会の傾斜・集金のページ + もりあげ道具: 席替え・チーム分け・王様ゲーム・ルーレット)。Stripe のお会計のページ(Checkout)を使い、カードの情報はこちらで持たない。
+// 買い切りの有料パック(ひとりずつ催促 + 会社の会の傾斜で割る)。Stripe のお会計のページ(Checkout)を使い、カードの情報はこちらで持たない。
 // STRIPE_SECRET_KEY と LICENSE_SECRET がそろうまでは、有料にせず誰でも全部使える。
 // 支払いのあとは /pro/done に戻り、Stripe に支払いを確かめてから、端末に鍵(lib/license.ts)を渡す
 
@@ -28,8 +28,8 @@ export function billingEnabled(): boolean {
 }
 
 /**
- * もりあげ道具(席替え・ゲーム)が使えるか。会計と違って、支払いの準備ができていなくても鍵をかけたままにする
- * (買う前は、見本の名前で動くデモ版になる)。FUN_UNLOCK=1 のときは全部使える(持ち主の確認用)
+ * 有料パックの機能(ひとりずつ催促)が使えるか。傾斜と違って、支払いの準備ができていなくても鍵をかけたままにする
+ * (買う前は、見本だけのデモ版になる)。FUN_UNLOCK=1 のときは全部使える(持ち主の確認用)
  */
 export function hasFun(license: unknown): boolean {
   if (cleanEnv(process.env.FUN_UNLOCK) === "1") return true;
@@ -63,7 +63,7 @@ export async function createProCheckout(origin: string, back: string): Promise<s
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "jpy",
     "line_items[0][price_data][unit_amount]": String(proPrice()),
-    "line_items[0][price_data][product_data][name]": "Tsudoro 有料パック(会社の傾斜・集金 + 席替え・ゲーム)買い切り",
+    "line_items[0][price_data][product_data][name]": "Tsudoro 有料パック(ひとりずつ催促 + 会社の傾斜)買い切り",
     // 別の端末で使うときに、メールアドレスから買ったことを確かめられるようにする
     customer_creation: "always",
     "metadata[kind]": "pro",

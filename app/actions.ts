@@ -325,7 +325,7 @@ export async function proStatus(license: string | null): Promise<{ enabled: bool
   return { enabled: billingEnabled(), unlocked: hasPro(license), price: proPrice() };
 }
 
-/** もりあげ道具が使えるか。unlocked = false なら見本の名前のデモ版。purchasable = いま買えるか(支払いの準備ができているか) */
+/** 有料パックの機能(ひとりずつ催促)が使えるか。unlocked = false なら見本だけのデモ版。purchasable = いま買えるか(支払いの準備ができているか) */
 export async function funStatus(license: string | null): Promise<{ purchasable: boolean; unlocked: boolean; price: number }> {
   return { purchasable: billingEnabled(), unlocked: hasFun(license), price: proPrice() };
 }

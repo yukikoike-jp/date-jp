@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Dices, Hourglass, Lock, Store, Wrench } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Hourglass, Store, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
@@ -35,22 +35,14 @@ function HomeRow({ href, icon, title, sub }: { href: string; icon: React.ReactNo
   );
 }
 
-/** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料パックの入口) */
-function ToolTile({ href, icon, title, sub, badge, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; badge?: string; wide?: boolean }) {
+/** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角 */
+function ToolTile({ href, icon, title, sub }: { href: string; icon: React.ReactNode; title: string; sub: string }) {
   return (
     <Link
       href={href}
-      className={`relative flex items-center rounded-2xl bg-surface text-center ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-95 ${
-        wide ? "col-span-2 gap-4 px-4 py-4 text-left" : "flex-col gap-3 px-3 py-5"
-      }`}
+      className="flex flex-col items-center gap-3 rounded-2xl bg-surface px-3 py-5 text-center ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-95"
     >
-      {badge && (
-        <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-md border border-accent/50 px-1.5 py-0.5 text-[10px] font-black leading-none text-accent">
-          <Lock className="size-3" aria-hidden />
-          {badge}
-        </span>
-      )}
-      <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-accent/40 text-accent">{icon}</span>
+      <span className="grid size-12 place-items-center rounded-xl border border-accent/40 text-accent">{icon}</span>
       <span>
         <span className="block text-[15px] font-black tracking-tight text-white/90">{title}</span>
         <span className="mt-1 block text-xs font-medium text-white/60">{sub}</span>
@@ -372,7 +364,6 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店を探す" sub={home.shops} />
           <ToolTile href="/split" icon={tierIcon} title="会計をする" sub={home.split} />
-          <ToolTile href="/fun" icon={<Dices className="size-6" aria-hidden />} title="もりあげ道具" sub="席替え・チーム分け・王様ゲーム・ルーレット" badge="有料パック" wide />
         </div>
       </section>
 
