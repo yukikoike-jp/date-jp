@@ -385,17 +385,14 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
       )}
       {/* いちばん下。方針へのリンクと説明は小さくまとめ、ホームの上にだけ出す(起動の演出や選ぶ画面には出さない) */}
       <div className="space-y-1.5 pt-1">
-        <p className="flex items-center justify-center gap-4 text-[11px]">
-          <Link href="/privacy" className="inline-flex min-h-9 items-center text-white/55 underline underline-offset-2 hover:text-white/80">
-            プライバシーポリシー
-          </Link>
-          {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く */}
-          {process.env.BILLING_ON === "1" && (
+        {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く(プライバシーポリシーは、下の説明の行の中) */}
+        {process.env.BILLING_ON === "1" && (
+          <p className="flex justify-center text-[11px]">
             <Link href="/legal" className="inline-flex min-h-9 items-center text-white/55 underline underline-offset-2 hover:text-white/80">
               特定商取引法に基づく表記
             </Link>
-          )}
-        </p>
+          </p>
+        )}
         {about}
       </div>
     </div>

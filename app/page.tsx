@@ -69,6 +69,25 @@ export default function Home() {
                 ))}
               </ul>
             </details>
+            <details className="group rounded-xl border panel px-3.5 [&_summary::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between text-xs font-bold text-white/70">
+                プライバシーポリシー
+                <ChevronDown className="size-3.5 text-muted transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <div className="pb-3.5 text-xs leading-relaxed text-white/70">
+                <ul className="grid gap-1.5">
+                  <li>会員登録はありません。氏名・住所・電話番号・メールアドレスを、登録のために求めることはありません。</li>
+                  <li>お預かりするのは、会のタイトルと候補日、答えた名前(ニックネーム可)・行ける日・予算などです。</li>
+                  <li>会のURLを知っている人は、その会の回答を見られます。予算は、ほかの参加者に個別には見せません。</li>
+                  <li>アクセス解析と、行動を追跡する広告は使っていません。</li>
+                  <li>お店や予約サイトへのリンクは、提携リンク(アフィリエイト広告)を経由することがあります。その場合は「PR」または「#アフィリエイト広告」と表示します。</li>
+                  <li>ご本人の同意なく、第三者に情報を提供することはありません(法令にもとづく場合を除く)。</li>
+                </ul>
+                <Link href="/privacy" className="mt-2.5 inline-flex min-h-9 items-center font-bold text-white/85 underline underline-offset-2">
+                  全文を読む
+                </Link>
+              </div>
+            </details>
           </div>
         }
       />
