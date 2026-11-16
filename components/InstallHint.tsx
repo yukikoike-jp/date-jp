@@ -21,8 +21,12 @@ export function InstallHint() {
       closed = localStorage.getItem(KEY) === "closed";
     } catch {}
     const standalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone === true;
-    if (closed || standalone) return;
-    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const ua = navigator.userAgent;
+    // iPad は「Mac」を名乗ることがあるので、指で触れるかでも見分ける
+    const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+    // パソコンでは出さない(ホーム画面に置く使い方に合わないため)。スマホとタブレットだけ
+    const mobile = ios || /Android|Mobile/.test(ua);
+    if (closed || standalone || !mobile) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (ios) setMode("ios");
     const onPrompt = (e: Event) => {
