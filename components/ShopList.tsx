@@ -9,7 +9,7 @@ import type { Shop } from "@/lib/shops";
 import { areaLabel } from "@/lib/sendai";
 import { PrNote } from "./PrNote";
 import { OtherSites } from "./OtherSites";
-import { stationFromAccess } from "@/lib/otherSites";
+import { placeOtherSites, stationFromAccess, type Scene } from "@/lib/otherSites";
 
 const SMOKING_LABEL = { ok: "喫煙可", partial: "分煙", no: "全面禁煙" } as const;
 
@@ -31,6 +31,7 @@ export function ShopList({
   empty,
   initial = 5,
   others = true,
+  scene = null,
 }: {
   partyId: string;
   shops: Shop[];
@@ -56,11 +57,16 @@ export function ShopList({
   initial?: number;
   /** 一覧の下に、ほかの予約サイトへのボタンを出すか(二次会の一覧では出さない) */
   others?: boolean;
+  /** どんな会か(会の種類・予算)。ほかの予約サイトを一覧の上に出すか下に出すかを決める */
+  scene?: Scene | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const favorites = useFavorites();
   if (shops.length === 0 && !empty) return null;
   const isSample = shops.some((s) => s.sample);
+  // ほかの予約サイトは、バリューコマースの審査が済んでから出す(next.config.ts の OTHER_SITES_ON)
+  const showOthers = others && !isSample && process.env.OTHER_SITES_ON === "1";
+  const placed = placeOtherSites(shops.map((x) => stationFromAccess(x.access)).find(Boolean) ?? null, scene);
   return (
     <section id={id} className="mt-4 mx-4 rounded-3xl border panel px-4 py-6">
       <h2 className="text-lg font-black">{heading}</h2>
@@ -91,6 +97,11 @@ export function ShopList({
         <p className="mt-2 rounded-xl bg-match-soft px-3 py-2 text-xs font-bold text-match-text">
           実在しない見本のお店
         </p>
+      )}
+      {showOthers && placed.top && shops.length > 0 && (
+        <div className="mt-4">
+          <OtherSites sites={placed.sites} top />
+        </div>
       )}
       <ul className="mt-4 space-y-3">
         {(expanded ? shops : shops.slice(0, initial)).map((s, i) => (
@@ -202,7 +213,7 @@ export function ShopList({
           <ChevronDown className="size-4" aria-hidden />
         </button>
       )}
-      {others && !isSample && <OtherSites station={shops.map((x) => stationFromAccess(x.access)).find(Boolean) ?? null} />}
+      {showOthers && !placed.top && <OtherSites sites={placed.sites} />}
       {!isSample && <PrNote className="mt-3" />}
       {/* ホットペッパーの規約で、クレジットと、写真を使うときの「画像提供」の表示が必要 */}
       {!isSample && (

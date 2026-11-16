@@ -71,6 +71,7 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
             notice={dietNotice(summary.diet)}
             basis={view.basis}
             relaxed={view.relaxed}
+            scene={{ audience: party.audience, budget: summary.budget }}
             initial={6}
           />
         )}

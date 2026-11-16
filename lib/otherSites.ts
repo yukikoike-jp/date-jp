@@ -20,9 +20,24 @@ export function stationFromAccess(access: string): string | null {
   return name.length >= 1 && name.length <= 12 ? name : null;
 }
 
-export type OtherSite = { key: string; label: string; note: string; href: string };
+export type OtherSite = {
+  key: "ikyu" | "ozmall";
+  label: string;
+  note: string;
+  href: string;
+  /** 提携先が用意した広告の画像(バナー)。審査が済むまでは 1×1 の画像が返るので、画面側で隠す */
+  banner: { img: string; href: string };
+};
 
-/** 一覧の下に並べる、ほかの予約サイト。station があれば、その駅の近くで探す */
+/** バナーの画像と、そのバナー用のリンク(バナーごとに番号が別) */
+function banner(pid: string) {
+  return {
+    img: `https://ad.jp.ap.valuecommerce.com/servlet/gifbanner?sid=${VC_SID}&pid=${pid}`,
+    href: `https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=${VC_SID}&pid=${pid}`,
+  };
+}
+
+/** ほかの予約サイト。station があれば、その駅の近くで探す */
 export function otherSites(station: string | null): OtherSite[] {
   return [
     {
@@ -30,12 +45,35 @@ export function otherSites(station: string | null): OtherSite[] {
       label: "記念日・接待向けの高級店を探す",
       note: station ? `${station}駅の近くの、ちょっといいお店` : "ちょっといいお店の予約サイト",
       href: vcLink("892749796", station ? `https://restaurant.ikyu.com/search?term=${encodeURIComponent(station)}` : "https://restaurant.ikyu.com/"),
+      banner: banner("892749801"),
     },
     {
       key: "ozmall",
       label: "忘年会・宴会のプランを探す",
       note: "女性に人気の予約サイト(関東・関西が中心)",
       href: vcLink("892749797", "https://www.ozmall.co.jp/restaurant/enkai/"),
+      banner: banner("892749804"),
     },
   ];
+}
+
+/** どんな会か。出す場所と順番を決めるのに使う */
+export type Scene = { audience: "student" | "private" | "worker" | null; budget: number | null };
+
+/** 高めのお店の予約サイトを、お店の一覧の上に出す予算の目安(1人あたり) */
+export const HIGH_BUDGET = 5000;
+
+/**
+ * 会の種類と予算で、ほかの予約サイトをどこに、どの順で出すかを決める。
+ * - 会社の会: 一覧の上。高級店(宴会は人数が多く、予約額に比べた報酬が大きい)を先に
+ * - 友達の会で予算が高め: 一覧の上。女子会・記念日向けを先に
+ * - それ以外(学生の会など): 一覧の下
+ */
+export function placeOtherSites(station: string | null, scene: Scene | null): { top: boolean; sites: OtherSite[] } {
+  const [ikyu, ozmall] = otherSites(station);
+  if (scene?.audience === "worker") return { top: true, sites: [ikyu, ozmall] };
+  // 「こだわらない」(とても大きな数で持つ)は、高めの予算とは数えない
+  const high = scene?.budget != null && scene.budget >= HIGH_BUDGET && scene.budget < 1_000_000;
+  if (scene?.audience === "private" && high) return { top: true, sites: [ozmall, ikyu] };
+  return { top: false, sites: [ozmall, ikyu] };
 }

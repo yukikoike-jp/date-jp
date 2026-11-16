@@ -200,7 +200,7 @@ export function ShopSearch() {
         {station && result && !pending &&
           (result.shops.length > 0 ? (
             <>
-              <ShopList partyId="search" shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} />
+              <ShopList partyId="search" shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} scene={{ audience, budget }} />
             </>
           ) : (
             <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">

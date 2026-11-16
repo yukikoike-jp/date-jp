@@ -1,5 +1,6 @@
 "use client";
 
+import type { Scene } from "@/lib/otherSites";
 import { BottomSheet } from "./BottomSheet";
 import { toast } from "./Toast";
 import { CalendarClock, CalendarDays, Calculator, Check, ChevronRight, KeyRound, PartyPopper, Store, Users } from "lucide-react";
@@ -42,6 +43,8 @@ type Props = {
   notice: string | null;
   basis: string[];
   relaxed: string | null;
+  /** どんな会か。ほかの予約サイトの出し方を決める */
+  scene: Scene;
 };
 
 /** 「幹事が決める」の中の小見出し。選ぶものごとに色(tier-*)を変え、アイコンを添える */
@@ -74,7 +77,7 @@ function BoxHead({ icon, title, note, tone }: { icon: React.ReactNode; title: st
   );
 }
 
-export function AdminPanel({ partyId, title, token, created, ranking, bestDate, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed }: Props) {
+export function AdminPanel({ partyId, title, token, created, ranking, bestDate, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed, scene }: Props) {
   const router = useRouter();
   const [origin, setOrigin] = useState("");
   const canShare = useCanShare();
@@ -311,6 +314,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
           notice={notice}
           basis={basis}
           relaxed={relaxed}
+          scene={scene}
           initial={8}
           pick={
             decision

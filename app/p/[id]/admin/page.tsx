@@ -86,6 +86,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           notice={dietNotice(summary.diet)}
           basis={view.basis}
           relaxed={view.relaxed}
+          scene={{ audience: party.audience, budget: summary.budget }}
         />
         {created === "1" && (
           <div className="mt-4">
