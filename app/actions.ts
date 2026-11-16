@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { AUDIENCES, isAudience } from "@/lib/audience";
+import { AUDIENCES, isAudience, needsPro } from "@/lib/audience";
 import { billingEnabled, createProCheckout, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
@@ -158,11 +158,11 @@ export async function findShops(input: {
 }
 
 /** 傾斜会計から集金のページを作る。金額はサーバーで計算し直す */
-/** license = この端末の買い切りの鍵。有料にしているときは、鍵がないと集金のページは作れない */
+/** license = この端末の買い切りの鍵。有料にしているときは、会社の会だけ、鍵がないと集金のページは作れない */
 export async function startCollection(input: CollectionInput, license?: string | null): Promise<{ ok: true; id: string; adminToken: string } | Fail> {
-  if (!hasPro(license)) return { ok: false, error: "集金のページは、会計・集金の機能を買うと使えます" };
   const parsed = parseCollection(input);
   if (!parsed.ok) return parsed;
+  if (needsPro(parsed.value.audience) && !hasPro(license)) return { ok: false, error: "会社の会の集金のページは、会計・集金の機能を買うと使えます" };
   const id = generateGroupId();
   const adminToken = generateToken();
   try {

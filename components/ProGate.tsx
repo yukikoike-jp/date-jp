@@ -76,7 +76,7 @@ export function ProPaywall({ feature, price, onClose }: { feature: string; price
         <Lock className="size-5 text-accent" aria-hidden />
         {feature}は有料の機能
       </p>
-      <p className="mt-1 text-sm text-muted">割り勘は無料のまま ・ 一度買えばずっと使える</p>
+      <p className="mt-1 text-sm text-muted">会社の会だけ有料 ・ 学生とプライベートの会は無料 ・ 一度買えばずっと使える</p>
       <ul className="mt-4 space-y-1.5 text-sm">
         {["傾斜で割る(先輩・上司は多め)", "集金のページ(まだの人にだけ催促)", "これからの会計もずっと"].map((t) => (
           <li key={t} className="flex items-center gap-2">

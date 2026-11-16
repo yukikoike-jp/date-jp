@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
 import { ProPaywall, useProAccess } from "./ProGate";
-import { isFormal, loadAudience, type Audience } from "@/lib/audience";
+import { isFormal, loadAudience, needsPro, type Audience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
@@ -93,7 +93,8 @@ export function SplitClient({ from = null }: { from?: string | null }) {
   const [weighted, setWeighted] = useState(false);
   // 傾斜と集金のページは買い切りの有料機能(有料にしていないあいだは誰でも使える)
   const pro = useProAccess();
-  const locked = pro.enabled && !pro.unlocked;
+  // 有料にしているときも、鍵をかけるのは会社の会だけ(学生・プライベートは無料)
+  const locked = pro.enabled && !pro.unlocked && needsPro(audience);
   const [paywall, setPaywall] = useState<string | null>(null);
   // 会社や部署・部費からの補助(1人あたり、または全体でいくら)。空なら補助なし
   const [subsidyKind, setSubsidyKind] = useState<"per" | "lump">("per");

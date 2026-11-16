@@ -41,3 +41,12 @@ describe("canSetPayment", () => {
     expect(isConfirmed(undefined)).toBe(false);
   });
 });
+
+describe("needsPro", () => {
+  it("有料にするのは会社の会だけ。学生・プライベートは無料", async () => {
+    const { needsPro } = await import("./audience");
+    expect(needsPro("worker")).toBe(true);
+    expect(needsPro("student")).toBe(false);
+    expect(needsPro("private")).toBe(false);
+  });
+});
