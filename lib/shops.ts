@@ -341,6 +341,23 @@ export async function findShop(id: string): Promise<Shop | null> {
  * 送客の手数料が付くリンクにする。AFFILIATE_URL_TEMPLATE に {url} を含むテンプレートを入れておく
  * (例: バリューコマースの「MyLink」の形)。空なら、お店のページにそのまま飛ばす
  */
+/**
+ * ホットペッパーのお店のページを、アプリが勝手に開かない形の URL にする。
+ * ホットペッパーは「/strJ0000000000/」(最後に / が付く形)をアプリで開くよう設定している
+ * (https://www.hotpepper.jp/.well-known/apple-app-site-association)。
+ * 最後の / を外した「/strJ0000000000」でも同じお店のページが開き、こちらはアプリの対象外なので、ブラウザのまま予約できる
+ * (ブラウザで予約しないと、紹介料の印が付かない)
+ */
+export function browserShopUrl(shopUrl: string): string {
+  try {
+    const u = new URL(shopUrl);
+    if (u.hostname === "www.hotpepper.jp") u.pathname = u.pathname.replace(/^\/(str[A-Za-z0-9]{10})\/$/, "/$1");
+    return u.toString();
+  } catch {
+    return shopUrl;
+  }
+}
+
 export function referralUrl(shopUrl: string): string {
   const template = process.env.AFFILIATE_URL_TEMPLATE?.trim();
   if (!template || !template.includes("{url}")) return shopUrl;

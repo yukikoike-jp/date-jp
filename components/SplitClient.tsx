@@ -12,7 +12,7 @@ import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
 import { SendButtons, useCanShare } from "./SendButtons";
 import { ROUND_UNITS, WEIGHTS, splitBill, subsidyTotal, tenthsFromInput, type Weight } from "@/lib/split";
-import { BUTTON_PRIMARY, BUTTON_SUB, PILL, PILL_OFF, PILL_ON } from "./ui";
+import { BUTTON_PRIMARY, BUTTON_SUB } from "./ui";
 
 // 会計。最初は全員同じ額の割り勘で、「傾斜で割る」に切り替えると区分や倍率を選べる(学生やプライベートでは傾斜はあまり使わないため)。
 // 傾斜では hasuru と同じく、区分ごとに色・記号・頭文字の丸で人を見分ける(色だけに頼らない)
@@ -485,36 +485,38 @@ export function SplitClient({ from = null }: { from?: string | null }) {
           );
         })}
       </ul>
-      <div className="mx-4 mt-2 grid grid-cols-[1fr_auto] gap-2">
+      <div className="mx-4 mt-2">
         <button
           type="button"
           onClick={() => setPeople((ps) => [...ps, person("normal")])}
           disabled={people.length >= 30}
-          className={`${BUTTON_SUB} gap-2 whitespace-nowrap px-3`}
+          className={`${BUTTON_SUB} w-full gap-2 whitespace-nowrap px-3`}
         >
           <Plus className="size-4" aria-hidden />
           人を足す
         </button>
-        <div className="flex items-center gap-1 rounded-2xl border border-border bg-surface-2 px-1.5" role="group" aria-label="何円単位にそろえるか">
-          {ROUND_UNITS.map((u) => (
-            <button
-              key={u}
-              type="button"
-              aria-pressed={unit === u}
-              onClick={() => setUnit(u)}
-              className={`${PILL} min-h-9 px-2.5 text-xs ${unit === u ? PILL_ON : `${PILL_OFF} border-transparent bg-transparent`}`}
-            >
-              {u}円
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* 結果 */}
       <section className="glow mx-4 mt-5 overflow-hidden rounded-3xl border border-accent/40 bg-surface" aria-live="polite">
         <div className="flex items-baseline justify-between px-5 pt-5">
           <h2 className="text-lg font-black">1人いくら?</h2>
-          {result && <span className="text-xs font-bold text-muted">{unit}円単位</span>}
+          {/* 何円単位にそろえるか。結果のすぐそばで切り替える */}
+          {result && (
+            <div className="flex items-center gap-0.5 rounded-xl bg-surface-2 p-0.5" role="group" aria-label="何円単位にそろえるか">
+              {ROUND_UNITS.map((u) => (
+                <button
+                  key={u}
+                  type="button"
+                  aria-pressed={unit === u}
+                  onClick={() => setUnit(u)}
+                  className={`min-h-9 rounded-lg px-2.5 text-xs font-bold ${unit === u ? "bg-accent text-accent-text" : "text-muted"}`}
+                >
+                  {u}円
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {result ? (
           <>
@@ -554,16 +556,14 @@ export function SplitClient({ from = null }: { from?: string | null }) {
             </ul>
             <div className="flex items-baseline justify-between border-t-2 border-text/80 px-5 py-3">
               <span className="text-sm font-bold">合計</span>
-              <span className="flex items-center gap-2">
-                <span className="rounded-md px-1.5 py-0.5 text-[11px] font-bold text-[#93e3b2] ring-1 ring-[#93e3b2]/60">✓ 一致</span>
-                <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
-              </span>
+              <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
             </div>
-            <p className="px-5 text-xs text-muted">
-              {result.organizerDiff === 0
-                ? "端数は出ませんでした"
-                : `端数の${yen(Math.abs(result.organizerDiff))}ぶん、幹事が${result.organizerDiff > 0 ? "多め" : "少なめ"}に`}
-            </p>
+            {/* 端数が出たときだけ、誰が持つかを書く */}
+            {result.organizerDiff !== 0 && (
+              <p className="px-5 text-xs text-muted">
+                端数の{yen(Math.abs(result.organizerDiff))}ぶん、幹事が{result.organizerDiff > 0 ? "多め" : "少なめ"}に
+              </p>
+            )}
             <div className="px-5 pb-5">
               <SendButtons
                 mainLabel="共有して金額を送る"
@@ -617,9 +617,9 @@ export function SplitClient({ from = null }: { from?: string | null }) {
           )}
       </section>
 
-      <div className="mx-4 mt-4">
-        <button type="button" onClick={startOver} className={`${BUTTON_SUB} w-full gap-2 text-sm`}>
-          <RotateCcw className="size-4" aria-hidden />
+      <div className="mx-4 mt-3 text-center">
+        <button type="button" onClick={startOver} className="inline-flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
+          <RotateCcw className="size-3.5" aria-hidden />
           新しい会計を始める
         </button>
       </div>

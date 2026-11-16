@@ -1,9 +1,7 @@
-import { CheersArt } from "./Logo";
-
 // 起動の演出(約3.2秒)
 // 左右から金の線で描いたグラスが勢いよく飛んできて、真ん中で乾杯する。
-// ぶつかった瞬間に画面が揺れて光り、切り絵のグラスの絵(ロゴと同じ)がぽんと出る。
-// グラスが下に退くと、線の下から「Tsudoro」がせり上がる。
+// ぶつかった瞬間に画面が揺れて光り、グラスは乾杯したところで止まる(止まった姿がアイコンと同じ)。
+// その下から「Tsudoro」がせり上がる。
 // 動きは globals.css の .intro-* に置く。動きを減らす設定の人には出さない(HomeClient で判定)
 
 const NAME = "Tsudoro";
@@ -42,22 +40,23 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
       <span aria-hidden className="intro-flash pointer-events-none absolute inset-0" />
 
       <span className="intro-stage absolute inset-0 flex flex-col items-center justify-center">
-        {/* 乾杯の線画と、切り絵のグラスは同じ場所で重ねる */}
+        {/* 乾杯するグラス。止まった姿はアイコン(components/Logo.tsx)と同じ */}
         <span className="relative grid h-36 w-72 place-items-center">
           <span aria-hidden className="absolute top-1/2 left-1/2">
             {LINES.map((deg) => (
               <span key={deg} className="intro-line absolute h-[3px] w-20 origin-left rounded-full bg-text" style={{ rotate: `${deg}deg` }} />
             ))}
           </span>
+          {/* 乾杯の瞬間に出て、そのまま残る金の「カチン」の線(アイコンと同じ) */}
+          <svg viewBox="0 0 60 30" className="intro-spark absolute -top-7 left-1/2 w-16 -translate-x-1/2" aria-hidden>
+            <path d="M30 2v14M16 6l6 10M44 6l-6 10" stroke="var(--accent)" strokeWidth="4" strokeLinecap="round" fill="none" />
+          </svg>
           <span className="intro-glass-left absolute">
             <Glass side="left" />
           </span>
           <span className="intro-glass-right absolute">
             <Glass side="right" />
           </span>
-          <svg viewBox="0 0 200 200" className="intro-cheers absolute w-44" aria-hidden>
-            <CheersArt />
-          </svg>
         </span>
 
         <span className="relative mt-2 flex flex-col items-center">

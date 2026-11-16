@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { budgetFromRange, budgetFromText, mergeShops, pickSamples, searchShopsAlways, smokeFriendly, smokingFromText, type Shop } from "./shops";
+import { browserShopUrl, budgetFromRange, budgetFromText, mergeShops, pickSamples, searchShopsAlways, smokeFriendly, smokingFromText, type Shop } from "./shops";
 
 describe("budgetFromRange", () => {
   it("予算の区分名から上限を読む", () => {
@@ -80,5 +80,17 @@ describe("searchShopsAlways(お店が必ず出る)", () => {
     const r = await searchShopsAlways({ area: "station", budget: 1000, size: 500, privateRoom: true, smoking: "only", genres: ["yoshoku"] }, 10, steps);
     expect(r.shops.length).toBeGreaterThan(0);
     expect(r.relaxed).not.toBeNull();
+  });
+});
+
+describe("browserShopUrl(アプリが開かない形のお店の URL)", () => {
+  it("お店のページの最後の / を外す。後ろの ?… はそのまま", () => {
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/?vos=nhppalsa000016")).toBe("https://www.hotpepper.jp/strJ001155193?vos=nhppalsa000016");
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/")).toBe("https://www.hotpepper.jp/strJ001155193");
+  });
+  it("お店のページ以外や、ほかのサイトは変えない", () => {
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/yoyaku/")).toBe("https://www.hotpepper.jp/strJ001155193/yoyaku/");
+    expect(browserShopUrl("https://example.com/strJ001155193/")).toBe("https://example.com/strJ001155193/");
+    expect(browserShopUrl("not a url")).toBe("not a url");
   });
 });

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { findShop, referralUrl } from "@/lib/shops";
+import { browserShopUrl, findShop, referralUrl } from "@/lib/shops";
 import { getStore } from "@/lib/store";
 
 // お店のページへ飛ばす。押された数を数え、送客の手数料が付くリンクにする。
@@ -68,7 +68,7 @@ export async function GET(request: Request, ctx: RouteContext<"/go/[partyId]/[sh
 
   await store.logShopClick(party?.id ?? null, shop.id).catch((e) => console.error("[go] 数えられませんでした", e));
   if (!shop.url) return NextResponse.redirect(back);
-  return new Response(bridgePage(referralUrl(shop.url), shop.name), {
+  return new Response(bridgePage(referralUrl(browserShopUrl(shop.url)), shop.name), {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
