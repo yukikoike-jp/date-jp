@@ -4,7 +4,11 @@ import { ShopSearch } from "@/components/ShopSearch";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PageMotion } from "@/components/PageMotion";
 
-export const metadata: Metadata = { title: "お店を探す" };
+export const metadata: Metadata = {
+  title: "飲み会のお店を探す",
+  description: "駅・予算・料理・人数から、飲み会に合うお店をすぐ探せます。個室・飲み放題・喫煙可でも絞り込めます",
+  alternates: { canonical: "/shops" },
+};
 
 export default function ShopsPage() {
   return (

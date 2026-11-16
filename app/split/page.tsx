@@ -4,7 +4,11 @@ import { StepBar } from "@/components/StepBar";
 import { SplitClient } from "@/components/SplitClient";
 import { PageMotion } from "@/components/PageMotion";
 
-export const metadata: Metadata = { title: "会計" };
+export const metadata: Metadata = {
+  title: "飲み会の割り勘・傾斜計算",
+  description: "合計を入れるだけで、1人いくらかがすぐ分かります。全員同じ額の割り勘も、先輩・後輩で差をつける傾斜も。集金のページも作れます",
+  alternates: { canonical: "/split" },
+};
 
 // 会の画面から来たときだけ、上に「日程調整 → お店探し → 会計精算」の段階を出す(ただ計算したいときは出さない)
 export default async function SplitPage(props: PageProps<"/split">) {

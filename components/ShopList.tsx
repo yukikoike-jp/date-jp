@@ -8,6 +8,8 @@ import { accessHint, mapsUrl } from "@/lib/maps";
 import type { Shop } from "@/lib/shops";
 import { areaLabel } from "@/lib/sendai";
 import { PrNote } from "./PrNote";
+import { OtherSites } from "./OtherSites";
+import { stationFromAccess } from "@/lib/otherSites";
 
 const SMOKING_LABEL = { ok: "喫煙可", partial: "分煙", no: "全面禁煙" } as const;
 
@@ -28,6 +30,7 @@ export function ShopList({
   children,
   empty,
   initial = 5,
+  others = true,
 }: {
   partyId: string;
   shops: Shop[];
@@ -51,6 +54,8 @@ export function ShopList({
   empty?: string;
   /** 最初に見せる数。残りは「もっと見る」で出す */
   initial?: number;
+  /** 一覧の下に、ほかの予約サイトへのボタンを出すか(二次会の一覧では出さない) */
+  others?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const favorites = useFavorites();
@@ -197,6 +202,7 @@ export function ShopList({
           <ChevronDown className="size-4" aria-hidden />
         </button>
       )}
+      {others && !isSample && <OtherSites station={shops.map((x) => stationFromAccess(x.access)).find(Boolean) ?? null} />}
       {!isSample && <PrNote className="mt-3" />}
       {/* ホットペッパーの規約で、クレジットと、写真を使うときの「画像提供」の表示が必要 */}
       {!isSample && (

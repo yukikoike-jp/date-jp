@@ -27,6 +27,7 @@ export function SecondPartyShops({ partyId }: { partyId: string }) {
   return (
     <div className={`transition-opacity ${pending ? "opacity-60" : ""}`} aria-busy={pending}>
       <ShopList
+        others={false}
         id="second-party"
         partyId={partyId}
         shops={result?.shops ?? []}

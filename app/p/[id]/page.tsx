@@ -20,9 +20,10 @@ import { PullToRefresh } from "@/components/PullToRefresh";
 export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Metadata> {
   const { id } = await props.params;
   const party = await getStore().getParty(id);
-  if (!party) return { title: "飲み会が見つかりません" };
+  // 会のページは、URLを知っている人だけのもの。検索には出さない
+  if (!party) return { title: "飲み会が見つかりません", robots: { index: false } };
   const description = "行ける日と予算を30秒で答えてください";
-  return { title: party.title, description, openGraph: { title: party.title, description } };
+  return { title: party.title, description, robots: { index: false }, alternates: { canonical: null }, openGraph: { title: party.title, description } };
 }
 
 export default async function PartyPage(props: PageProps<"/p/[id]">) {

@@ -4,7 +4,11 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { PageMotion } from "@/components/PageMotion";
 import { StepBar } from "@/components/StepBar";
 
-export const metadata: Metadata = { title: "会をつくる" };
+export const metadata: Metadata = {
+  title: "飲み会の日程調整をはじめる",
+  description: "候補日を選んでURLをLINEに貼るだけ。登録なしで、みんなの行ける日と予算がまとまります",
+  alternates: { canonical: "/new" },
+};
 
 export default function NewPage() {
   return (

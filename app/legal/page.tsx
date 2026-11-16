@@ -6,7 +6,7 @@ import { proPrice } from "@/lib/billing";
 import { cleanText } from "@/lib/env";
 import { yen } from "@/lib/sendai";
 
-export const metadata: Metadata = { title: "特定商取引法に基づく表記" };
+export const metadata: Metadata = { title: "特定商取引法に基づく表記", alternates: { canonical: "/legal" } };
 
 // 有料の機能(会計・集金の全部の機能、買い切り)を売るので、特定商取引法の表示を置く。
 // 売る人の名前・住所・連絡先は個人の情報なので、コードには書かず環境変数(SELLER_*)から読む。

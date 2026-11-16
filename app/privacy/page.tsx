@@ -4,7 +4,7 @@ import { PageMotion } from "@/components/PageMotion";
 import { SiteHeader } from "@/components/SiteHeader";
 import { cleanText } from "@/lib/env";
 
-export const metadata: Metadata = { title: "プライバシーポリシー" };
+export const metadata: Metadata = { title: "プライバシーポリシー", alternates: { canonical: "/privacy" } };
 
 // 実際に扱っている情報だけを書く(書いていない情報は集めない)。
 // 運営者の名前と連絡先は個人の情報なので、コードには書かず環境変数から読む
