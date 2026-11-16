@@ -235,6 +235,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
         `${title.trim() ? `「${title.trim()}」の` : ""}お会計 ${yen(totalYen)}(${people.length}人)`,
         ...(subsidy > 0 ? [`補助 ${yen(subsidy)} を引いて、${yen(totalYen - subsidy)} をみんなで`] : []),
         ...people.map((p, i) => `${weighted ? `${weightOf(p).mark} ` : "・"}${nameOf(p, i)} ${yen(result.amounts[i])}`),
+        ...(result.surplus > 0 ? [`(全員同じ額にしたので、${yen(result.surplus)} のお釣りが出ます)`] : []),
       ].join("\n")
     : "";
 
@@ -526,7 +527,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
                 <span
                   key={p.id}
                   className={`tier-${weightOf(p).tone} h-full bg-[var(--tb)] [&:not(:first-child)]:border-l-2 [&:not(:first-child)]:border-surface`}
-                  style={{ width: `${(result.amounts[i] / totalYen) * 100}%` }}
+                  style={{ width: `${(result.amounts[i] / Math.max(1, result.amounts.reduce((a, b) => a + b, 0))) * 100}%` }}
                 />
               ))}
             </div>
@@ -559,6 +560,11 @@ export function SplitClient({ from = null }: { from?: string | null }) {
               <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
             </div>
             {/* 端数が出たときだけ、誰が持つかを書く */}
+            {result.surplus > 0 && (
+              <p className="px-5 text-xs text-muted">
+                全員 {yen(result.amounts[0])} で同じ額。{yen(result.surplus)} のお釣りが出ます(幹事が預かる){unit > 1 && "。1円にすると、お釣りが小さくなります"}
+              </p>
+            )}
             {result.organizerDiff !== 0 && (
               <p className="px-5 text-xs text-muted">
                 端数の{yen(Math.abs(result.organizerDiff))}ぶん、幹事が{result.organizerDiff > 0 ? "多め" : "少なめ"}に

@@ -43,7 +43,7 @@ export function tenthsFromInput(text: string): number | null {
   return t >= CUSTOM_MIN && t <= CUSTOM_MAX ? t : null;
 }
 
-export const ROUND_UNITS = [10, 100, 500] as const;
+export const ROUND_UNITS = [1, 10, 100, 500] as const;
 
 /** 会社や部署・部費から出る補助。per = 1人あたり、lump = 全体でいくら */
 export type Subsidy = { kind: "per" | "lump"; yen: number };
@@ -72,15 +72,23 @@ export type SplitResult = {
   amounts: number[];
   /** 幹事が、重みどおりの額より多く(+)または少なく(-)払う額 */
   organizerDiff: number;
+  /** 全員同じ額にしたとき、合計より多く集まる額(お釣り)。それ以外は 0 */
+  surplus: number;
 };
 
 /**
- * 重みに比べて割り、幹事以外は unit 円単位の近い額にそろえる。合計とのずれは幹事が受け持つ。
+ * 全員の重みが同じなら、全員同じ額(unit 円単位に切り上げ。多い分はお釣り)。
+ * 傾斜のときは、重みに比べて割り、幹事以外は unit 円単位の近い額にそろえる。合計とのずれは幹事が受け持つ。
  * 幹事の額がマイナスになるときは、ほかの人を切り捨てにして、ずれを小さくする
  */
 export function splitBill({ total, weights, unit, organizer }: SplitInput): SplitResult {
   const n = weights.length;
-  if (n === 0 || !Number.isInteger(total) || total <= 0) return { amounts: weights.map(() => 0), organizerDiff: 0 };
+  if (n === 0 || !Number.isInteger(total) || total <= 0) return { amounts: weights.map(() => 0), organizerDiff: 0, surplus: 0 };
+  // 全員の重みが同じ(割り勘)なら、全員を同じ額にする。単位に切り上げ、足りなくならないようにして、多い分はお釣りにする
+  if (weights.every((w) => w === weights[0])) {
+    const each = Math.ceil(total / n / unit) * unit;
+    return { amounts: weights.map(() => each), organizerDiff: 0, surplus: each * n - total };
+  }
   const sum = weights.reduce((a, b) => a + b, 0);
   const exact = weights.map((w) => (total * w) / sum);
 
@@ -93,5 +101,5 @@ export function splitBill({ total, weights, unit, organizer }: SplitInput): Spli
   let amounts = build(Math.round);
   if (amounts[organizer] < 0) amounts = build(Math.floor);
 
-  return { amounts, organizerDiff: Math.round(amounts[organizer] - exact[organizer]) };
+  return { amounts, organizerDiff: Math.round(amounts[organizer] - exact[organizer]), surplus: 0 };
 }
