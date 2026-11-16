@@ -25,34 +25,22 @@ export type OtherSite = {
   label: string;
   note: string;
   href: string;
-  /** 提携先が用意した広告の画像(バナー)。審査が済むまでは 1×1 の画像が返るので、画面側で隠す */
-  banner: { img: string; href: string };
 };
-
-/** バナーの画像と、そのバナー用のリンク(バナーごとに番号が別) */
-function banner(pid: string) {
-  return {
-    img: `https://ad.jp.ap.valuecommerce.com/servlet/gifbanner?sid=${VC_SID}&pid=${pid}`,
-    href: `https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=${VC_SID}&pid=${pid}`,
-  };
-}
 
 /** ほかの予約サイト。station があれば、その駅の近くで探す */
 export function otherSites(station: string | null): OtherSite[] {
   return [
     {
       key: "ikyu",
-      label: "記念日・接待向けの高級店を探す",
-      note: station ? `${station}駅の近くの、ちょっといいお店` : "ちょっといいお店の予約サイト",
+      label: "記念日・接待向けの高級店",
+      note: station ? `${station}駅の近くの、ちょっといいお店を予約サイトで探す` : "ちょっといいお店を予約サイトで探す",
       href: vcLink("892749796", station ? `https://restaurant.ikyu.com/search?term=${encodeURIComponent(station)}` : "https://restaurant.ikyu.com/"),
-      banner: banner("892749801"),
     },
     {
       key: "ozmall",
-      label: "忘年会・宴会のプランを探す",
-      note: "女性に人気の予約サイト(関東・関西が中心)",
+      label: "忘年会・宴会のプラン",
+      note: "女子会・記念日にも。予約サイトで探す(関東・関西が中心)",
       href: vcLink("892749797", "https://www.ozmall.co.jp/restaurant/enkai/"),
-      banner: banner("892749804"),
     },
   ];
 }

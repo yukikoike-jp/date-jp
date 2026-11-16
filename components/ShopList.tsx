@@ -8,7 +8,7 @@ import { accessHint, mapsUrl } from "@/lib/maps";
 import type { Shop } from "@/lib/shops";
 import { areaLabel } from "@/lib/sendai";
 import { PrNote } from "./PrNote";
-import { OtherSites } from "./OtherSites";
+import { OtherSiteCandidate } from "./OtherSites";
 import { placeOtherSites, stationFromAccess, type Scene } from "@/lib/otherSites";
 
 const SMOKING_LABEL = { ok: "喫煙可", partial: "分煙", no: "全面禁煙" } as const;
@@ -67,6 +67,10 @@ export function ShopList({
   // ほかの予約サイトは、バリューコマースの審査が済んでから出す(next.config.ts の OTHER_SITES_ON)
   const showOthers = others && !isSample && process.env.OTHER_SITES_ON === "1";
   const placed = placeOtherSites(shops.map((x) => stationFromAccess(x.access)).find(Boolean) ?? null, scene);
+  const visible = expanded ? shops : shops.slice(0, initial);
+  // 会社の会・予算が高めの会は2軒目の後、ほかは一覧の最後
+  const insertAt = placed.top ? 2 : visible.length;
+  const candidates = placed.sites.map((x) => <OtherSiteCandidate key={x.key} site={x} />);
   return (
     <section id={id} className="mt-4 mx-4 rounded-3xl border panel px-4 py-6">
       <h2 className="text-lg font-black">{heading}</h2>
@@ -98,13 +102,11 @@ export function ShopList({
           実在しない見本のお店
         </p>
       )}
-      {showOthers && placed.top && shops.length > 0 && (
-        <div className="mt-4">
-          <OtherSites sites={placed.sites} top />
-        </div>
-      )}
       <ul className="mt-4 space-y-3">
-        {(expanded ? shops : shops.slice(0, initial)).map((s, i) => (
+        {/* ほかの予約サイトも、お店の候補の1つとして並べる。会社の会・予算が高めの会は2軒目の後、ほかは最後 */}
+        {visible.flatMap((s, i) => [
+          ...(showOthers && i === insertAt ? candidates : []),
+          (
           <li
             key={s.id}
             style={{ "--i": i } as React.CSSProperties}
@@ -201,7 +203,9 @@ export function ShopList({
               </a>
             )}
           </li>
-        ))}
+          ),
+        ])}
+        {showOthers && insertAt >= visible.length && candidates}
       </ul>
       {!expanded && shops.length > initial && (
         <button
@@ -213,7 +217,6 @@ export function ShopList({
           <ChevronDown className="size-4" aria-hidden />
         </button>
       )}
-      {showOthers && !placed.top && <OtherSites sites={placed.sites} />}
       {!isSample && <PrNote className="mt-3" />}
       {/* ホットペッパーの規約で、クレジットと、写真を使うときの「画像提供」の表示が必要 */}
       {!isSample && (
