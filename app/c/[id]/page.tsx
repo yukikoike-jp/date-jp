@@ -26,15 +26,6 @@ export default async function CollectionPage(props: PageProps<"/c/[id]">) {
   if (!collection) notFound();
   const { adminHash, ...view } = collection;
   const hostToken = typeof token === "string" && verifyToken(token, adminHash) ? token : null;
-  // 通知をオンにした人(宛先の表がまだ作られていなくても、集金のページは開けるようにする)
-  let subscribedIds: number[] = [];
-  if (collection.autoRemindAt !== undefined) {
-    try {
-      subscribedIds = [...new Set((await getStore().listPushSubs(id)).map((s) => s.personId))];
-    } catch (e) {
-      console.error("[collection] 通知の宛先を読めませんでした", e);
-    }
-  }
   const pushKey = pushReady() ? vapidPublicKey() : null;
 
   return (
@@ -45,7 +36,6 @@ export default async function CollectionPage(props: PageProps<"/c/[id]">) {
           collection={view}
           hostToken={hostToken}
           pushKey={pushKey}
-          subscribedIds={subscribedIds}
         />
       </div>
     </PageMotion>

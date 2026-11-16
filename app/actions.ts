@@ -205,7 +205,7 @@ export async function setCollectionPayment(
 export async function saveCollectionSettings(
   collectionId: string,
   adminToken: string | null,
-  input: { payLink: string; autoRemind: boolean },
+  input: { payLink: string; autoRemind?: boolean },
   license: string | null,
 ): Promise<{ ok: true; payLink: string | null; autoRemindAt: number | null } | Fail> {
   const store = getStore();

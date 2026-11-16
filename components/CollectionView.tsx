@@ -9,7 +9,7 @@ import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
-import { AutoRemindPanel } from "./AutoRemindPanel";
+import { PayLinkPanel } from "./PayLinkPanel";
 import { PushOptIn } from "./PushOptIn";
 import { toast } from "./Toast";
 
@@ -43,14 +43,11 @@ export function CollectionView({
   collection: c,
   hostToken,
   pushKey,
-  subscribedIds,
 }: {
   collection: Omit<Collection, "adminHash">;
   hostToken: string | null;
   /** 通知を送る準備ができているときの公開鍵(なければ null) */
   pushKey: string | null;
-  /** 通知をオンにした人の番号 */
-  subscribedIds: number[];
 }) {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(hostToken);
@@ -258,20 +255,8 @@ export function CollectionView({
 
       {isHost && (
         <>
-          {/* 払い方(PayPay のリンク)をのせる(無料)と、催促をアプリにまかせる(有料プレミアム。買う前はデモ版) */}
-          {token && (
-            <AutoRemindPanel
-              collectionId={c.id}
-              hostToken={token}
-              title={c.title}
-              initialPayLink={c.payLink ?? null}
-              initialAutoRemindAt={c.autoRemindAt ?? null}
-              pushReady={pushKey !== null}
-              subscribed={unpaid.filter((p) => subscribedIds.includes(p.id)).length}
-              unpaid={unpaid.length}
-              sampleAmount={unpaid[0]?.amount ?? payers[0]?.amount ?? 0}
-            />
-          )}
+          {/* 払い方(PayPay のリンク)をのせる(無料) */}
+          {token && <PayLinkPanel collectionId={c.id} hostToken={token} initialPayLink={c.payLink ?? null} />}
           <p className="mx-4 mt-3 text-xs text-muted">
             現金で受け取ったら「受け取った」
           </p>

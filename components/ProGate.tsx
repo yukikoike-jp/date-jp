@@ -92,7 +92,7 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
       </p>
       <p className="mt-1 text-sm text-muted">{fun ? "有料プレミアム(月額) ・ いつでも解約できます" : "会社の会の傾斜だけ有料 ・ 学生とプライベートの会は無料 ・ いつでも解約できます"}</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {["集金の催促をアプリにまかせる(払っていない人に、幹事の代わりに通知)", "会社の会の傾斜で割る(先輩・上司は多め)", "これからふえる機能も、契約中はずっと"].map((t) => (
+        {["席替え・チーム分け・王様ゲーム・ルーレットなど、盛り上がる道具", "会社の会の傾斜で割る(先輩・上司は多め)", "これからふえる道具も、契約中はずっと"].map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}

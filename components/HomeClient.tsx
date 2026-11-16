@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Bell, Hourglass, Lock, Store, Wrench } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Dices, Hourglass, Lock, Store, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
@@ -372,12 +372,12 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店を探す" sub={home.shops} />
           <ToolTile href="/split" icon={tierIcon} title="会計をする" sub={home.split} />
-          {/* 有料プレミアムの入口。何が有料かが、ホームですぐ分かるようにする */}
+          {/* 有料プレミアムの入口。何が有料かが、ホームですぐ分かるようにする(鍵のマークだけ) */}
           <ToolTile
-            href="/collect/new"
-            icon={<Bell className="size-6" aria-hidden />}
-            title="集金の催促を、アプリにまかせる"
-            sub="払っていない人に、あなたの代わりにアプリが通知。集金の表づくりは無料"
+            href="/fun"
+            icon={<Dices className="size-6" aria-hidden />}
+            title="もりあげ道具"
+            sub="席替え・チーム分け・王様ゲーム・ルーレット。幹事がいる回が、もっと楽しく"
             lockOnly
             wide
           />
