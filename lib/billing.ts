@@ -9,7 +9,7 @@ import { signLicense, verifyLicense } from "./license";
 /** 値段(円・税込)。PRO_PRICE で変えられる */
 export function proPrice(): number {
   const n = Number(cleanEnv(process.env.PRO_PRICE));
-  return Number.isInteger(n) && n >= 100 ? n : 980;
+  return Number.isInteger(n) && n >= 100 ? n : 500;
 }
 
 const API = "https://api.stripe.com/v1";
