@@ -22,9 +22,9 @@ const jsonLd = {
 };
 
 const FEATURES = [
-  ["日程調整", "候補日を選び、URLをLINEに貼るだけです。参加者は、登録なしで、30秒ほどで行ける日と予算を答えられます。"],
-  ["お店探し", "全員の予算と人数、集まりやすい駅から、合うお店を自動で選びます。個室、飲み放題、喫煙可などの条件でも絞り込めます。"],
-  ["割り勘・傾斜", "合計金額を入れると、1人あたりの金額が分かります。全員同じ額の割り勘と、先輩・後輩などで差をつける傾斜の、どちらにも対応しています。"],
+  ["日程調整", "候補日を選んでURLをLINEに貼るだけです。参加者は登録なしで、30秒ほどで行ける日と予算を答えられます。"],
+  ["お店探し", "全員の予算・人数・集まりやすい駅から合うお店を自動で選びます。個室・飲み放題・喫煙可などの条件でも絞り込めます。"],
+  ["割り勘・傾斜", "合計金額を入れると1人あたりの金額が分かります。全員同じ額の割り勘と、先輩・後輩などで差をつける傾斜の両方に対応しています。"],
 ] as const;
 
 export default function Home() {
@@ -40,7 +40,7 @@ export default function Home() {
                 <ChevronDown className="size-3.5 text-muted transition-transform group-open:rotate-180" aria-hidden />
               </summary>
               <div className="pb-3.5 text-white/70">
-                <h2 className="text-xs font-black text-white/85">Tsudoro は、飲み会の幹事の負担を減らす、基本無料のアプリです</h2>
+                <h2 className="text-xs font-black text-white/85">Tsudoro は飲み会の幹事の負担を減らす基本無料のアプリです</h2>
                 <dl className="mt-2.5 grid gap-2.5 text-xs leading-relaxed">
                   {FEATURES.map(([t, d]) => (
                     <div key={t}>
@@ -50,7 +50,7 @@ export default function Home() {
                   ))}
                 </dl>
                 <p className="mt-2.5 text-xs leading-relaxed">
-                  学生やサークルの飲み会、友達どうしの集まり、会社の忘年会・新年会・歓送迎会まで使えます。アカウント登録とアプリのインストールは不要です。
+                  学生やサークルの飲み会から友達との集まり、会社の忘年会・新年会・歓送迎会まで使えます。アカウント登録とアプリのインストールは不要です。
                 </p>
               </div>
             </details>
