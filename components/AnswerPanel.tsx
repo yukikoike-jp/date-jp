@@ -10,7 +10,7 @@ import { AVOIDS } from "@/lib/diet";
 import { ANSWER_BUDGETS, GENRES, STAY_CHOICES, UNLIMITED_BUDGET, clock, dateLabel, stayLabel, yen } from "@/lib/sendai";
 import { AddPicker } from "./AddPicker";
 import { StationPicker } from "./StationPicker";
-import { WheelPicker } from "./WheelPicker";
+import { Picker } from "./Picker";
 import type { DateAnswer } from "@/lib/summary";
 import { MAX_AVOID_NOTE, MAX_MEMO, type AnswerInput } from "@/lib/validation";
 import { Required } from "./Required";
@@ -190,7 +190,7 @@ export function AnswerPanel({
       : partyStart === null && form.arrival === 0
         ? "何時から来られるかを選んでください"
         : form.stay === 0
-          ? "いつまで残れるかを、回して選んでください"
+          ? "いつまで残れるかを選んでください"
           : null;
 
   return (
@@ -305,11 +305,10 @@ export function AnswerPanel({
             いつまで残れる?
             <Required />
           </p>
-          {/* いちばん上が「いつでもOK」(最後までいられる)。回すと30分ごとの時刻になる */}
-          <WheelPicker
+          {/* 押すと選ぶ画面が開く。いちばん上が「いつでもOK」(最後までいられる)、そのあと30分ごとの時刻 */}
+          <Picker
             label="残れる時刻"
             value={form.stay}
-            initial={1800}
             options={[{ value: 1800, label: "いつでもOK" }, ...STAY_CHOICES.filter((m) => m !== 1800).map((m) => ({ value: m, label: stayLabel(m) }))]}
             onChange={(m) => set({ stay: m })}
           />
@@ -322,11 +321,11 @@ export function AnswerPanel({
             どのくらいのお店がいい?
             <span className="text-xs font-bold text-muted">(なくてもOK)</span>
           </p>
-          {/* 選ばなければ「こだわらない」。いちばん上が「こだわらない」で、回すと500円ごとの額になる */}
-          <WheelPicker
+          {/* 選ばなければ「こだわらない」。押すと選ぶ画面が開き、500円ごとの額から選べる */}
+          <Picker
             label="1人の目安"
             value={form.budget}
-            initial={UNLIMITED_BUDGET}
+            placeholder="こだわらない"
             options={[{ value: UNLIMITED_BUDGET, label: "こだわらない" }, ...ANSWER_BUDGETS.map((b) => ({ value: b, label: `${yen(b)}くらいまで` }))]}
             onChange={(b) => set({ budget: b })}
           />

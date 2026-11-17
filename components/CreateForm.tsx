@@ -11,7 +11,7 @@ import { clock, dateLabel, upcomingDates } from "@/lib/sendai";
 import { MAX_DATES } from "@/lib/validation";
 import { DateCalendar } from "./DateCalendar";
 import { Required } from "./Required";
-import { WheelPicker } from "./WheelPicker";
+import { Picker } from "./Picker";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
 export function saveAdminToken(partyId: string, token: string) {
@@ -96,15 +96,9 @@ export function CreateForm() {
 
         <div className="mt-5 border-t border-white/8 pt-5">
           <FieldHead title="何時から始める?" sub="幹事だけで決定" />
-          {/* 回答するときと同じ、時計のように回して選ぶ形。19:00 を目安に合わせておく(15分ごと) */}
+          {/* 押すと選ぶ画面が開く形(時計のように回す形は分かりにくかったので戻した)。19:00 を目安に、15分ごと */}
           <div className="mt-3">
-            <WheelPicker
-              label="開始時刻"
-              value={startAt}
-              initial={1140}
-              options={START_CHOICES.map((m) => ({ value: m, label: clock(m) }))}
-              onChange={setStartAt}
-            />
+            <Picker label="開始時刻" value={startAt} options={START_CHOICES.map((m) => ({ value: m, label: clock(m) }))} onChange={setStartAt} />
           </div>
         </div>
 
