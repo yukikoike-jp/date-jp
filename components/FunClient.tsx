@@ -1,10 +1,12 @@
 "use client";
 
-import { Ban, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
+import { Ban, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, Mic, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, kingGame, parseNames, pickIndex, splitTeams, type KingDraw } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
+import { loadAudience } from "@/lib/audience";
+import { CHECKLIST, OCCASIONS, SPEECHES, TOPICS, TOPIC_KINDS, drawIndex, type Occasion, type TopicKind } from "@/lib/work";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
 // 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
@@ -12,8 +14,8 @@ import { ProPaywall, useFunAccess } from "./ProGate";
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "truth" | "wolf" | "king" | "ng" | "wheel" | "team";
-const TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
+type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "speech" | "memo";
+const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
   { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
@@ -21,6 +23,18 @@ const TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wheel", label: "ルーレット", icon: Dices },
   { key: "team", label: "チーム分け", icon: Users },
 ];
+
+/** 会社の会: ゲームより、会話のきっかけ・あいさつ・幹事のメモ。ルーレット(担当決め)とチーム分け(席・グループ)は、そのまま使える */
+const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
+  { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
+  { key: "speech", label: "ひとこと", icon: Mic },
+  { key: "memo", label: "幹事メモ", icon: ClipboardList },
+  { key: "wheel", label: "ルーレット", icon: Dices },
+  { key: "team", label: "チーム分け", icon: Users },
+];
+
+/** 名前を入れる道具(話題・ひとこと・メモには要らない) */
+const NEEDS_NAMES: Tool[] = ["wolf", "ng", "truth", "king", "wheel", "team"];
 
 /** 有料プレミアムの印。鍵のマークだけ(デモ版かどうかは、上の案内に書く) */
 function PackBadge({ locked }: { locked: boolean }) {
@@ -39,7 +53,16 @@ function PackBadge({ locked }: { locked: boolean }) {
 export function FunClient() {
   const access = useFunAccess();
   const locked = !access.unlocked;
+  // 会社の会は、会社向けの道具。学生とプライベートは同じ遊び。会の種類は、この端末に残っている選んだ値から読む
+  const [company, setCompany] = useState(false);
   const [tool, setTool] = useState<Tool>("wolf");
+  useEffect(() => {
+    const isWork = loadAudience() === "worker";
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCompany(isWork);
+    if (isWork) setTool("topic");
+  }, []);
+  const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
 
@@ -80,7 +103,7 @@ export function FunClient() {
             いまはデモ版です
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            見本の名前({DEMO_NAMES.slice(0, 3).join("・")}…)でぜんぶの遊びを試せます。自分たちの名前で使うには有料プレミアムが必要です
+            {company ? "一部の話題やあいさつを試せます。ぜんぶ使ってメモを残すには有料プレミアムが必要です" : `見本の名前(${DEMO_NAMES.slice(0, 3).join("・")}…)でぜんぶの遊びを試せます。自分たちの名前で使うには有料プレミアムが必要です`}
           </p>
           {!showBuy && (
             <button
@@ -114,7 +137,8 @@ export function FunClient() {
         ))}
       </div>
 
-      {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける */}
+      {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける(話題・ひとこと・メモでは出さない) */}
+      {NEEDS_NAMES.includes(tool) && (
       <section className="mx-4 mt-4 rounded-3xl border panel px-4 py-4">
         <label className="flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-white/70" htmlFor="fun-names">
           <span className="flex items-center gap-2">
@@ -149,6 +173,7 @@ export function FunClient() {
         )}
         {!locked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
       </section>
+      )}
 
       <div className="mt-4">
         {tool === "truth" && <TruthDare names={names} locked={locked} />}
@@ -157,6 +182,9 @@ export function FunClient() {
         {tool === "ng" && <NgWord names={names} locked={locked} />}
         {tool === "wheel" && <Wheel names={names} locked={locked} />}
         {tool === "team" && <Teams names={names} locked={locked} />}
+        {tool === "topic" && <Topic locked={locked} />}
+        {tool === "speech" && <Speech locked={locked} />}
+        {tool === "memo" && <Memo locked={locked} />}
       </div>
     </div>
   );
@@ -693,6 +721,192 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
         </RerollButton>
         {names.length < 2 && <p className="mt-2 text-center text-xs text-muted">2人から遊べます</p>}
       </div>
+    </Box>
+  );
+}
+
+// ───── 話題ガチャ(会社の会)─────
+function Topic({ locked }: { locked: boolean }) {
+  const [kind, setKind] = useState<TopicKind>("chat");
+  const [card, setCard] = useState<string | null>(null);
+  const [used, setUsed] = useState<Record<TopicKind, Set<number>>>({ chat: new Set(), work: new Set(), future: new Set() });
+
+  function draw() {
+    const r = drawIndex(TOPICS[kind].length, used[kind]);
+    setUsed({ ...used, [kind]: r.reset ? new Set([r.index]) : new Set([...used[kind], r.index]) });
+    setCard(TOPICS[kind][r.index]);
+  }
+
+  return (
+    <Box title="話題ガチャ" locked={locked}>
+      <p className="text-sm text-white/70">会話に困ったら引いてみてください。みんなに順番に聞いても盛り上がります</p>
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="話題の種類">
+        {TOPIC_KINDS.map((k, i) => {
+          // デモ版は最初の種類だけ。ほかは鍵つき
+          const closed = locked && i > 0;
+          return (
+            <button
+              key={k.key}
+              type="button"
+              disabled={closed}
+              aria-pressed={kind === k.key}
+              onClick={() => {
+                setKind(k.key);
+                setCard(null);
+              }}
+              className={`${PILL} disabled:opacity-50 ${kind === k.key ? PILL_ON : PILL_OFF}`}
+            >
+              {closed ? <Lock className="size-3.5" aria-hidden /> : kind === k.key && "✓ "}
+              {k.label}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-2 text-xs text-muted">{TOPIC_KINDS.find((k) => k.key === kind)!.note}</p>
+      {card && (
+        <div className="anim-rise mt-4 rounded-2xl border border-accent/40 px-4 py-5 text-center" aria-live="polite">
+          <p className="text-xl leading-snug font-black">{card}</p>
+        </div>
+      )}
+      <div className="mt-4">
+        <RerollButton onClick={draw}>
+          <MessageCircleQuestionMark className="size-4" aria-hidden />
+          {card ? "次の話題を引く" : "話題を引く"}
+        </RerollButton>
+      </div>
+    </Box>
+  );
+}
+
+// ───── ひとこと(会社の会)─────
+function Speech({ locked }: { locked: boolean }) {
+  const [occasion, setOccasion] = useState<Occasion>("bonenkai");
+  const [kind, setKind] = useState<"toast" | "closing">("toast");
+  const [n, setN] = useState(0);
+  const list = SPEECHES[occasion][kind];
+  const text = list[n % list.length];
+
+  return (
+    <Box title="ひとこと" locked={locked}>
+      <p className="text-sm text-white/70">乾杯と〆のあいさつの例です。そのまま読んでも 少し変えても使えます</p>
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="会の種類">
+        {OCCASIONS.map((o, i) => {
+          const closed = locked && i > 0;
+          return (
+            <button
+              key={o.key}
+              type="button"
+              disabled={closed}
+              aria-pressed={occasion === o.key}
+              onClick={() => {
+                setOccasion(o.key);
+                setN(0);
+              }}
+              className={`${PILL} disabled:opacity-50 ${occasion === o.key ? PILL_ON : PILL_OFF}`}
+            >
+              {closed ? <Lock className="size-3.5" aria-hidden /> : occasion === o.key && "✓ "}
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-2 flex gap-2" role="group" aria-label="あいさつの種類">
+        {(["toast", "closing"] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={kind === k}
+            onClick={() => {
+              setKind(k);
+              setN(0);
+            }}
+            className={`${PILL} flex-1 ${kind === k ? PILL_ON : PILL_OFF}`}
+          >
+            {kind === k && "✓ "}
+            {k === "toast" ? "乾杯" : "〆"}
+          </button>
+        ))}
+      </div>
+      <p className="anim-rise mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-base leading-relaxed font-bold ring-1 ring-white/10" key={`${occasion}${kind}${n}`}>
+        {text}
+      </p>
+      <button
+        type="button"
+        onClick={() => setN((v) => v + 1)}
+        className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95"
+      >
+        <Shuffle className="size-4" aria-hidden />
+        別の例を見る
+      </button>
+    </Box>
+  );
+}
+
+// ───── 幹事メモ(会社の会)─────
+const MEMO_KEY = "nomi:work-memo";
+
+function Memo({ locked }: { locked: boolean }) {
+  const [checked, setChecked] = useState<boolean[]>(CHECKLIST.map(() => false));
+  const [memo, setMemo] = useState("");
+
+  // 買った人だけ、この端末に残す(デモ版は残らない)
+  useEffect(() => {
+    if (locked) return;
+    try {
+      const v = JSON.parse(localStorage.getItem(MEMO_KEY) ?? "null") as { checked?: boolean[]; memo?: string } | null;
+      if (v) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        if (Array.isArray(v.checked)) setChecked(CHECKLIST.map((_, i) => v.checked?.[i] === true));
+        if (typeof v.memo === "string") setMemo(v.memo);
+      }
+    } catch {}
+  }, [locked]);
+
+  function save(nextChecked: boolean[], nextMemo: string) {
+    setChecked(nextChecked);
+    setMemo(nextMemo);
+    if (locked) return;
+    try {
+      localStorage.setItem(MEMO_KEY, JSON.stringify({ checked: nextChecked, memo: nextMemo }));
+    } catch {}
+  }
+
+  const done = checked.filter(Boolean).length;
+
+  return (
+    <Box title="幹事メモ" locked={locked}>
+      <p className="text-sm text-white/70">当日までにやることと 自由なメモをまとめます{locked ? "(デモ版は保存されません)" : "(この端末に残ります)"}</p>
+      <p className="mt-2 text-xs font-bold text-muted tabular-nums">
+        {done} / {CHECKLIST.length} 終わった
+      </p>
+      <ul className="mt-2 space-y-1.5">
+        {CHECKLIST.map((t, i) => (
+          <li key={t}>
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={checked[i]}
+              onClick={() => save(checked.map((c, k) => (k === i ? !c : c)), memo)}
+              className="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-2 px-3 text-left ring-1 ring-white/10 transition active:scale-[0.98]"
+            >
+              <span className={`grid size-6 shrink-0 place-items-center rounded-md border-2 ${checked[i] ? "border-accent bg-accent text-accent-text" : "border-white/30"}`}>
+                {checked[i] && <span aria-hidden className="text-sm leading-none font-black">✓</span>}
+              </span>
+              <span className={`text-sm font-bold ${checked[i] ? "text-muted line-through" : ""}`}>{t}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+      <label className="mt-4 block">
+        <span className="text-sm font-bold text-white/70">メモ</span>
+        <textarea
+          value={memo}
+          onChange={(e) => save(checked, e.target.value.slice(0, 1000))}
+          rows={4}
+          placeholder="お店の連絡先 乾杯をお願いする人 気をつけることなど"
+          className="mt-1.5 w-full resize-none rounded-2xl bg-white/8 px-4 py-3 text-base text-white ring-1 ring-white/12 outline-none placeholder:text-white/25 focus:ring-accent/50"
+        />
+      </label>
     </Box>
   );
 }
