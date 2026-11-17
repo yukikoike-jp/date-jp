@@ -386,14 +386,14 @@ export async function funStatus(license: string | null): Promise<{ purchasable: 
 }
 
 /** 月額のお会計のページを開く。back = 買ったあとに戻るページ(このサイトの中だけ) */
-export async function buyPro(back: string, work = false): Promise<{ ok: true; url: string } | Fail> {
+export async function buyPro(back: string): Promise<{ ok: true; url: string } | Fail> {
   if (!billingEnabled()) return { ok: false, error: "いまは支払いを受け付けていません" };
   const path = typeof back === "string" && /^\/[A-Za-z0-9/_?=&.-]*$/.test(back) && !back.startsWith("//") ? back : "/split";
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "https";
   try {
-    return { ok: true, url: await createProCheckout(`${proto}://${host}`, path, work === true) };
+    return { ok: true, url: await createProCheckout(`${proto}://${host}`, path) };
   } catch (e) {
     console.error("[billing] お会計のページを作れませんでした", e);
     return { ok: false, error: "お会計のページを開けませんでした。少し待ってからもう一度お試しください" };

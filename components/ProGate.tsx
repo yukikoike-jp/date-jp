@@ -51,7 +51,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
   function buy() {
     setError(null);
     start(async () => {
-      const r = await buyPro(pathname, work);
+      const r = await buyPro(pathname);
       if (r.ok) location.href = r.url;
       else setError(r.error);
     });
