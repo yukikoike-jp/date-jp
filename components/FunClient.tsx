@@ -92,7 +92,7 @@ export function FunClient() {
           <span className="font-logo">Play</span>
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">幹事がいる会をもっと楽しく</p>
+        <p className="mt-1 text-sm text-muted">{company ? "会話もあいさつも準備もスムーズに" : "幹事がいる会をもっと楽しく"}</p>
       </div>
 
       {/* デモ版のとき: 何が起きているか、どうすれば使えるかを最初に伝える */}
@@ -119,15 +119,19 @@ export function FunClient() {
       {locked && showBuy && <ProPaywall feature="Play" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
 
       {/* 道具の切り替え */}
-      <div className="mx-4 mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface-2 p-1" role="tablist" aria-label="遊び">
-        {TOOLS.map(({ key, label, icon: Icon }) => (
+      {/* 3つずつ並べる。余りが2つのとき(5つのとき)は、下の段の2つを広げて、きれいにそろえる */}
+      <div className="mx-4 mt-4 grid grid-cols-6 gap-1 rounded-2xl bg-surface-2 p-1" role="tablist" aria-label="遊び">
+        {TOOLS.map(({ key, label, icon: Icon }, i) => (
           <button
             key={key}
             type="button"
             role="tab"
             aria-selected={tool === key}
             onClick={() => setTool(key)}
-            className={`flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
+            className={`${
+              // 余りが2つのとき(TOOLS.length が3で割って2余る)は、最後の2つが3列ぶんずつ。それ以外は2列ぶん(3つずつ)
+              TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : "col-span-2"
+            } flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
               tool === key ? "bg-surface text-text shadow" : "text-muted hover:text-text"
             }`}
           >

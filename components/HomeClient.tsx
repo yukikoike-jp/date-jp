@@ -116,22 +116,26 @@ function PartyGroup({
  */
 const HOME_BY_AUDIENCE: Record<
   Audience,
-  { lead: string; shops: string; split: string }
+  { lead: string; shops: string; split: string; play: string }
 > = {
   student: {
     lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "学割・飲み放題のお店",
     split: "先輩多めの傾斜も割り勘も",
+    play: "幹事がいる会をもっと楽しく",
   },
   private: {
     lead: "友達との飲み会をURLひとつで",
     shops: "飲み放題・個室のお店",
     split: "割り勘も年上多めも",
+    play: "幹事がいる会をもっと楽しく",
   },
   worker: {
     lead: "歓送迎会・忘年会をURLひとつで",
     shops: "個室・喫煙できるお店も",
     split: "会社の補助も上司多めも",
+    // 会社の会では、ゲームではなく、会話・あいさつ・準備(話題ガチャ・ひとこと・幹事メモ)
+    play: "会話もあいさつも準備もスムーズに",
   },
 };
 
@@ -377,7 +381,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
             title="Play"
-            sub="幹事がいる会をもっと楽しく"
+            sub={home.play}
             lockOnly
             wide
           />
