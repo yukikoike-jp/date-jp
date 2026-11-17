@@ -74,7 +74,7 @@ export function ShopSearch() {
   const [pending, start] = useTransition();
 
   useEffect(() => {
-    const a = loadAudience() ?? "private";
+    const a = loadAudience() ?? "student";
     /* eslint-disable react-hooks/set-state-in-effect */
     setAudience(a);
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -96,7 +96,7 @@ export function ShopSearch() {
   const toggleGenre = (k: GenreKey) =>
     setGenres((cur) => (cur.includes(k) ? cur.filter((g) => g !== k) : [...cur, k]));
 
-  const opts = AUDIENCES[audience ?? "private"];
+  const opts = AUDIENCES[audience ?? "student"];
   const summary = [
     station ? `${station.name}駅` : "場所はまだ",
     budget === null ? "予算は決めない" : `${yen(budget)}まで`,

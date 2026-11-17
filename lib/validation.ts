@@ -1,4 +1,4 @@
-import { isAudience, normalizeAudience, type Audience } from "./audience";
+import { isAudience, type Audience } from "./audience";
 import { isStation } from "./stations";
 import { isAvoidKey } from "./diet";
 import { isAnswerBudget, isArrival, isAreaKey, isGenreKey, isStay, type AreaKey } from "./sendai";
@@ -31,7 +31,7 @@ export function parseParty(input: {
   const dates = [...new Set(raw.filter((d): d is string => typeof d === "string" && DATE.test(d)))].sort();
   if (dates.length === 0) return { ok: false, error: "候補の日を1つ以上選んでください" };
   if (dates.length > MAX_DATES) return { ok: false, error: `候補の日は${MAX_DATES}つまでにしてください` };
-  const audience = isAudience(input.audience) ? normalizeAudience(input.audience) : "private";
+  const audience = isAudience(input.audience) ? input.audience : "student";
   if (!isArrival(input.start)) return { ok: false, error: "何時から始めるかを選んでください" };
   return { ok: true, value: { title: title.value, audience, dates, start: input.start, deadline: null } };
 }

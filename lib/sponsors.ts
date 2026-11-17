@@ -1,4 +1,4 @@
-import { normalizeAudience, type Audience } from "./audience";
+import type { Audience } from "./audience";
 
 // 広告枠。飲食店以外の仙台の会社に、月いくらで直接売る。
 // 飲食店からお金をもらうとホットペッパーのデータが使えなくなるので、飲食店は載せない。
@@ -78,7 +78,7 @@ export function activeSponsors(now: Date = new Date()): Sponsor[] {
 
 /** その場所に出す広告。会の種類(学生・社会人)に合うものだけ */
 export function sponsorFor(placement: Placement, audience: Audience, now?: Date): Sponsor | null {
-  return activeSponsors(now).find((s) => s.placement === placement && (s.audience === "both" || normalizeAudience(s.audience) === normalizeAudience(audience))) ?? null;
+  return activeSponsors(now).find((s) => s.placement === placement && (s.audience === "both" || s.audience === audience)) ?? null;
 }
 
 export function findSponsor(id: string): Sponsor | null {

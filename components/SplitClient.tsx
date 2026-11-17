@@ -81,7 +81,7 @@ function TierTag({ w }: { w: Weight }) {
 export function SplitClient({ from = null }: { from?: string | null }) {
   // どの会の会計か。会の画面から来たか、決まった会から名前を読み込んだときに入る
   const [fromParty, setFromParty] = useState<string | null>(from);
-  const [audience, setAudience] = useState<Audience>("private");
+  const [audience, setAudience] = useState<Audience>("student");
   const [title, setTitle] = useState("");
   const [total, setTotal] = useState("");
   const [people, setPeople] = useState<Person[]>([]);
@@ -134,7 +134,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
   }
 
   useEffect(() => {
-    const a = loadAudience() ?? "private";
+    const a = loadAudience() ?? "student";
     // 前の形(名前だけの文字列)でも受け取れるようにする
     let names: (string | { name: string; soft?: boolean })[] = [];
     try {
