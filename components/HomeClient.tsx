@@ -377,7 +377,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
             title="もりあげ道具"
-            sub="席替え・チーム分け・王様ゲーム・ルーレット。幹事がいる回が、もっと楽しく"
+            sub="真実か挑戦・ワードウルフ・王様ゲーム・チーム分け。幹事がいる回が、もっと楽しく"
             lockOnly
             wide
           />

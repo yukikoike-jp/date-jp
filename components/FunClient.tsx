@@ -1,33 +1,23 @@
 "use client";
 
-import { Armchair, Crown, Dices, Eye, EyeOff, Lock, LockOpen, PartyPopper, Shuffle, Users } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  DEMO_NAMES,
-  KING_ORDERS,
-  SEAT_LAYOUTS,
-  kingGame,
-  parseNames,
-  pickIndex,
-  seatPlan,
-  splitTeams,
-  type KingDraw,
-  type SeatLayout,
-} from "@/lib/fun";
+import { Crown, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { DEMO_NAMES, KING_ORDERS, kingGame, parseNames, pickIndex, splitTeams, type KingDraw } from "@/lib/fun";
+import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
-// 有料プレミアムの「もりあげ道具」(席替え・チーム分け・王様ゲーム・ルーレット)。
+// 有料プレミアムの「もりあげ道具」(真実か挑戦・ワードウルフ・王様ゲーム・チーム分け)。
 // 買う前は「デモ版」: 見本の名前で全部の道具を試せるが、自分たちの名前は入れられない。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "seat" | "team" | "king" | "wheel";
-const TOOLS: { key: Tool; label: string; icon: typeof Armchair }[] = [
-  { key: "seat", label: "席替え", icon: Armchair },
-  { key: "team", label: "チーム分け", icon: Users },
+type Tool = "truth" | "wolf" | "king" | "team";
+const TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
+  { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
+  { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "king", label: "王様ゲーム", icon: Crown },
-  { key: "wheel", label: "ルーレット", icon: Dices },
+  { key: "team", label: "チーム分け", icon: Users },
 ];
 
 /** 有料プレミアムの印。鍵のマークだけ(デモ版かどうかは、上の案内に書く) */
@@ -47,7 +37,7 @@ function PackBadge({ locked }: { locked: boolean }) {
 export function FunClient() {
   const access = useFunAccess();
   const locked = !access.unlocked;
-  const [tool, setTool] = useState<Tool>("seat");
+  const [tool, setTool] = useState<Tool>("truth");
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
 
@@ -77,7 +67,7 @@ export function FunClient() {
           もりあげ道具
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">席替え・チーム分け・王様ゲーム・ルーレット</p>
+        <p className="mt-1 text-sm text-muted">真実か挑戦・ワードウルフ・王様ゲーム・チーム分け</p>
       </div>
 
       {/* デモ版のとき: 何が起きているか、どうすれば使えるかを最初に伝える */}
@@ -138,9 +128,9 @@ export function FunClient() {
         </label>
         {locked ? (
           // デモ版は見本の名前を並べるだけ(入力はできない)。場所をとらないよう、小さな札にする
-          <ul id="fun-names" className="mt-2.5 flex flex-wrap gap-1.5 opacity-70" aria-label="見本の名前">
+          <ul id="fun-names" className="mt-2.5 grid grid-cols-3 gap-1.5 opacity-70" aria-label="見本の名前">
             {DEMO_NAMES.map((n) => (
-              <li key={n} className="rounded-full bg-white/8 px-3 py-1 text-sm font-bold ring-1 ring-white/12">
+              <li key={n} className="truncate rounded-full bg-white/8 px-3 py-1.5 text-center text-sm font-bold ring-1 ring-white/12">
                 {n}
               </li>
             ))}
@@ -159,10 +149,10 @@ export function FunClient() {
       </section>
 
       <div className="mt-4">
-        {tool === "seat" && <Seats names={names} locked={locked} />}
-        {tool === "team" && <Teams names={names} locked={locked} />}
+        {tool === "truth" && <TruthDare names={names} locked={locked} />}
+        {tool === "wolf" && <Wolf names={names} locked={locked} />}
         {tool === "king" && <King names={names} locked={locked} />}
-        {tool === "wheel" && <Wheel names={names} locked={locked} />}
+        {tool === "team" && <Teams names={names} locked={locked} />}
       </div>
     </div>
   );
@@ -191,108 +181,6 @@ function RerollButton({ onClick, disabled, children }: { onClick: () => void; di
     >
       {children}
     </button>
-  );
-}
-
-// ───── 席替え ─────
-function Seats({ names, locked }: { names: string[]; locked: boolean }) {
-  const [layout, setLayout] = useState<SeatLayout>("table");
-  const [plan, setPlan] = useState<{ rows: string[][] } | null>(null);
-  const [round, setRound] = useState(0);
-  const ok = names.length >= 2;
-  // 名前や並べ方を変えたら、いったん結果を消す
-  const key = `${layout}|${names.join("\u0000")}`;
-  const last = useRef(key);
-  useEffect(() => {
-    if (last.current !== key) {
-      last.current = key;
-      setPlan(null);
-    }
-  }, [key]);
-
-  function run() {
-    setPlan(seatPlan(names, layout));
-    setRound((r) => r + 1);
-  }
-
-  return (
-    <Box title="席替え" locked={locked}>
-      <div className="flex flex-wrap gap-2" role="group" aria-label="席の並べ方">
-        {SEAT_LAYOUTS.map((l) => (
-          <button key={l.key} type="button" aria-pressed={layout === l.key} onClick={() => setLayout(l.key)} className={`${PILL} ${layout === l.key ? PILL_ON : PILL_OFF}`}>
-            {layout === l.key && "✓ "}
-            {l.label}
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-xs text-muted">{SEAT_LAYOUTS.find((l) => l.key === layout)!.note}</p>
-
-      {plan && (
-        <div key={round} className="anim-rise mt-4">
-          {layout === "round" ? (
-            <RoundTable names={plan.rows[0]} />
-          ) : (
-            <div className="space-y-2">
-              {plan.rows.map((row, ri) => (
-                <div key={ri}>
-                  {layout === "table" && ri === 1 && (
-                    <div className="mb-2 rounded-lg bg-white/8 py-1.5 text-center text-[11px] font-bold tracking-widest text-white/50">テーブル</div>
-                  )}
-                  <ul className="flex flex-wrap justify-center gap-2">
-                    {row.map((n, i) => (
-                      <SeatChip key={n} n={n} no={ri === 0 ? i + 1 : plan.rows[0].length + i + 1} />
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-      <div className="mt-4">
-        <RerollButton onClick={run} disabled={!ok}>
-          <Shuffle className="size-4" aria-hidden />
-          {plan ? "席替えをやり直す" : "席替えする"}
-        </RerollButton>
-      </div>
-    </Box>
-  );
-}
-
-function SeatChip({ n, no }: { n: string; no: number }) {
-  return (
-    <li className="flex min-h-12 min-w-[5.5rem] items-center gap-2 rounded-xl bg-surface-2 px-3 ring-1 ring-white/10">
-      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-black text-accent-text">{no}</span>
-      <span className="truncate text-sm font-bold">{n}</span>
-    </li>
-  );
-}
-
-function RoundTable({ names }: { names: string[] }) {
-  const n = names.length;
-  const size = 300;
-  const r = 118;
-  return (
-    <div className="mx-auto" style={{ width: size, height: size, maxWidth: "100%" }}>
-      <div className="relative h-full w-full">
-        <div className="absolute inset-[22%] grid place-items-center rounded-full bg-white/8 text-[11px] font-bold tracking-widest text-white/50 ring-1 ring-white/10">
-          テーブル
-        </div>
-        {names.map((name, i) => {
-          const a = (i / n) * Math.PI * 2 - Math.PI / 2;
-          const x = 50 + (Math.cos(a) * r * 100) / size;
-          const y = 50 + (Math.sin(a) * r * 100) / size;
-          return (
-            <div key={name} className="absolute -translate-x-1/2 -translate-y-1/2" style={{ left: `${x}%`, top: `${y}%` }}>
-              <span className="flex max-w-[5.5rem] items-center gap-1 rounded-full bg-surface-2 py-1 pr-2.5 pl-1 text-xs font-bold ring-1 ring-white/10">
-                <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[10px] font-black text-accent-text">{i + 1}</span>
-                <span className="truncate">{name}</span>
-              </span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 }
 
@@ -426,96 +314,190 @@ function King({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-// ───── ルーレット ─────
-function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
-  const [angle, setAngle] = useState(0);
-  const [winner, setWinner] = useState<number | null>(null);
-  const [spinning, setSpinning] = useState(false);
-  const n = names.length;
-  const ok = n >= 2;
-  const key = names.join("\u0000");
-  const last = useRef(key);
-  useEffect(() => {
-    if (last.current !== key) {
-      last.current = key;
-      setWinner(null);
-    }
-  }, [key]);
+// ───── 真実か挑戦 ─────
+function TruthDare({ names, locked }: { names: string[]; locked: boolean }) {
+  const [level, setLevel] = useState<Level>("soft");
+  const [player, setPlayer] = useState<number | null>(null);
+  const [done, setDone] = useState<Set<number>>(new Set());
+  const [card, setCard] = useState<{ kind: CardKind; text: string } | null>(null);
+  const [used, setUsed] = useState<{ truth: Set<number>; dare: Set<number> }>({ truth: new Set(), dare: new Set() });
+  const ok = names.length >= 2;
 
-  function spin() {
-    if (!ok || spinning) return;
-    const w = pickIndex(n);
-    const slice = 360 / n;
-    // 上の矢印に、勝った人のまん中が来るように回す。何周か回してから止める
-    const target = Math.ceil(angle / 360) * 360 + 360 * 5 - (w + 0.5) * slice;
-    setWinner(null);
-    setSpinning(true);
-    setAngle(target);
-    window.setTimeout(() => {
-      setWinner(w);
-      setSpinning(false);
-    }, 4200);
+  function pick() {
+    const r = nextPlayer(names.length, done);
+    setPlayer(r.index);
+    setDone(r.reset ? new Set([r.index]) : new Set([...done, r.index]));
+    setCard(null);
   }
 
-  const R = 140;
-  const slices = names.map((name, i) => {
-    const a0 = ((i / n) * 360 - 90) * (Math.PI / 180);
-    const a1 = (((i + 1) / n) * 360 - 90) * (Math.PI / 180);
-    const large = 360 / n > 180 ? 1 : 0;
-    const d = `M0 0 L${R * Math.cos(a0)} ${R * Math.sin(a0)} A${R} ${R} 0 ${large} 1 ${R * Math.cos(a1)} ${R * Math.sin(a1)} Z`;
-    const mid = (((i + 0.5) / n) * 360 - 90) * (Math.PI / 180);
-    return { name, d, tx: R * 0.62 * Math.cos(mid), ty: R * 0.62 * Math.sin(mid), rot: ((i + 0.5) / n) * 360 - 90 };
-  });
+  function draw(kind: CardKind) {
+    const c = drawCard(kind, level, used[kind]);
+    setUsed({ ...used, [kind]: c.reset ? new Set([c.index]) : new Set([...used[kind], c.index]) });
+    setCard({ kind, text: c.text });
+  }
+
+  const total = TRUTHS[level].length + DARES[level].length;
 
   return (
-    <Box title="ルーレット" locked={locked}>
-      <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を、運で決めます。</p>
-      <div className="relative mx-auto mt-4 w-full max-w-[300px]">
-        {/* 上の矢印 */}
-        <div className="absolute top-[-6px] left-1/2 z-10 -translate-x-1/2 text-accent" aria-hidden>
-          <svg width="26" height="22" viewBox="0 0 26 22">
-            <path d="M13 22 L1 2 H25 Z" fill="currentColor" />
-          </svg>
-        </div>
-        <svg viewBox="-150 -150 300 300" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
-          <g style={{ transform: `rotate(${angle}deg)`, transition: spinning ? "transform 4s cubic-bezier(0.12, 0.7, 0.1, 1)" : "none" }}>
-            {slices.map((s, i) => (
-              <g key={s.name}>
-                <path d={s.d} fill={winner === i ? "var(--accent)" : i % 2 === 0 ? "#2a2a2a" : "#1d1d1d"} stroke="#000" strokeWidth="1.5" />
-                <text
-                  x={s.tx}
-                  y={s.ty}
-                  transform={`rotate(${s.rot} ${s.tx} ${s.ty})`}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={n > 12 ? 9 : 13}
-                  fontWeight="800"
-                  fill={winner === i ? "#000" : "#fff"}
-                >
-                  {s.name.length > 6 ? `${s.name.slice(0, 5)}…` : s.name}
-                </text>
-              </g>
-            ))}
-            <circle r="14" fill="#000" stroke="var(--accent)" strokeWidth="3" />
-          </g>
-        </svg>
+    <Box title="真実か挑戦" locked={locked}>
+      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければ、パスしても大丈夫です。</p>
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="盛り上がり度">
+        {LEVELS.map((l) => (
+          <button
+            key={l.key}
+            type="button"
+            aria-pressed={level === l.key}
+            onClick={() => {
+              setLevel(l.key);
+              setCard(null);
+            }}
+            className={`${PILL} ${level === l.key ? PILL_ON : PILL_OFF}`}
+          >
+            {level === l.key && "✓ "}
+            {l.key === "spicy" && <Flame className="size-4" aria-hidden />}
+            {l.label}
+          </button>
+        ))}
       </div>
-      <p className="mt-3 min-h-7 text-center text-lg font-black" aria-live="polite">
-        {winner !== null ? (
-          <>
-            <span className="text-accent">{names[winner]}</span> さんに決まり!
-          </>
-        ) : spinning ? (
-          "…"
-        ) : (
-          ""
-        )}
-      </p>
-      <div className="mt-2">
-        <RerollButton onClick={spin} disabled={!ok || spinning}>
-          <Dices className="size-4" aria-hidden />
-          {spinning ? "回っています…" : winner !== null ? "もう一度回す" : "回す"}
+      <p className="mt-2 text-xs text-muted">{LEVELS.find((l) => l.key === level)!.note}(お題は{total}個)</p>
+
+      {player !== null && (
+        <div className="anim-rise mt-4 rounded-2xl border border-accent/40 px-4 py-4 text-center" aria-live="polite">
+          <p className="text-xs font-bold text-muted">次は</p>
+          <p className="mt-1 text-3xl font-black text-accent">{names[player]}</p>
+          <p className="mt-1 text-sm font-bold">さんの番です</p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {(["truth", "dare"] as const).map((k) => (
+              <button
+                key={k}
+                type="button"
+                onClick={() => draw(k)}
+                className="min-h-12 rounded-xl bg-white/8 text-base font-black ring-1 ring-white/12 transition active:scale-95 hover:bg-white/12"
+              >
+                {k === "truth" ? "真実" : "挑戦"}
+              </button>
+            ))}
+          </div>
+          {card && (
+            <div className="anim-rise mt-3 rounded-xl bg-surface-2 px-4 py-4 text-left ring-1 ring-white/10">
+              <p className="text-xs font-black text-accent">{card.kind === "truth" ? "真実: 正直に答える" : "挑戦: やりきる"}</p>
+              <p className="mt-1.5 text-lg font-black leading-snug">{card.text}</p>
+              <button type="button" onClick={() => draw(card.kind)} className="mt-3 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-muted underline underline-offset-2">
+                <Shuffle className="size-3.5" aria-hidden />
+                別のお題にする(パス)
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      <div className="mt-4">
+        <RerollButton onClick={pick} disabled={!ok}>
+          <MessageCircleQuestionMark className="size-4" aria-hidden />
+          {player === null ? "最初の人を選ぶ" : "次の人を選ぶ"}
         </RerollButton>
+        {!ok && <p className="mt-2 text-center text-xs text-muted">2人から遊べます</p>}
+      </div>
+    </Box>
+  );
+}
+
+// ───── ワードウルフ ─────
+function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
+  const [game, setGame] = useState<ReturnType<typeof wordWolf> | null>(null);
+  const [open, setOpen] = useState<number | null>(null);
+  const [reveal, setReveal] = useState(false);
+  const [left, setLeft] = useState<number | null>(null);
+
+  // 話し合いのタイマー(3分)
+  useEffect(() => {
+    if (left === null || left <= 0) return;
+    const t = window.setTimeout(() => setLeft((v) => (v === null ? v : v - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [left]);
+
+  function start() {
+    setGame(wordWolf(names));
+    setOpen(null);
+    setReveal(false);
+    setLeft(null);
+  }
+
+  return (
+    <Box title="ワードウルフ" locked={locked}>
+      <p className="text-sm text-white/70">
+        全員にお題の言葉が配られますが、1人だけ(ウルフ)は、少し違う言葉です。自分の名前を押して、こっそり言葉を見たら、見せずに話し合い、ウルフを当てます。
+      </p>
+      {game && (
+        <>
+          <ul className="mt-4 grid grid-cols-2 gap-2">
+            {game.deals.map((d, i) => {
+              const shown = open === i;
+              return (
+                <li key={d.name}>
+                  <button
+                    type="button"
+                    onClick={() => setOpen(shown ? null : i)}
+                    aria-pressed={shown}
+                    className="flex min-h-16 w-full flex-col items-center justify-center rounded-2xl bg-surface-2 px-2 py-2 ring-1 ring-white/10 transition active:scale-95"
+                  >
+                    <span className="max-w-full truncate text-sm font-bold">{d.name}</span>
+                    <span className={`mt-0.5 inline-flex items-center gap-1 text-xs font-black ${shown ? "text-accent" : "text-muted"}`}>
+                      {shown ? (
+                        <>
+                          <Eye className="size-3.5" aria-hidden />
+                          {d.word}
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="size-3.5" aria-hidden />
+                          言葉を見る
+                        </>
+                      )}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLeft(180)}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95"
+            >
+              <Timer className="size-4" aria-hidden />
+              話し合い 3分
+            </button>
+            {left !== null && (
+              <span className="text-lg font-black tabular-nums" aria-live="off">
+                {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
+                {left === 0 && <span className="ml-2 text-sm text-accent">時間です。投票しましょう</span>}
+              </span>
+            )}
+          </div>
+          <div className="mt-3 rounded-2xl border border-border px-4 py-3">
+            {reveal ? (
+              <p className="text-sm" aria-live="polite">
+                ウルフは <span className="text-lg font-black text-accent">{game.wolf}</span> さん!
+                <span className="mt-1 block text-xs text-muted">
+                  みんなの言葉は「{game.majorityWord}」、ウルフは「{game.wolfWord}」でした
+                </span>
+              </p>
+            ) : (
+              <button type="button" onClick={() => setReveal(true)} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-black text-accent underline underline-offset-2">
+                <PartyPopper className="size-4" aria-hidden />
+                投票が終わったら、答え合わせ
+              </button>
+            )}
+          </div>
+        </>
+      )}
+      <div className="mt-4">
+        <RerollButton onClick={start} disabled={names.length < 3}>
+          <VenetianMask className="size-4" aria-hidden />
+          {game ? "新しいお題でもう一度" : "ゲームをはじめる"}
+        </RerollButton>
+        {names.length < 3 && <p className="mt-2 text-center text-xs text-muted">3人から遊べます</p>}
       </div>
     </Box>
   );
