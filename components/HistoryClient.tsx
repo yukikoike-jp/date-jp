@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
 import { mapsUrl } from "@/lib/maps";
 import { loadMyCollections, type MyCollection } from "@/lib/myCollections";
-import { loadAudience } from "@/lib/audience";
+import { isAudience, loadAudience, normalizeAudience, type Audience } from "@/lib/audience";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { clock, dateLabel, yen } from "@/lib/sendai";
 import { SkeletonRows } from "./Skeleton";
@@ -35,7 +35,7 @@ export function HistoryClient() {
         setRows(
           mine
             // 学生・プライベート・会社で分ける(いま選んでいるものの会だけ)
-            .filter((p) => st[p.id]?.decision && (!audience || st[p.id].audience === audience))
+            .filter((p) => st[p.id]?.decision && (!audience || isAudience(st[p.id].audience) && normalizeAudience(st[p.id].audience as Audience) === audience))
             .map((p) => ({ party: p, status: st[p.id], collection: collections.find((c) => c.partyId === p.id) ?? null }))
             .sort((a, b) => b.status.decision!.date.localeCompare(a.status.decision!.date)),
         ),

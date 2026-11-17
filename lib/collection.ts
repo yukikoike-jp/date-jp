@@ -1,4 +1,4 @@
-import { isAudience, type Audience } from "./audience";
+import { isAudience, normalizeAudience, type Audience } from "./audience";
 import { ROUND_UNITS, splitBill, subsidyTotal, CUSTOM_MAX, CUSTOM_MIN } from "./split";
 import type { CollectionPerson, Payment } from "./store/types";
 
@@ -60,7 +60,7 @@ export function parseCollection(input: CollectionInput): Result<ParsedCollection
     ok: true,
     value: {
       title: typeof input.title === "string" ? input.title.trim().slice(0, 30) : "",
-      audience: isAudience(input.audience) ? input.audience : "student",
+      audience: isAudience(input.audience) ? normalizeAudience(input.audience) : "private",
       total,
       subsidy,
       people: rows.map((r, i) => ({ ...r, amount: amounts[i], organizer: i === organizer })),
