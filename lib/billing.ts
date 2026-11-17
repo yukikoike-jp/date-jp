@@ -88,14 +88,19 @@ export async function hasFun(license: unknown): Promise<boolean> {
 }
 
 /** お会計のページを作り、その URL を返す。origin はこのサイトの URL、back は買ったあとに戻るページ */
-export async function createProCheckout(origin: string, back: string): Promise<string> {
+/** Stripe の決済ページ・領収書に出る商品名。プライベートは遊び、仕事は会話・あいさつ・メモ(仕事の会に「遊び」とは出さない) */
+export function proProductName(work: boolean): string {
+  return work ? "Tsudoro 有料プレミアム(Play: 会話・あいさつ・幹事メモ)月額" : "Tsudoro 有料プレミアム(Play: 盛り上がる遊び)月額";
+}
+
+export async function createProCheckout(origin: string, back: string, work = false): Promise<string> {
   const params = new URLSearchParams({
     mode: "subscription",
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "jpy",
     "line_items[0][price_data][unit_amount]": String(proPrice()),
     "line_items[0][price_data][recurring][interval]": "month",
-    "line_items[0][price_data][product_data][name]": "Tsudoro 有料プレミアム(Play: 盛り上がる遊び)月額",
+    "line_items[0][price_data][product_data][name]": proProductName(work),
     // Stripe の Managed Payments(最初からオン)では、商品の税コードが必要。電子的に提供するサービス(一般)
     "line_items[0][price_data][product_data][tax_code]": "txcd_10000000",
     "metadata[kind]": "pro",

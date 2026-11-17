@@ -286,7 +286,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setPhase("choose")}
-          aria-label={`プライベート・会社を選び直す(いまは${AUDIENCES[audience].label})`}
+          aria-label={`プライベート・仕事を選び直す(いまは${AUDIENCES[audience].label})`}
           className="-mr-1 flex h-11 items-center gap-1 rounded-full px-4 text-[13px] font-bold text-white/80 ring-1 ring-white/20 transition hover:text-white hover:ring-white/40 active:scale-95"
         >
           {AUDIENCES[audience].label}

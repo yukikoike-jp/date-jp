@@ -41,7 +41,7 @@ export function useFunAccess(): FunAccess {
 }
 
 /** 有料の機能を使おうとしたときに出す案内。買う、または別の端末で買ったものを戻す */
-export function ProPaywall({ feature, price, onClose, purchasable = true }: { feature: string; price: number; onClose?: () => void; purchasable?: boolean }) {
+export function ProPaywall({ feature, price, onClose, purchasable = true, work = false }: { feature: string; price: number; onClose?: () => void; purchasable?: boolean; work?: boolean }) {
   const pathname = usePathname();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true }: { fe
   function buy() {
     setError(null);
     start(async () => {
-      const r = await buyPro(pathname);
+      const r = await buyPro(pathname, work);
       if (r.ok) location.href = r.url;
       else setError(r.error);
     });
@@ -78,7 +78,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true }: { fe
       </p>
       <p className="mt-1 text-sm text-muted">有料プレミアム(月額) ・ いつでも解約できます。</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {["盛り上がる遊びがぜんぶ", "これからふえる遊びも、契約中はずっと"].map((t) => (
+        {(work ? ["話題ガチャ・ひとこと・幹事メモがぜんぶ", "これからふえる道具も、契約中はずっと"] : ["盛り上がる遊びがぜんぶ", "これからふえる遊びも、契約中はずっと"]).map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}

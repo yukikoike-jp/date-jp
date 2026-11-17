@@ -132,7 +132,7 @@ export function FunClient() {
           )}
         </section>
       )}
-      {locked && showBuy && <ProPaywall feature="Play" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
+      {locked && showBuy && <ProPaywall feature="Play" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
 
       {/* 道具の切り替え */}
       {/* 3つずつ並べる。余りが2つのとき(5つのとき)は、下の段の2つを広げて、きれいにそろえる */}

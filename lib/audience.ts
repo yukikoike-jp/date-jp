@@ -58,7 +58,7 @@ export const AUDIENCES: Record<
     prefer: ["学割", "飲み放題"],
   },
   worker: {
-    label: "会社",
+    label: "仕事",
     note: "職場・部署・取引先",
     budgets: [3000, 4000, 5000, 6000, 8000],
     arrivals: [1080, 1110, 1140, 1170, 1200, 1260],
