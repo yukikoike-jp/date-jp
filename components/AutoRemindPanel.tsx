@@ -131,7 +131,7 @@ export function AutoRemindPanel({
         )}
 
         {locked ? (
-          showBuy && <ProPaywall feature="催促をアプリにまかせる" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+          showBuy && <ProPaywall feature="催促をアプリにまかせる" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : access.loading ? null : !pushReady ? (
           <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">通知の準備がまだできていません。しばらく待ってからお試しください</p>
         ) : autoOn ? (

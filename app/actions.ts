@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience } from "@/lib/audience";
-import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, hasPro, licenseForEmail, proPrice } from "@/lib/billing";
+import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { parsePushSub } from "@/lib/pushRemind";
 import { cleanPayLink } from "@/lib/reminder";
@@ -164,7 +164,7 @@ export async function findShops(input: {
 }
 
 /** 傾斜会計から集金のページを作る。金額はサーバーで計算し直す */
-/** 集金のページは無料(2026-11-17 から。有料プレミアムにするのは、傾斜で割ると、催促をアプリにまかせること) */
+/** 集金のページは無料(2026-11-17 から。有料プレミアムにするのは Play だけ) */
 export async function startCollection(input: CollectionInput): Promise<{ ok: true; id: string; adminToken: string } | Fail> {
   const parsed = parseCollection(input);
   if (!parsed.ok) return parsed;
@@ -378,11 +378,6 @@ export async function partyAttendees(
   if (!party?.decision || !verifyToken(adminToken, party.adminHash)) return null;
   const summary = summarize(party.dates, await store.listAnswers(party.id), party.decision.date);
   return { title: party.title, date: party.decision.date, attendees: summary.attendees.map((a) => ({ name: a.name, soft: a.soft })) };
-}
-
-/** 有料プレミアム(傾斜で割る)が使えるか。有料にしていなければ、いつでも使える(enabled = false) */
-export async function proStatus(license: string | null): Promise<{ enabled: boolean; unlocked: boolean; price: number }> {
-  return { enabled: billingEnabled(), unlocked: await hasPro(license), price: proPrice() };
 }
 
 /** 有料プレミアムの機能(催促をアプリにまかせる)が使えるか。unlocked = false なら見本だけのデモ版。purchasable = いま買えるか(支払いの準備ができているか) */

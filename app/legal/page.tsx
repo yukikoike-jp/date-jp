@@ -22,7 +22,7 @@ export default async function LegalPage() {
     ["所在地", cleanText(process.env.SELLER_ADDRESS) ?? DISCLOSE],
     ["電話番号", cleanText(process.env.SELLER_PHONE) ?? DISCLOSE],
     ["メールアドレス", cleanText(process.env.SELLER_EMAIL) ?? "準備中"],
-    ["販売価格", `有料プレミアム(催促をアプリにまかせる・会社の会の傾斜で割る) 月額 ${yen(proPrice())}(税込)`],
+    ["販売価格", `有料プレミアム(Play: 盛り上がる遊び) 月額 ${yen(proPrice())}(税込)`],
     ["契約期間・更新", "1か月ごとの自動更新です。解約するまで、毎月同じ日に自動で更新され、代金が請求されます"],
     ["商品代金以外の必要料金", "なし(インターネットの通信料はお客さまのご負担です)"],
     ["お支払い方法", "クレジットカード(Stripe による決済)"],

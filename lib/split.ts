@@ -12,22 +12,22 @@ export const WEIGHTS: Record<Audience, Weight[]> = {
   student: [
     { key: "more", label: "多め", note: "先輩・OB", tenths: 13, mark: "▲", tone: "red" },
     { key: "normal", label: "ふつう", note: "同期", tenths: 10, mark: "●", tone: "yellow" },
-    { key: "less", label: "少なめ", note: "後輩・1年", tenths: 7, mark: "▼", tone: "green" },
-    { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 6, mark: "◇", tone: "purple" },
+    { key: "less", label: "少なめ", note: "後輩・1年", tenths: 7, mark: "▼", tone: "blue" },
+    { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 6, mark: "◇", tone: "green" },
   ],
   // 友達どうしは上下が少ないので、割り勘を基本に、多め・少なめだけ
   private: [
     { key: "more", label: "多め", note: "年上・誘った人", tenths: 13, mark: "▲", tone: "red" },
     { key: "normal", label: "ふつう", note: "", tenths: 10, mark: "●", tone: "yellow" },
-    { key: "less", label: "少なめ", note: "年下", tenths: 8, mark: "▼", tone: "green" },
-    { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 7, mark: "◇", tone: "purple" },
+    { key: "less", label: "少なめ", note: "年下", tenths: 8, mark: "▼", tone: "blue" },
+    { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 7, mark: "◇", tone: "green" },
   ],
   worker: [
     { key: "boss", label: "上司", note: "部長・課長", tenths: 15, mark: "★", tone: "red" },
-    { key: "senior", label: "先輩", note: "", tenths: 12, mark: "▲", tone: "blue" },
+    { key: "senior", label: "先輩", note: "", tenths: 12, mark: "▲", tone: "purple" },
     { key: "normal", label: "ふつう", note: "同期", tenths: 10, mark: "●", tone: "yellow" },
-    { key: "junior", label: "新人", note: "1〜2年目", tenths: 7, mark: "▼", tone: "green" },
-    { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 7, mark: "◇", tone: "purple" },
+    { key: "junior", label: "新人", note: "1〜2年目", tenths: 7, mark: "▼", tone: "blue" },
+    { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 7, mark: "◇", tone: "green" },
   ],
 };
 

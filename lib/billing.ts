@@ -2,7 +2,7 @@ import "server-only";
 import { cleanEnv } from "./env";
 import { signLicense, verifyLicense } from "./license";
 
-// 有料プレミアム(月額のサブスク。催促をアプリにまかせる + 会社の会の傾斜で割る)。
+// 有料プレミアム(月額のサブスク。エンタメの Play だけ)。
 // Stripe のお会計のページ(Checkout、mode=subscription)を使い、カードの情報はこちらで持たない。
 // STRIPE_SECRET_KEY と LICENSE_SECRET がそろうまでは、買えない。
 // 支払いのあとは /pro/done に戻り、Stripe に支払いを確かめてから、端末に鍵(lib/license.ts)を渡す。
@@ -78,14 +78,8 @@ export async function proActive(license: unknown): Promise<boolean> {
   }
 }
 
-/** 会社の会の傾斜で割る: 有料にしていなければ、いつでも使える。有料にしていれば、契約が続いている端末だけ */
-export async function hasPro(license: unknown): Promise<boolean> {
-  if (!billingEnabled()) return true;
-  return proActive(license);
-}
-
 /**
- * 催促をアプリにまかせる(自動でお知らせ)が使えるか。傾斜と違って、支払いの準備ができていなくても鍵をかけたままにする
+ * 催促をアプリにまかせる(自動でお知らせ)が使えるか。支払いの準備ができていなくても鍵をかけたままにする
  * (買う前は、見本だけのデモ版になる)。FUN_UNLOCK=1 のときは使える(持ち主の確認用)
  */
 export async function hasFun(license: unknown): Promise<boolean> {

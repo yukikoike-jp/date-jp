@@ -22,14 +22,6 @@ export function isFormal(a: Audience): boolean {
   return a === "worker";
 }
 
-/**
- * 傾斜で割る・集金のページを、有料にする会か。会社の会だけ(2026-11-17 決定)。
- * 学生とプライベートの会は無料のまま(使う人を増やす入口にする。学生はお金を払いにくい)
- */
-export function needsPro(a: Audience): boolean {
-  return a === "worker";
-}
-
 export const AUDIENCES: Record<
   Audience,
   {

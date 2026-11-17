@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { hasFun, hasPro, isActiveSession, proActive, resetBillingCache } from "./billing";
+import { hasFun, isActiveSession, proActive, resetBillingCache } from "./billing";
 import { signLicense } from "./license";
 
 const SECRET = "test-secret";
@@ -71,11 +71,7 @@ describe("proActive", () => {
   });
 });
 
-describe("hasPro / hasFun", () => {
-  it("傾斜(hasPro)は、有料にしていなければ誰でも使える", async () => {
-    vi.stubEnv("STRIPE_SECRET_KEY", "");
-    expect(await hasPro(null)).toBe(true);
-  });
+describe("hasFun", () => {
   it("催促(hasFun)は、有料にしていなくても鍵をかけたまま。FUN_UNLOCK=1 だけは使える", async () => {
     vi.stubEnv("STRIPE_SECRET_KEY", "");
     expect(await hasFun(null)).toBe(false);

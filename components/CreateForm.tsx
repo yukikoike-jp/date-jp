@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { createParty } from "@/app/actions";
@@ -11,6 +11,7 @@ import { clock, dateLabel, upcomingDates } from "@/lib/sendai";
 import { MAX_DATES } from "@/lib/validation";
 import { DateCalendar } from "./DateCalendar";
 import { Required } from "./Required";
+import { WheelPicker } from "./WheelPicker";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
 export function saveAdminToken(partyId: string, token: string) {
@@ -95,27 +96,16 @@ export function CreateForm() {
 
         <div className="mt-5 border-t border-white/8 pt-5">
           <FieldHead title="何時から始める?" sub="幹事だけで決定" />
-          {/* KANJI のように、何時からでも自由に選べるようにする(15分ごと) */}
-          <label className="relative mt-3 flex min-h-14 items-center justify-between rounded-2xl bg-white/6 px-4 ring-1 ring-white/10">
-            <span className="text-sm font-bold text-white/60">開始時刻</span>
-            <span className="flex items-center gap-1.5 text-2xl font-black tabular-nums">
-              {clock(startAt)}
-              <ChevronDown className="size-5 text-accent" aria-hidden />
-            </span>
-            <select
+          {/* 回答するときと同じ、時計のように回して選ぶ形。19:00 を目安に合わせておく(15分ごと) */}
+          <div className="mt-3">
+            <WheelPicker
+              label="開始時刻"
               value={startAt}
-              onChange={(e) => setStartAt(Number(e.target.value))}
-              aria-label="何時から始めるか"
-              // 押すと開く時刻の一覧は、スマホによっては白い地に白い字になって読めなくなるので、色をはっきり決めておく
-              className="absolute inset-0 cursor-pointer text-white opacity-0 [color-scheme:dark]"
-            >
-              {START_CHOICES.map((m) => (
-                <option key={m} value={m} className="bg-[#1c1a17] text-white">
-                  {clock(m)}
-                </option>
-              ))}
-            </select>
-          </label>
+              initial={1140}
+              options={START_CHOICES.map((m) => ({ value: m, label: clock(m) }))}
+              onChange={setStartAt}
+            />
+          </div>
         </div>
 
         <div className="mt-5 border-t border-white/8 pt-5">

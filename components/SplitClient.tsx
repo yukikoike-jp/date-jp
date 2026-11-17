@@ -1,12 +1,11 @@
 "use client";
 
-import { Check, Crown, ExternalLink, Lock, NotebookPen, PencilLine, Plus, RotateCcw, Users, Wallet, X } from "lucide-react";
+import { Check, Crown, ExternalLink, NotebookPen, PencilLine, Plus, RotateCcw, Users, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
-import { ProPaywall, useProAccess } from "./ProGate";
-import { isFormal, loadAudience, needsPro, type Audience } from "@/lib/audience";
+import { isFormal, loadAudience, type Audience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
@@ -91,11 +90,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
   const [loaded, setLoaded] = useState(false);
   const [collection, setCollection] = useState<Saved["collection"]>(null);
   const [weighted, setWeighted] = useState(false);
-  // 傾斜と集金のページは買い切りの有料機能(有料にしていないあいだは誰でも使える)
-  const pro = useProAccess();
-  // 有料にしているときも、鍵をかけるのは会社の会だけ(学生・プライベートは無料)
-  const locked = pro.enabled && !pro.unlocked && needsPro(audience);
-  const [paywall, setPaywall] = useState<string | null>(null);
   // 会社や部署・部費からの補助(1人あたり、または全体でいくら)。空なら補助なし
   const [subsidyKind, setSubsidyKind] = useState<"per" | "lump">("per");
   const [subsidyYen, setSubsidyYen] = useState("");
@@ -197,11 +191,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
     setSubsidyYen("");
     setCollection(null);
   }
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (locked && weighted) setWeighted(false);
-  }, [locked, weighted]);
 
   const weights = WEIGHTS[audience];
   const normal = weights.find((w) => w.key === "normal")!;
@@ -364,16 +353,15 @@ export function SplitClient({ from = null }: { from?: string | null }) {
             key={String(v)}
             type="button"
             aria-pressed={weighted === v}
-            onClick={() => (v && locked ? setPaywall("傾斜で割る") : setWeighted(v))}
+            onClick={() => setWeighted(v)}
             className={`min-h-11 rounded-xl text-sm font-bold transition-colors ${
               weighted === v ? "bg-surface text-text shadow" : "text-muted hover:text-text"
             }`}
           >
-            {v ? <span className="inline-flex items-center gap-1">傾斜で割る{locked && <Lock className="size-3.5" aria-label="有料" />}</span> : "割り勘"}
+            {v ? "傾斜で割る" : "割り勘"}
           </button>
         ))}
       </div>
-      {paywall && <ProPaywall feature={paywall} price={pro.price} onClose={() => setPaywall(null)} />}
 
       {/* 区分の見本 */}
       {weighted && (

@@ -97,7 +97,6 @@ export default function Home() {
                 </summary>
                 <div className="pb-3.5 text-xs leading-relaxed text-white/70">
                   <p>Tsudoro は学生が1人で作っています。気に入ったら応援してもらえるとうれしいです。</p>
-                  <p className="mt-1.5 text-white/55">応援は気持ちだけです。見返りはなく機能が増えることもありません。</p>
                   <a
                     href={process.env.SUPPORT_URL}
                     target="_blank"

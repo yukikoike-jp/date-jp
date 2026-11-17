@@ -3,11 +3,11 @@
 import { Check, Lock } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { buyPro, funStatus, proStatus, restorePro } from "@/app/actions";
+import { buyPro, funStatus, restorePro } from "@/app/actions";
 import { yen } from "@/lib/sendai";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
-// 月額の有料プレミアム(催促をアプリにまかせる + 会社の会の傾斜で割る)。割り勘と集金の表づくりは無料のまま。
+// 月額の有料プレミアム(エンタメの Play だけ)。割り勘・傾斜・集金の表づくりは無料のまま。
 // 買った鍵はこの端末に保存する(ログインなし)。別の端末では、買ったときのメールアドレスで戻せる
 
 const KEY = "date:pro";
@@ -26,20 +26,6 @@ export function saveLicense(license: string) {
   } catch {}
 }
 
-export type ProAccess = { loading: boolean; enabled: boolean; unlocked: boolean; price: number; license: string | null };
-
-/** この端末で有料の機能が使えるか。有料にしていなければ、いつでも使える */
-export function useProAccess(): ProAccess {
-  const [state, setState] = useState<ProAccess>({ loading: true, enabled: false, unlocked: true, price: 0, license: null });
-  useEffect(() => {
-    const license = loadLicense();
-    proStatus(license)
-      .then((s) => setState({ loading: false, ...s, license }))
-      .catch(() => setState({ loading: false, enabled: false, unlocked: true, price: 0, license }));
-  }, []);
-  return state;
-}
-
 export type FunAccess = { loading: boolean; purchasable: boolean; unlocked: boolean; price: number; license: string | null };
 
 /** 有料プレミアムの機能(催促をアプリにまかせる)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
@@ -55,7 +41,7 @@ export function useFunAccess(): FunAccess {
 }
 
 /** 有料の機能を使おうとしたときに出す案内。買う、または別の端末で買ったものを戻す */
-export function ProPaywall({ feature, price, onClose, fun = false, purchasable = true }: { feature: string; price: number; onClose?: () => void; fun?: boolean; purchasable?: boolean }) {
+export function ProPaywall({ feature, price, onClose, purchasable = true }: { feature: string; price: number; onClose?: () => void; purchasable?: boolean }) {
   const pathname = usePathname();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -90,9 +76,9 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
         <Lock className="size-5 text-accent" aria-hidden />
         {feature}は有料の機能
       </p>
-      <p className="mt-1 text-sm text-muted">{fun ? "有料プレミアム(月額) ・ いつでも解約できます" : "会社の会の傾斜だけ有料 ・ 学生とプライベートの会は無料 ・ いつでも解約できます"}</p>
+      <p className="mt-1 text-sm text-muted">有料プレミアム(月額) ・ いつでも解約できます</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {["盛り上がる遊びがぜんぶ", "会社の会の傾斜で割る(先輩・上司は多め)", "これからふえる道具も、契約中はずっと"].map((t) => (
+        {["盛り上がる遊びがぜんぶ", "これからふえる遊びも、契約中はずっと"].map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}
@@ -130,7 +116,7 @@ export function ProPaywall({ feature, price, onClose, fun = false, purchasable =
       )}
       {onClose && (
         <button type="button" onClick={onClose} className="mx-auto flex min-h-11 items-center px-3 text-xs font-bold text-muted underline underline-offset-2">
-          {fun ? "とじる" : "割り勘にもどる"}
+          とじる
         </button>
       )}
     </section>

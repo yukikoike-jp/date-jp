@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Crown, RotateCcw, Share2, Wallet } from "lucide-react";
+import { Check, Crown, RotateCcw, Share2, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCollectionPayment } from "@/app/actions";
@@ -11,6 +11,7 @@ import { collectText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
 import { PayLinkPanel } from "./PayLinkPanel";
 import { PushOptIn } from "./PushOptIn";
+import { SendButtons, useCanShare } from "./SendButtons";
 import { toast } from "./Toast";
 
 // 集金のページ。払ったかどうかは幹事だけが記録する(本人が押せるとごまかせるため)。色だけでなく ✓ と文字でも分かるようにする
@@ -50,6 +51,7 @@ export function CollectionView({
   pushKey: string | null;
 }) {
   const router = useRouter();
+  const canShare = useCanShare();
   const [token, setToken] = useState<string | null>(hostToken);
   const [origin, setOrigin] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -255,6 +257,15 @@ export function CollectionView({
 
       {isHost && (
         <>
+          <section className="mx-4 mt-4 rounded-3xl border panel px-5 py-5">
+            <h2 className="flex items-center gap-2 text-lg font-black">
+              <Users className="size-5" aria-hidden />
+              みんなにこのページを送る
+            </h2>
+            <p className="mt-1 text-sm text-muted">一人ずつの金額入りの案内文</p>
+            <SendButtons mainLabel="共有してみんなに送る" share={{ text: askText }} copy={askText} copyLabel="送る文をコピー" canShare={canShare} />
+          </section>
+
           {/* 払い方(PayPay のリンク)をのせる(無料) */}
           {token && <PayLinkPanel collectionId={c.id} hostToken={token} initialPayLink={c.payLink ?? null} />}
           <p className="mx-4 mt-3 text-xs text-muted">
