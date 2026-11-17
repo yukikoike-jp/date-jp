@@ -36,7 +36,7 @@ URL を LINE に貼ると、みんなが30秒で行ける日と予算を答え�
 - 紹介料を出す前に、Vercel を有料プラン(Pro)にする(無料プランはお金を得るサイトに使えない)。手順は `docs/launch-checklist.md`
 - **有料プレミアム(月額 500円のサブスク、Stripe)**: 軸は**エンターテインメント**。幹事がいる会を楽しくする「Play」(`/fun`。学生とプライベートは、ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分けの6つの遊び。**会社の会は別の道具**(話題ガチャ・ひとこと・幹事メモ・ルーレット・チーム分け。`lib/work.ts`。会社ではゲームを使いにくいため。話題は職場で聞きにくいことを入れない)。会社の会の Play の説明は「会話もあいさつも準備もスムーズに」(ゲームの「楽しく」とは言わない)。遊びのタブは3つずつ並べ、5つのときは下の2つを広げる。遊びはこの順に並べる(Play の説明は「幹事がいる会をもっと楽しく」だけで、遊びの名前を並べない)。応援(OFUSE)は、ホームのいちばん下の「説明の行」(Tsudoro について・幹事のガイド・プライバシーポリシー・応援)の4つ目に置く。`components/FunClient.tsx`、`lib/fun.ts`、`lib/games.ts`。席替えは、2026-11-17 に、より盛り上がる遊びに入れ替えた。お題は、だれでも楽しめる軽いものだけ)。傾斜で割るは、会社の会も含めて**無料**(2026-11-17 に有料から外した。有料はこの Play だけ)。ホームのタイル「Play」(右上は鍵のマークだけ)から入る。買う前は、遊びの名前(タブ)だけ見せ、中身は出さない(2026-11-17 に、デモ版をやめた)。鍵は決済の鍵がなくてもかけたまま(`hasFun`)。有料の印は鍵のマークだけ。集金の表づくり・PayPay のリンクをのせること(`PayLinkPanel`)は無料。Tsudoro はお金を預からない(リンクは PayPay のものだけ通す)
   - 月額の契約: Stripe Checkout(mode=subscription)。鍵は Stripe のお会計の id の署名で、**使うたびに Stripe で契約が続いているか(active / trialing)を確かめる**(10分は覚える。`lib/billing.ts` の `proActive`)。解約・確認は Stripe のカスタマーポータル(ダッシュボードで有効にしておく)。特定商取引法の表記(`/legal`)は月額の自動更新・解約の書き方
-  - 持ち主が全部を試すときは、環境変数 `FUN_UNLOCK=1`(`.claude/launch.json` の `Date-fun-unlocked`)
+  - 持ち主が全部を試すときは、環境変数 `FUN_UNLOCK=1`(`.claude/launch.json` の `Tsudoro-fun-unlocked`)
   - 「催促をアプリにまかせる」(通知で催促する機能)は、ユーザーの判断でやめた(必要性が薄い。2026-11-17)。コード(`AutoRemindPanel.tsx`、`PerPersonReminders.tsx`、`lib/pushRemind.ts`、`lib/webpush.ts`、`app/api/cron/remind`、`public/sw.js`、DB の `nomi_push_subs`、環境変数 VAPID_*/CRON_SECRET)は残してあるが、画面からは使えない。使うなら、削除するかを先にユーザーに聞く
 - 提携リンクには、ステルスマーケティングにならないよう「PR」または「#アフィリエイト広告」をはっきり見える形で付ける(`components/PrNote.tsx`)
 - 紹介料を出す前に、Vercel を有料プラン(Pro)にする(無料プランはお金を得るサイトに使えない)。手順は `docs/launch-checklist.md`
@@ -45,7 +45,7 @@ URL を LINE に貼ると、みんなが30秒で行ける日と予算を答え�
   - 通知には、環境変数 `VAPID_PUBLIC_KEY` `VAPID_PRIVATE_KEY`(`npx web-push generate-vapid-keys`)と `CRON_SECRET`、マイグレーション `20261117000000_push_subs.sql` が要る。`vercel.json` の crons が1日1回 `/api/cron/remind` を呼ぶ。iPhone は、ホーム画面に追加したアプリからだけ通知を受け取れる
   - 席替え・ゲームの「もりあげ道具」と、「ひとりずつ催促」の有料化は、ユーザーの判断でやめた(買い切りから月額に変えたのも、ユーザーの判断。2026-11-17)
   - 催促は、決済の鍵がそろっていなくても鍵をかけたまま(`hasFun`)。買う前は「デモ版」(最初の1人ぶんの見本だけ)。ホームのタイルと各道具に「有料パック」「デモ版」の印を付ける
-  - 持ち主が全部を試すときは、環境変数 `FUN_UNLOCK=1`(`.claude/launch.json` の `Date-fun-unlocked`)
+  - 持ち主が全部を試すときは、環境変数 `FUN_UNLOCK=1`(`.claude/launch.json` の `Tsudoro-fun-unlocked`)
 
 ## 技術
 - Next.js 16(App Router、`cacheComponents`)+ TypeScript、Tailwind CSS、Supabase(Postgres)、Vercel
