@@ -45,6 +45,8 @@ export type ShopQuery = {
   /** 料理をいくつか選んだとき。genre より優先する */
   genres?: GenreKey[];
   privateRoom?: boolean;
+  /** 飲み放題があるお店だけにする */
+  freeDrink?: boolean;
   audience?: Audience;
   /** only = 吸えるお店だけ、prefer = 吸えるお店を先に出す(タバコを吸う人がいる会) */
   smoking?: "only" | "prefer";  /** 近くで見つからないときに、3km まで広げて探す */
@@ -136,6 +138,7 @@ export function pickSamples(q: ShopQuery, limit = 3): { shops: Shop[]; otherArea
       (s.capacity ?? 0) >= q.size &&
       (genresOf(q).length === 0 || (s.genreKey !== null && genresOf(q).includes(s.genreKey))) &&
       (!q.privateRoom || s.features.includes("個室")) &&
+      (!q.freeDrink || s.features.includes("飲み放題")) &&
       (q.smoking !== "only" || smokeFriendly(s)),
   ).sort(
     (a, b) =>
@@ -245,6 +248,7 @@ export async function searchShops(q: ShopQuery, limit = 3): Promise<{ shops: Sho
         ? { genre: genresOf(q).flatMap((k) => GENRES.find((g) => g.key === k)!.hotpepper).join(",") }
         : {}),
       ...(q.privateRoom ? { private_room: "1" } : {}),
+      ...(q.freeDrink ? { free_drink: "1" } : {}),
       count: "50",
       order: "4", // おすすめ順
     };
@@ -383,7 +387,7 @@ export async function searchShopsAlways(
     }
     steps.push({ q: { ...plain, budget: null }, relaxed: "予算に合うお店がなかったので、予算を問わずに選んでいます" });
   }
-  const loose: ShopQuery = { ...plain, budget: null, size: 1, privateRoom: false, smoking: q.smoking === "only" ? undefined : q.smoking };
+  const loose: ShopQuery = { ...plain, budget: null, size: 1, privateRoom: false, freeDrink: false, smoking: q.smoking === "only" ? undefined : q.smoking };
   steps.push({ q: loose, relaxed: "条件に合うお店がなかったので、人数などの条件を外して選んでいます" });
   steps.push({ q: { ...loose, wide: true }, relaxed: "近くにお店が少ないので、少し離れたお店も出しています" });
 

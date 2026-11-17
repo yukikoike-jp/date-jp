@@ -94,3 +94,14 @@ describe("browserShopUrl(アプリが開かない形のお店の URL)", () => {
     expect(browserShopUrl("not a url")).toBe("not a url");
   });
 });
+
+describe("pickSamples の飲み放題の条件", () => {
+  it("飲み放題だけにすると、飲み放題のあるお店だけが出る", () => {
+    const q = { area: "station" as const, budget: null, size: 2 };
+    const all = pickSamples(q, 20).shops;
+    const only = pickSamples({ ...q, freeDrink: true }, 20).shops;
+    expect(only.length).toBeGreaterThan(0);
+    expect(only.length).toBeLessThanOrEqual(all.length);
+    expect(only.every((s) => s.features.includes("飲み放題"))).toBe(true);
+  });
+});

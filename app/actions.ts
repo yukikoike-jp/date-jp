@@ -132,6 +132,8 @@ export async function findShops(input: {
   genres: string[];
   budget: number | null;
   privateRoom: boolean;
+  /** 飲み放題があるお店だけにする */
+  freeDrink?: boolean;
   /** タバコが吸えるお店だけにする(社会人の画面だけで出す) */
   smoking?: boolean;
   audience: string;
@@ -151,6 +153,7 @@ export async function findShops(input: {
       genres,
       budget: asked,
       privateRoom: input.privateRoom === true,
+      freeDrink: input.freeDrink === true,
       ...(input.smoking === true ? { smoking: "only" as const } : {}),
       size: 2,
       audience,

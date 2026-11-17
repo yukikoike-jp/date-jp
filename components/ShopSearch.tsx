@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, UtensilsCrossed, Wallet } from "lucide-react";
+import { Beer, Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, UtensilsCrossed, Wallet } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { findShops } from "@/app/actions";
 import { AUDIENCES, loadAudience, type Audience } from "@/lib/audience";
@@ -67,6 +67,7 @@ export function ShopSearch() {
   const [genres, setGenres] = useState<GenreKey[]>([]);
   const [budget, setBudget] = useState<number | null>(null);
   const [privateRoom, setPrivateRoom] = useState(false);
+  const [freeDrink, setFreeDrink] = useState(false);
   // 社会人の会は、上司がタバコを吸えるかどうかが大事なので、吸えるお店だけに絞れるようにする
   const [smoking, setSmoking] = useState(false);
   const [result, setResult] = useState<{ shops: Shop[]; otherArea: boolean; relaxed: string | null } | null>(null);
@@ -88,9 +89,9 @@ export function ShopSearch() {
       return;
     }
     start(async () => {
-      setResult(await findShops({ station, genres, budget, privateRoom, smoking: audience !== null && smoking, audience }));
+      setResult(await findShops({ station, genres, budget, privateRoom, freeDrink, smoking: audience !== null && smoking, audience }));
     });
-  }, [station, genres, budget, privateRoom, smoking, audience]);
+  }, [station, genres, budget, privateRoom, freeDrink, smoking, audience]);
 
   const toggleGenre = (k: GenreKey) =>
     setGenres((cur) => (cur.includes(k) ? cur.filter((g) => g !== k) : [...cur, k]));
@@ -101,6 +102,7 @@ export function ShopSearch() {
     budget === null ? "予算は決めない" : `${yen(budget)}まで`,
     genres.length > 0 ? genres.map((k) => GENRES.find((g) => g.key === k)!.label).join("・") : null,
     privateRoom ? "個室あり" : null,
+    freeDrink ? "飲み放題あり" : null,
     audience !== null && smoking ? "喫煙できる" : null,
   ]
     .filter(Boolean)
@@ -155,6 +157,16 @@ export function ShopSearch() {
               <span className="inline-flex items-center gap-1.5">
                 <DoorClosed className="size-4" aria-hidden />
                 個室があるお店だけにする
+              </span>
+            }
+          />
+          <Option
+            on={freeDrink}
+            onClick={() => setFreeDrink(!freeDrink)}
+            title={
+              <span className="inline-flex items-center gap-1.5">
+                <Beer className="size-4" aria-hidden />
+                飲み放題があるお店だけにする
               </span>
             }
           />
