@@ -208,8 +208,8 @@ export function FunClient() {
   );
 }
 
-/** ルーレットのひと切れずつの色。あざやかな色を順にくり返す。最後と最初が同じ色にならないよう、ずらす */
-const WHEEL_COLORS = ["#ff5d73", "#4d9bff", "#34d98b", "#b078ff", "#ff8a3d", "#ffd23f", "#22d3ee"];
+/** ルーレットのひと切れずつの色。やわらかい色を順にくり返す。最後と最初が同じ色にならないよう、ずらす */
+const WHEEL_COLORS = ["#e07a88", "#7aa6dd", "#62bd96", "#a592dc", "#e09a6b", "#e3c46e", "#60b9c9"];
 function sliceColor(i: number, n: number): string {
   const len = WHEEL_COLORS.length;
   return WHEEL_COLORS[i === n - 1 && n > 1 && i % len === 0 ? 1 : i % len];
@@ -218,7 +218,7 @@ function sliceColor(i: number, n: number): string {
 /** 道具の箱。デモ版のときは右上に印を付ける */
 function Box({ title, tone, locked, children }: { title: string; tone: Tone; locked: boolean; children: React.ReactNode }) {
   return (
-    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5 shadow-[0_0_32px_-14px_var(--accent)]`}>
+    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5 shadow-[0_0_28px_-18px_var(--accent)]`}>
       <h2 className="mb-3 flex items-center justify-between text-lg font-black">
         <span className="flex items-center gap-2">
           <span className="h-5 w-1.5 rounded-full bg-accent" aria-hidden />
