@@ -253,7 +253,8 @@ h3 {
 .tone-orange { --accent: #e09a6b; --accent-strong: #e9b088; }
 .tone-cyan { --accent: #60b9c9; --accent-strong: #80c9d6; }
 
-/* 説明文の右端をそろえる(両端ぞろえ)。禁則(句読点などが行の頭に来ない)を守る。
+/* 説明文は、左そろえにして、字の間をそろえてつめる(両端ぞろえにすると、行によって字の間が広がるため)。
+   禁則(句読点などが行の頭に来ない)を守り、最後の行が1字だけにならないようにする。
    @layer base に置くので、text-center などの指定があるところはそちらが優先される */
 @layer base {
   body {
@@ -262,11 +263,9 @@ h3 {
   p,
   dd,
   li {
-    text-align: justify;
-    text-justify: inter-character;
-    letter-spacing: 0;
-    /* 文節ごとの折り返しは、両端ぞろえと合わせると文字の間が大きくあくので、ここでは字ごとに詰めて折り返す */
+    text-align: left;
+    letter-spacing: -0.015em;
     word-break: normal;
-    text-wrap: wrap;
+    text-wrap: pretty;
   }
 }
