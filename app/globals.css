@@ -253,16 +253,17 @@ h3 {
 .tone-orange { --accent: #e09a6b; --accent-strong: #e9b088; }
 .tone-cyan { --accent: #60b9c9; --accent-strong: #80c9d6; }
 
-/* 説明文の行の長さをそろえる。文節で折り返し、短い文は各行の長さを近づける(長い文は自然に折り返す) */
-body {
-  word-break: auto-phrase;
-  line-break: strict;
-}
-p,
-dd,
-li,
-h1,
-h2,
-h3 {
-  text-wrap: balance;
+/* 説明文の右端をそろえる(両端ぞろえ)。禁則(句読点などが行の頭に来ない)を守る。
+   @layer base に置くので、text-center などの指定があるところはそちらが優先される */
+@layer base {
+  body {
+    line-break: strict;
+  }
+  p,
+  dd,
+  li {
+    text-align: justify;
+    text-justify: inter-character;
+    text-wrap: pretty;
+  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Crown, RotateCcw, Share2, Users, Wallet } from "lucide-react";
+import { Check, Crown, RotateCcw, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCollectionPayment } from "@/app/actions";
@@ -12,7 +12,6 @@ import type { Collection } from "@/lib/store/types";
 import { PayLinkPanel } from "./PayLinkPanel";
 import { PushOptIn } from "./PushOptIn";
 import { SendButtons, useCanShare } from "./SendButtons";
-import { toast } from "./Toast";
 
 // 集金のページ。払ったかどうかは幹事だけが記録する(本人が押せるとごまかせるため)。色だけでなく ✓ と文字でも分かるようにする
 
@@ -98,34 +97,10 @@ export function CollectionView({
   const autoOn = c.autoRemindAt !== undefined;
   const askText = collectText(c.title, url, c.audience, autoOn);
 
-  /** このページを送る(共有の画面があれば開き、なければ文をコピーする) */
-  async function shareThis() {
-    if (typeof navigator.share === "function") {
-      await navigator.share({ text: askText }).catch(() => {});
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(askText);
-      toast("コピーしました。LINE などに貼り付けてください");
-    } catch {}
-  }
-
   return (
     <>
       <div className="px-4 pt-6 pb-4">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-bold text-muted">{isHost ? "幹事の集金ページ" : "集金"}</p>
-          {isHost && (
-            <button
-              type="button"
-              onClick={shareThis}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-white/8 px-3.5 text-xs font-bold ring-1 ring-white/12 active:scale-95"
-            >
-              <Share2 className="size-3.5" aria-hidden />
-              URLを送る
-            </button>
-          )}
-        </div>
+        <p className="text-sm font-bold text-muted">{isHost ? "幹事の集金ページ" : "集金"}</p>
         <h1 className="mt-1 text-[22px] font-black tracking-tight">{heading}</h1>
         <p className="mt-1 text-sm text-muted">
           合計 {yen(c.total)}・{c.people.length}人{host ? `・幹事は${host.name}さん` : ""}
