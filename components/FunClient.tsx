@@ -36,8 +36,8 @@ const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
 /** 道具ごとの色(飽きないように、黄色と黒だけにしない)。色の定義は app/globals.css の .tone-* */
 type Tone = "gold" | "red" | "blue" | "green" | "purple" | "orange" | "cyan";
 const TOOL_TONE: Record<Tool, Tone> = {
-  wolf: "red",
-  ng: "purple",
+  wolf: "purple",
+  ng: "red",
   truth: "blue",
   king: "gold",
   wheel: "orange",
