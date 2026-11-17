@@ -40,7 +40,7 @@ export default function Home() {
                 <ChevronDown className="size-3 text-muted transition-transform group-open:rotate-180" aria-hidden />
               </summary>
               <div className="pb-3.5 text-white/70">
-                <h2 className="text-xs font-black leading-[1.5] text-white/85">Tsudoro は幹事の負担を減らす基本無料のアプリです。</h2>
+                <h2 className="text-xs font-black leading-[1.5] text-white/85">Tsudoro は幹事の負担を減らす基本無料のアプリです</h2>
                 <dl className="mt-2.5 grid gap-2 text-xs leading-[1.5]">
                   {FEATURES.map(([t, d]) => (
                     <div key={t}>

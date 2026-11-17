@@ -35,12 +35,14 @@ function HomeRow({ href, icon, title, sub }: { href: string; icon: React.ReactNo
   );
 }
 
-/** ツールの行。アイコンと、一言の名前と、その下に一行の説明。3つとも同じ形にそろえる(有料プレミアムの Play だけ、右上に鍵) */
-function ToolTile({ href, icon, title, sub, lockOnly = false }: { href: string; icon: React.ReactNode; title: string; sub: string; lockOnly?: boolean }) {
+/** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料プレミアムの入口) */
+function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; lockOnly?: boolean; wide?: boolean }) {
   return (
     <Link
       href={href}
-      className="relative flex items-center gap-4 rounded-2xl bg-surface px-4 py-4 text-left ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.98]"
+      className={`relative flex items-center rounded-2xl bg-surface text-center ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-95 ${
+        wide ? "col-span-2 gap-4 px-4 py-4 text-left" : "flex-col gap-3 px-3 py-5"
+      }`}
     >
       {/* 有料の印は、鍵のマークだけ */}
       {lockOnly && (
@@ -49,9 +51,9 @@ function ToolTile({ href, icon, title, sub, lockOnly = false }: { href: string; 
         </span>
       )}
       <span className="grid size-12 shrink-0 place-items-center rounded-xl border border-accent/40 text-accent">{icon}</span>
-      <span className="min-w-0 pr-8">
+      <span className={wide ? "pr-8" : ""}>
         <span className="block text-[15px] font-black tracking-tight text-white/90">{title}</span>
-        <span className="mt-1 block truncate text-xs font-medium text-white/60">{sub}</span>
+        <span className="mt-1 block text-xs font-medium text-white/60">{sub}</span>
       </span>
     </Link>
   );
@@ -371,7 +373,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
       <section>
         {/* ツールは「お店」と「会計」の2つだけ。集金は会計の中から開く */}
         <SectionTitle icon={<Wrench className="size-3.5" aria-hidden />}>ツール</SectionTitle>
-        <div className="grid gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店探し" sub={home.shops} />
           <ToolTile href="/split" icon={tierIcon} title="会計" sub={home.split} />
           {/* 有料プレミアムの入口。何が有料かが、ホームですぐ分かるようにする(鍵のマークだけ) */}
@@ -381,6 +383,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             title="Play"
             sub={home.play}
             lockOnly
+            wide
           />
         </div>
       </section>
