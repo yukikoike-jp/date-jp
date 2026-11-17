@@ -4,7 +4,7 @@ import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, C
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
-import { AUDIENCES, AUDIENCE_ORDER, loadAudience, saveAudience, type Audience } from "@/lib/audience";
+import { AUDIENCES, AUDIENCE_ORDER, isAudience, loadAudience, normalizeAudience, saveAudience, type Audience } from "@/lib/audience";
 import { forgetParty, loadMyParties, rememberParty, type MyParty } from "@/lib/myParties";
 import { SkeletonRows } from "./Skeleton";
 import { SwipeRow } from "./SwipeRow";
@@ -125,9 +125,9 @@ const HOME_BY_AUDIENCE: Record<
     play: "幹事がいる会をもっと楽しく",
   },
   private: {
-    lead: "友達との飲み会をURLひとつで",
-    shops: "飲み放題・個室のお店",
-    split: "割り勘も年上多めも",
+    lead: "サークル・友達の飲み会をURLひとつで",
+    shops: "学割・飲み放題のお店",
+    split: "割り勘も先輩多めも",
     play: "幹事がいる会をもっと楽しく",
   },
   worker: {
@@ -253,7 +253,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
 
   const tiers = WEIGHTS[audience];
   // 学生・プライベート・会社で、会の一覧を分ける(いま選んでいるものの会だけを出す)
-  const known = statuses ? parties.filter((p) => statuses[p.id] && statuses[p.id].audience === audience) : [];
+  const known = statuses ? parties.filter((p) => statuses[p.id] && isAudience(statuses[p.id].audience) && normalizeAudience(statuses[p.id].audience as Audience) === audience) : [];
   const home = HOME_BY_AUDIENCE[audience];
   // 調整中の会を先に、次にこれからの会を日が近い順に。終わった会は「これまでの会」に回す
   const active = [
@@ -286,7 +286,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         <button
           type="button"
           onClick={() => setPhase("choose")}
-          aria-label={`学生・プライベート・会社を選び直す(いまは${AUDIENCES[audience].label})`}
+          aria-label={`プライベート・会社を選び直す(いまは${AUDIENCES[audience].label})`}
           className="-mr-1 flex h-11 items-center gap-1 rounded-full px-4 text-[13px] font-bold text-white/80 ring-1 ring-white/20 transition hover:text-white hover:ring-white/40 active:scale-95"
         >
           {AUDIENCES[audience].label}

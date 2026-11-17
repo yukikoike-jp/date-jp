@@ -37,7 +37,7 @@ export function QuickCollect() {
     start(async () => {
       const r = await startCollection({
         title,
-        audience: loadAudience() ?? "student",
+        audience: loadAudience() ?? "private",
         total: totalYen,
         subsidy: null,
         unit: 100,

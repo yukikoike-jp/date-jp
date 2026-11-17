@@ -50,7 +50,7 @@ export function reminderText(
 }
 
 /** 集金のページを送る文。会社の会は敬語にする */
-export function collectText(title: string, url: string, audience: Audience = "student", autoRemind = false): string {
+export function collectText(title: string, url: string, audience: Audience = "private", autoRemind = false): string {
   const what = title ? `「${title}」の` : "";
   // 自動でお知らせをオンにしているときは、通知のオンを一言そえる(払い忘れを、幹事ではなくアプリが知らせる)
   return isFormal(audience)

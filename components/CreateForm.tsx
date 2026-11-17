@@ -40,7 +40,7 @@ export function CreateForm() {
   const router = useRouter();
   const [title, setTitle] = useState("");
   const [dates, setDates] = useState<string[]>([]);
-  const [audience, setAudience] = useState<Audience>("student");
+  const [audience, setAudience] = useState<Audience>("private");
   // 何時から始めるか(分)。幹事が決め、参加者には聞かない
   const [startAt, setStartAt] = useState(1140);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export function CreateForm() {
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     setToday(upcomingDates(new Date(), 1)[0]);
-    setAudience(loadAudience() ?? "student");
+    setAudience(loadAudience() ?? "private");
     // 「これまでの会」の「この会をもとに作る」から来たら、名前を入れておく
     const copied = new URLSearchParams(location.search).get("title");
     if (copied) setTitle(copied.slice(0, 40));
@@ -88,7 +88,7 @@ export function CreateForm() {
             className={`${INPUT} mt-2`}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder={{ student: "例: ゼミの打ち上げ", private: "例: 高校の同期で飲み", worker: "例: 部署の歓迎会" }[audience]}
+            placeholder={{ student: "例: ゼミの打ち上げ", private: "例: ゼミの打ち上げ", worker: "例: 部署の歓迎会" }[audience]}
             maxLength={40}
             aria-label="飲み会の名前"
           />

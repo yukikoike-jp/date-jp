@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { AUDIENCES, isAudience } from "@/lib/audience";
+import { AUDIENCES, isAudience, normalizeAudience } from "@/lib/audience";
 import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { parsePushSub } from "@/lib/pushRemind";
@@ -141,9 +141,9 @@ export async function findShops(input: {
   if (!isStation(input.station)) return { shops: [], otherArea: false, relaxed: null };
   const point = { lat: input.station.lat, lng: input.station.lng };
   const genres = [...new Set(Array.isArray(input.genres) ? input.genres : [])].filter(isGenreKey);
-  const audience = isAudience(input.audience) ? input.audience : "student";
+  const audience = isAudience(input.audience) ? normalizeAudience(input.audience) : "private";
   const budgets = AUDIENCES[audience].budgets;
-  // 予算を「決めない」にしても、学生なら6,000円、社会人なら8,000円までのお店を先に探す
+  // 予算を「決めない」にしても、いちばん高い予算までのお店を先に探す
   const asked = isBudget(input.budget) ? input.budget : Math.max(...budgets);
   // 選んだ駅の近くで探し、合うお店がなければ条件を1つずつゆるめる(お店が必ず出るように)
   return searchShopsAlways(
