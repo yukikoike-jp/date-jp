@@ -1,12 +1,12 @@
 "use client";
 
-import { Ban, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, Mic, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
+import { Ban, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, Mic, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, kingGame, parseNames, pickIndex, splitTeams, type KingDraw } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { loadAudience } from "@/lib/audience";
-import { CHECKLIST, OCCASIONS, SPEECHES, TOPICS, TOPIC_KINDS, drawIndex, type Occasion, type TopicKind } from "@/lib/work";
+import { CHECKLIST, OCCASIONS, SPEECHES, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, type Occasion, type ThanksKind, type TopicKind } from "@/lib/work";
 import { openBillingPortal } from "@/app/actions";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
@@ -15,7 +15,7 @@ import { ProPaywall, useFunAccess } from "./ProGate";
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "speech" | "memo";
+type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "speech" | "memo" | "thanks";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
@@ -30,6 +30,7 @@ const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
   { key: "speech", label: "ひとこと", icon: Mic },
   { key: "memo", label: "幹事メモ", icon: ClipboardList },
+  { key: "thanks", label: "お礼の連絡", icon: Send },
   { key: "wheel", label: "ルーレット", icon: Dices },
   { key: "team", label: "チーム分け", icon: Users },
 ];
@@ -46,6 +47,7 @@ const TOOL_TONE: Record<Tool, Tone> = {
   topic: "cyan",
   speech: "gold",
   memo: "purple",
+  thanks: "blue",
 };
 
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
@@ -216,6 +218,7 @@ export function FunClient() {
             {tool === "topic" && <Topic locked={locked} />}
             {tool === "speech" && <Speech locked={locked} />}
             {tool === "memo" && <Memo locked={locked} />}
+            {tool === "thanks" && <Thanks locked={locked} />}
           </>
         )}
       </div>
@@ -904,6 +907,58 @@ function Speech({ locked }: { locked: boolean }) {
         <Shuffle className="size-4" aria-hidden />
         別の例を見る
       </button>
+    </Box>
+  );
+}
+
+// ───── お礼の連絡(会社の会)─────
+function Thanks({ locked }: { locked: boolean }) {
+  const [kind, setKind] = useState<ThanksKind>("all");
+  const [n, setN] = useState(0);
+  const [copied, setCopied] = useState(false);
+  const list = THANKS[kind];
+  const text = list[n % list.length];
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
+  }
+
+  return (
+    <Box title="お礼の連絡" tone={TOOL_TONE.thanks} locked={locked}>
+      <p className="text-sm text-white/70">会の次の日に送る お礼の文の例です。コピーして そのまま送れます。</p>
+      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="送る相手">
+        {THANKS_KINDS.map((k) => (
+          <button
+            key={k.key}
+            type="button"
+            aria-pressed={kind === k.key}
+            onClick={() => {
+              setKind(k.key);
+              setN(0);
+            }}
+            className={`${PILL} ${kind === k.key ? PILL_ON : PILL_OFF}`}
+          >
+            {kind === k.key && "✓ "}
+            {k.label}
+          </button>
+        ))}
+      </div>
+      <p className="anim-rise mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-base leading-relaxed font-bold ring-1 ring-white/10" key={`${kind}${n}`}>
+        {text}
+      </p>
+      <div className="mt-3 flex gap-2">
+        <button type="button" onClick={copy} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-accent px-3 text-sm font-black text-accent-text active:scale-95">
+          {copied ? "コピーしました" : "コピーする"}
+        </button>
+        <button type="button" onClick={() => setN((v) => v + 1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
+          <Shuffle className="size-4" aria-hidden />
+          別の例を見る
+        </button>
+      </div>
     </Box>
   );
 }
