@@ -19,9 +19,9 @@ export function ProDone({ license, back }: { license: string | null; back: strin
     return (
       <>
         <h1 className="text-xl font-black">支払いを確かめられませんでした</h1>
-        <p className="mt-2 text-sm text-muted">お支払いが済んでいれば、会計の画面の「ほかの端末で買った人はこちら」から、買ったときのメールアドレスで戻せます。</p>
+        <p className="mt-2 text-sm text-muted">お支払いが済んでいれば、Play の画面の「ほかの端末で契約した人はこちら」から、買ったときのメールアドレスで戻せます。</p>
         <Link href={back} className={`${BUTTON_PRIMARY} mt-6 w-full`}>
-          会計にもどる
+          もどる
         </Link>
       </>
     );
@@ -32,7 +32,7 @@ export function ProDone({ license, back }: { license: string | null; back: strin
         <Check className="size-6 text-accent" aria-hidden />
         購入ありがとうございます
       </p>
-      <p className="mt-2 text-sm text-muted">この端末で、傾斜と集金のページがずっと使えるように ・ 会計の画面にもどります。</p>
+      <p className="mt-2 text-sm text-muted">この端末で、契約している間は Play がずっと使えます。元の画面にもどります。</p>
     </>
   );
 }

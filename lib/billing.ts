@@ -95,7 +95,9 @@ export async function createProCheckout(origin: string, back: string): Promise<s
     "line_items[0][price_data][currency]": "jpy",
     "line_items[0][price_data][unit_amount]": String(proPrice()),
     "line_items[0][price_data][recurring][interval]": "month",
-    "line_items[0][price_data][product_data][name]": "Tsudoro 有料プレミアム(催促をアプリにまかせる + 会社の傾斜)月額",
+    "line_items[0][price_data][product_data][name]": "Tsudoro 有料プレミアム(Play: 盛り上がる遊び)月額",
+    // Stripe の Managed Payments(最初からオン)では、商品の税コードが必要。電子的に提供するサービス(一般)
+    "line_items[0][price_data][product_data][tax_code]": "txcd_10000000",
     "metadata[kind]": "pro",
     "subscription_data[metadata][kind]": "pro",
     success_url: `${origin}/pro/done?session={CHECKOUT_SESSION_ID}&back=${encodeURIComponent(back)}`,

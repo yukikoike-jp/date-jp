@@ -7,6 +7,7 @@ import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type Ca
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { loadAudience } from "@/lib/audience";
 import { CHECKLIST, OCCASIONS, SPEECHES, TOPICS, TOPIC_KINDS, drawIndex, type Occasion, type TopicKind } from "@/lib/work";
+import { openBillingPortal } from "@/app/actions";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
 // 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
@@ -79,6 +80,7 @@ export function FunClient() {
   const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   // 買ったあと(鍵が開いたあと)は、前に入れた名前を思い出す
   useEffect(() => {
@@ -204,6 +206,29 @@ export function FunClient() {
         {tool === "speech" && <Speech locked={locked} />}
         {tool === "memo" && <Memo locked={locked} />}
       </div>
+
+      {/* 契約中のとき: 契約の確認・解約(Stripe のカスタマーポータル)。解約の入口を、いつでも見える場所に置く */}
+      {!access.loading && !locked && access.license && (
+        <div className="mt-6 px-4">
+          <button
+            type="button"
+            onClick={async () => {
+              setPortalError(null);
+              const r = await openBillingPortal(access.license, "/fun");
+              if (r.ok) location.href = r.url;
+              else setPortalError(r.error);
+            }}
+            className="flex min-h-11 items-center text-xs font-bold text-muted underline underline-offset-2"
+          >
+            契約の確認・解約
+          </button>
+          {portalError && (
+            <p role="alert" className="text-xs font-bold text-danger">
+              {portalError}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
