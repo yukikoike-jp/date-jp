@@ -40,8 +40,8 @@ export default function Home() {
                 <ChevronDown className="size-3 text-muted transition-transform group-open:rotate-180" aria-hidden />
               </summary>
               <div className="pb-3.5 text-white/70">
-                <h2 className="text-xs font-black text-white/85">Tsudoro は飲み会の幹事の負担を減らす基本無料のアプリです</h2>
-                <dl className="mt-2.5 grid gap-2.5 text-xs leading-relaxed">
+                <h2 className="text-xs font-black leading-[1.5] text-white/85">Tsudoro は飲み会の幹事の負担を減らす基本無料のアプリです</h2>
+                <dl className="mt-2.5 grid gap-2 text-xs leading-[1.5]">
                   {FEATURES.map(([t, d]) => (
                     <div key={t}>
                       <dt className="font-bold text-white/80">{t}</dt>
@@ -49,7 +49,7 @@ export default function Home() {
                     </div>
                   ))}
                 </dl>
-                <p className="mt-2.5 text-xs leading-relaxed">
+                <p className="mt-2.5 text-xs leading-[1.5]">
                   学生やサークルの飲み会から会社の忘年会・新年会・歓送迎会まで使えます。アカウント登録とアプリのインストールは不要です。
                 </p>
               </div>
@@ -74,7 +74,7 @@ export default function Home() {
                 プライバシーポリシー
                 <ChevronDown className="size-3 text-muted transition-transform group-open:rotate-180" aria-hidden />
               </summary>
-              <div className="pb-3.5 text-xs leading-relaxed text-white/70">
+              <div className="pb-3.5 text-xs leading-[1.5] text-white/70">
                 <ul className="grid gap-1.5">
                   <li>会員登録はありません。氏名・住所・電話番号・メールアドレスを登録のために求めることもありません。</li>
                   <li>お預かりするのは、会のタイトル・候補日・答えた名前(ニックネーム可)・行ける日・予算などです</li>
@@ -95,7 +95,7 @@ export default function Home() {
                   Tsudoro を応援する
                   <ChevronDown className="size-3 text-muted transition-transform group-open:rotate-180" aria-hidden />
                 </summary>
-                <div className="pb-3.5 text-xs leading-relaxed text-white/70">
+                <div className="pb-3.5 text-xs leading-[1.5] text-white/70">
                   <p>Tsudoro は学生が1人で作っています。気に入ったら応援してもらえるとうれしいです。</p>
                   <a
                     href={process.env.SUPPORT_URL}

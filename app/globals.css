@@ -264,6 +264,9 @@ h3 {
   li {
     text-align: justify;
     text-justify: inter-character;
-    text-wrap: pretty;
+    letter-spacing: 0;
+    /* 文節ごとの折り返しは、両端ぞろえと合わせると文字の間が大きくあくので、ここでは字ごとに詰めて折り返す */
+    word-break: normal;
+    text-wrap: wrap;
   }
 }
