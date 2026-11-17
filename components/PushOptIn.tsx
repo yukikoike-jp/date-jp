@@ -138,7 +138,7 @@ export function PushOptIn({
           )}
           {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると、受け取れます</p>}
           {state === "error" && <p className="mt-2 text-xs font-bold text-danger">登録できませんでした。少し待ってからもう一度お試しください</p>}
-          <p className="mt-2 text-xs text-muted">通知は、払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません</p>
+          <p className="mt-2 text-xs text-muted">通知は、払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません。</p>
         </div>
       )}
       {pushKey && state === "done" && (

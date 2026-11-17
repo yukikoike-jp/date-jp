@@ -117,7 +117,7 @@ export function FunClient() {
             いまはデモ版です
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            {company ? "一部の話題やあいさつを試せます。ぜんぶ使ってメモを残すには有料プレミアムが必要です" : `見本の名前(${DEMO_NAMES.slice(0, 3).join("・")}…)でぜんぶの遊びを試せます。自分たちの名前で使うには有料プレミアムが必要です`}
+            {company ? "一部の話題やあいさつを試せます。ぜんぶ使ってメモを残すには有料プレミアムが必要です。" : `見本の名前(${DEMO_NAMES.slice(0, 3).join("・")}…)でぜんぶの遊びを試せます。自分たちの名前で使うには有料プレミアムが必要です。`}
           </p>
           {!showBuy && (
             <button
@@ -309,7 +309,7 @@ function King({ names, locked }: { names: string[]; locked: boolean }) {
   const [order, setOrder] = useState<string | null>(null);
   return (
     <Box title="王様ゲーム" tone={TOOL_TONE.king} locked={locked}>
-      <p className="text-sm text-white/70">くじを引いたら自分の名前を押してこっそりカードを見ます。見たらもう一度押して隠します</p>
+      <p className="text-sm text-white/70">くじを引いたら自分の名前を押してこっそりカードを見ます。見たらもう一度押して隠します。</p>
       {draw && (
         <ul className="mt-4 grid grid-cols-2 gap-2">
           {draw.map((d, i) => {
@@ -400,7 +400,7 @@ function TruthDare({ names, locked }: { names: string[]; locked: boolean }) {
 
   return (
     <Box title="真実か挑戦" tone={TOOL_TONE.truth} locked={locked}>
-      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければパスしても大丈夫です</p>
+      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければパスしても大丈夫です。</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="盛り上がり度">
         {LEVELS.map((l) => (
           <button
@@ -485,7 +485,7 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
   return (
     <Box title="ワードウルフ" tone={TOOL_TONE.wolf} locked={locked}>
       <p className="text-sm text-white/70">
-        全員にお題の言葉が配られますが1人だけ(ウルフ)は少し違う言葉です。自分の名前を押してこっそり言葉を見たら、見せずに話し合ってウルフを当てます
+        全員にお題の言葉が配られますが1人だけ(ウルフ)は少し違う言葉です。自分の名前を押してこっそり言葉を見たら、見せずに話し合ってウルフを当てます。
       </p>
       {game && (
         <>
@@ -682,7 +682,7 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
   return (
     <Box title="NGワード" tone={TOOL_TONE.ng} locked={locked}>
       <p className="text-sm text-white/70">
-        1人に1つNGワードが決まります<b className="text-white">その人以外の</b>みんなだけがその言葉を見ます。会話の中で自分のNGワードを言ってしまったらアウトです
+        1人に1つNGワードが決まります<b className="text-white">その人以外の</b>みんなだけがその言葉を見ます。会話の中で自分のNGワードを言ってしまったらアウトです。
       </p>
       {deals && (
         <>
@@ -727,7 +727,7 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
               );
             })}
           </ul>
-          <p className="mt-2 text-xs text-muted">言葉を見るときはその人に画面を見られないように。言ってしまったら「＋」を押します</p>
+          <p className="mt-2 text-xs text-muted">言葉を見るときはその人に画面を見られないように。言ってしまったら「＋」を押します。</p>
           <div className="mt-3 flex items-center gap-2">
             <button type="button" onClick={() => setLeft(300)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
               <Timer className="size-4" aria-hidden />
@@ -767,7 +767,7 @@ function Topic({ locked }: { locked: boolean }) {
 
   return (
     <Box title="話題ガチャ" tone={TOOL_TONE.topic} locked={locked}>
-      <p className="text-sm text-white/70">会話に困ったら引いてみてください。みんなに順番に聞いても盛り上がります</p>
+      <p className="text-sm text-white/70">会話に困ったら引いてみてください。みんなに順番に聞いても盛り上がります。</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="話題の種類">
         {TOPIC_KINDS.map((k, i) => {
           // デモ版は最初の種類だけ。ほかは鍵つき
@@ -816,7 +816,7 @@ function Speech({ locked }: { locked: boolean }) {
 
   return (
     <Box title="ひとこと" tone={TOOL_TONE.speech} locked={locked}>
-      <p className="text-sm text-white/70">乾杯と〆のあいさつの例です。そのまま読んでも 少し変えても使えます</p>
+      <p className="text-sm text-white/70">乾杯と〆のあいさつの例です。そのまま読んでも 少し変えても使えます。</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="会の種類">
         {OCCASIONS.map((o, i) => {
           const closed = locked && i > 0;

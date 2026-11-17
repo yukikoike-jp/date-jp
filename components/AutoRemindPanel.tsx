@@ -114,7 +114,7 @@ export function AutoRemindPanel({
           )}
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-white/75">
-          払っていない人に、あなたではなく Tsudoro が通知します。翌日・3日後・7日後に、言い方を変えて届きます
+          払っていない人に、あなたではなく Tsudoro が通知します。翌日・3日後・7日後に、言い方を変えて届きます。
         </p>
         <div className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-white/10" aria-label="届く通知の見本">
           <p className="flex items-center gap-1.5 text-sm font-black">

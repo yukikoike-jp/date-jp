@@ -6,7 +6,7 @@ import { PageMotion } from "@/components/PageMotion";
 
 export const metadata: Metadata = {
   title: "飲み会の割り勘・傾斜計算",
-  description: "合計を入れるだけで、1人いくらかがすぐ分かります。全員同じ額の割り勘も、先輩・後輩で差をつける傾斜も。集金のページも作れます",
+  description: "合計を入れるだけで、1人いくらかがすぐ分かります。全員同じ額の割り勘も、先輩・後輩で差をつける傾斜も。集金のページも作れます。",
   alternates: { canonical: "/split" },
 };
 

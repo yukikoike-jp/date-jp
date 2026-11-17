@@ -60,7 +60,7 @@ function Diet({ diet }: { diet: Summary["diet"] }) {
           </li>
         ))}
       </ul>
-      <p className="mt-2 text-xs text-muted">誰が選んだか・書いたかは出していません。予約のときにお店に伝えましょう</p>
+      <p className="mt-2 text-xs text-muted">誰が選んだか・書いたかは出していません。予約のときにお店に伝えましょう。</p>
     </div>
   );
 }

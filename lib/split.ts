@@ -10,14 +10,14 @@ export type Weight = { key: string; label: string; note: string; tenths: number;
 
 export const WEIGHTS: Record<Audience, Weight[]> = {
   student: [
-    { key: "more", label: "多め", note: "先輩・OB", tenths: 13, mark: "▲", tone: "blue" },
+    { key: "more", label: "多め", note: "先輩・OB", tenths: 13, mark: "▲", tone: "red" },
     { key: "normal", label: "ふつう", note: "同期", tenths: 10, mark: "●", tone: "yellow" },
     { key: "less", label: "少なめ", note: "後輩・1年", tenths: 7, mark: "▼", tone: "green" },
     { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 6, mark: "◇", tone: "purple" },
   ],
   // 友達どうしは上下が少ないので、割り勘を基本に、多め・少なめだけ
   private: [
-    { key: "more", label: "多め", note: "年上・誘った人", tenths: 13, mark: "▲", tone: "blue" },
+    { key: "more", label: "多め", note: "年上・誘った人", tenths: 13, mark: "▲", tone: "red" },
     { key: "normal", label: "ふつう", note: "", tenths: 10, mark: "●", tone: "yellow" },
     { key: "less", label: "少なめ", note: "年下", tenths: 8, mark: "▼", tone: "green" },
     { key: "soft", label: "飲まない", note: "ソフトドリンク", tenths: 7, mark: "◇", tone: "purple" },
