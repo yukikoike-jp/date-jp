@@ -429,3 +429,16 @@ export async function openBillingPortal(license: string | null, back: string): P
     return { ok: false, error: "契約のページを開けませんでした。少し待ってからもう一度お試しください" };
   }
 }
+
+/**
+ * どこから来たかを数える(SNS のリンクの ?s=ig など)。広告の記録の表に「src:名前」で残す(誰かは残さない)。
+ * 名前は英数字12文字まで。数えられなくても、画面には何も出さない
+ */
+export async function recordSource(source: string): Promise<void> {
+  if (typeof source !== "string" || !/^[a-z0-9_-]{1,12}$/.test(source)) return;
+  try {
+    await getStore().logAdEvent(`src:${source}`, "view");
+  } catch (e) {
+    console.error("[source] 数えられませんでした", e);
+  }
+}

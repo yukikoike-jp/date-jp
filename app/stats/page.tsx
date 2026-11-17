@@ -24,6 +24,8 @@ const AFFILIATE_SIGNAL = 60;
 const YEN_PER_DECIDED_PARTY = 10;
 /** 週ごとのグラフに出す週の数 */
 const WEEKS = 8;
+/** 流入元の印の名前(リンクの ?s=)。ここにないものは、印のまま出す */
+const SOURCE_NAMES: Record<string, string> = { ig: "Instagram", tiktok: "TikTok", x: "X", line: "LINE" };
 /** ほかの予約サイトの、押された数を数えるときの名前(app/out) */
 const SITE_NAMES: Record<string, string> = { "site:ikyu": "高級店の予約サイト(一休)", "site:ozmall": "宴会プランの予約サイト(オズモール)" };
 
@@ -61,8 +63,13 @@ export default async function StatsPage(props: PageProps<"/stats">) {
   // 広告主に見せる実績。載せている広告は、まだ数がなくても0回で出す
   const adRows = [
     ...activeSponsors().map((s) => ({ ...(ads.find((a) => a.sponsorId === s.id) ?? { sponsorId: s.id, views: 0, clicks: 0 }), name: s.name })),
-    ...ads.filter((a) => !activeSponsors().some((s) => s.id === a.sponsorId)).map((a) => ({ ...a, name: `${a.sponsorId}(掲載終了)` })),
+    ...ads.filter((a) => !a.sponsorId.startsWith("src:") && !activeSponsors().some((s) => s.id === a.sponsorId)).map((a) => ({ ...a, name: `${a.sponsorId}(掲載終了)` })),
   ];
+  // どこから来たか(SNS のリンクの ?s=ig など。1日1回、端末ごとに数える)
+  const sources = ads
+    .filter((a) => a.sponsorId.startsWith("src:"))
+    .map((a) => ({ key: a.sponsorId.slice(4), visits: a.views }))
+    .sort((x, y) => y.visits - x.visits);
   const shops = await Promise.all(
     stats.topShops.map(async (s) => ({ ...s, name: SITE_NAMES[s.shopId] ?? (await findShop(s.shopId))?.name ?? s.shopId })),
   );
@@ -144,6 +151,24 @@ export default async function StatsPage(props: PageProps<"/stats">) {
             今月の紹介料の見込みは、およそ
             {(stats.decided * YEN_PER_DECIDED_PARTY).toLocaleString("ja-JP")}円です(決まった会 × {YEN_PER_DECIDED_PARTY}円で計算。アプリでの予約は数えない)
           </p>
+        </section>
+
+        <h2 className="mt-9 mb-3 px-1 text-sm font-bold text-muted">今月どこから来たか(リンクの ?s= の印)</h2>
+        <section className="overflow-hidden rounded-3xl border panel">
+          {sources.length === 0 ? (
+            <p className="px-5 py-5 text-sm text-muted">まだありません。SNS のプロフィールのリンクを https://www.tsudoro.com/?s=ig のようにすると、ここに出ます</p>
+          ) : (
+            <ul>
+              {sources.map((x) => (
+                <li key={x.key} className="flex min-h-14 items-center gap-3 border-t border-border px-5 first:border-t-0">
+                  <span className="min-w-0 flex-1 truncate font-bold">{SOURCE_NAMES[x.key] ?? x.key}</span>
+                  <span className="shrink-0 text-sm tabular-nums">
+                    <span className="font-black">{x.visits.toLocaleString("ja-JP")}</span>人
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <h2 className="mt-9 mb-3 px-1 text-sm font-bold text-muted">今月の広告の実績(広告主に見せる数)</h2>
