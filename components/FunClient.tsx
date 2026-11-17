@@ -69,7 +69,7 @@ export function FunClient() {
           <span className="font-logo">Play</span>
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">幹事がいる回がもっと楽しく</p>
+        <p className="mt-1 text-sm text-muted">幹事がいる会をもっと楽しく</p>
       </div>
 
       {/* デモ版のとき: 何が起きているか、どうすれば使えるかを最初に伝える */}

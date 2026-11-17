@@ -377,7 +377,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
             title="Play"
-            sub="幹事がいる回がもっと楽しく"
+            sub="幹事がいる会をもっと楽しく"
             lockOnly
             wide
           />
