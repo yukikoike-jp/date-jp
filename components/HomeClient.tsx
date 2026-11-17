@@ -266,12 +266,12 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
   const adjusting = active.filter((p) => !statuses![p.id].decision).length;
   const upcoming = active.length - adjusting;
   const tierIcon = (
-    // 傾斜の区分の色を、高さの違う棒で並べる(多めの人ほど高い)
+    // 傾斜の区分の色を、高さの違う棒で並べる(多めの人ほど高い)。4本のとき、紫のかわりに赤を入れて、色に赤も加える
     <span aria-hidden className="flex h-6 items-end gap-[3px]">
       {tiers.map((w) => (
         <span
           key={w.key}
-          className={`tier-${w.tone} w-[5px] rounded-full bg-[var(--tb)]`}
+          className={`tier-${w.tone === "purple" ? "red" : w.tone} w-[5px] rounded-full bg-[var(--tb)]`}
           style={{ height: `${Math.round((w.tenths / 15) * 100)}%` }}
         />
       ))}
