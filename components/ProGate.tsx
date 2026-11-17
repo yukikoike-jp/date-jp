@@ -76,9 +76,9 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
         <Lock className="size-5 text-accent" aria-hidden />
         {feature}は有料プレミアム
       </p>
-      <p className="mt-1 text-sm text-muted">月{yen(price)}。自動で更新されます。いつでも解約でき、払った期間の終わりまで使えます。</p>
+      <p className="mt-1 text-sm text-muted">毎月{yen(price)}が自動で更新されます。いつでも解約でき、解約しても、払った期間の終わりまでは使えます。</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {(work ? ["話題ガチャ・ひとこと・幹事メモがぜんぶ", "新しい道具も、契約中は使える"] : ["盛り上がる遊びがぜんぶ", "新しい遊びも、契約中は使える"]).map((t) => (
+        {(work ? ["話題ガチャ・ひとこと・幹事メモがぜんぶ", "これからふえる道具も、契約中はずっと"] : ["盛り上がる遊びがぜんぶ", "これからふえる遊びも、契約中はずっと"]).map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}
@@ -94,7 +94,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
         {!purchasable ? `月${yen(price)} ・ 申し込みの受付はもうすぐ始まります` : pending && !restoring ? "お支払いのページを開いています…" : `月${yen(price)}で申し込む`}
       </button>
       <p className="mt-2 text-center text-xs text-muted">
-        お支払いは Stripe のページで。カード番号は Tsudoro に届きません。解約は、契約後、このページ下の「契約の確認・解約」から。{" "}
+        お支払いは Stripe のページで ・ カードの番号は Tsudoro に届きません。解約は、契約したあと、このページの下の「契約の確認・解約」からできます。{" "}
         <a href="/legal" className="underline underline-offset-2">
           特定商取引法に基づく表記
         </a>
