@@ -257,7 +257,7 @@ function audioFx(work, total) {
   run(["-f", "lavfi", "-i", "anoisesrc=d=0.25:c=white:a=0.5", "-af", "highpass=f=2000,afade=t=out:st=0.05:d=0.2,volume=0.35", "glitch.wav"]);
 }
 
-function join(scenes, files, work, total) {
+function join(scenes, files, work, total, outName = "v6_wordwolf.mp4") {
   const args = ["-y"];
   files.forEach((x) => args.push("-i", x));
   const a0 = files.length;
@@ -295,7 +295,7 @@ function join(scenes, files, work, total) {
     mix.push(`[gd${k}]`);
   });
   f.push(`${mix.join("")}amix=inputs=${mix.length}:normalize=0,apad,atrim=0:${total.toFixed(3)},loudnorm=I=-14:TP=-1.5:LRA=11,aformat=sample_rates=44100:channel_layouts=stereo[a]`);
-  args.push("-filter_complex", f.join(";"), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", path.join(OUT, "v6_wordwolf.mp4"));
+  args.push("-filter_complex", f.join(";"), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", path.join(OUT, outName));
   execFileSync("ffmpeg", args, { cwd: work, stdio: ["ignore", "ignore", "pipe"] });
 }
 
@@ -342,4 +342,6 @@ async function main() {
   }
 }
 
-main();
+module.exports = { city, hudLabel, speaker, synth, duration, audioFx, join, W, H, FPS, RED, CYAN, GOLD, JP, EN, OUT };
+
+if (require.main === module) main();
