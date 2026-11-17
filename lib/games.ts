@@ -142,3 +142,16 @@ export function wordWolf(names: readonly string[], rand: Rand = Math.random): { 
   const wolf = order[0];
   return { deals: names.map((name) => ({ name, word: name === wolf ? wolfWord : majorityWord })), wolf, majorityWord, wolfWord };
 }
+
+/** NGワードゲームの言葉。会話の中で、つい言ってしまいそうな、ふつうの言葉(30個。1人に1つずつ、重ならないように配る) */
+export const NG_WORDS = [
+  "確かに", "ていうか", "やばい", "マジで", "なるほど", "ほんと", "ちょっと", "たぶん", "とりあえず", "でも",
+  "ごめん", "いや", "ありがとう", "おいしい", "楽しい", "好き", "すごい", "わかる", "それな", "かわいい",
+  "たしかに", "だから", "うん", "えっと", "そうそう", "はい", "ねえ", "どうしよう", "最近", "今日",
+];
+
+/** NGワードゲーム。全員に、重ならないNGワードを1つずつ配る(自分のNGワードを会話で言ったら、アウト) */
+export function ngWords(names: readonly string[], rand: Rand = Math.random): { name: string; word: string }[] {
+  const words = shuffle(NG_WORDS, rand);
+  return names.map((name, i) => ({ name, word: words[i % words.length] }));
+}

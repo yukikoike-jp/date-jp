@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { HomeClient } from "@/components/HomeClient";
 import { PageMotion } from "@/components/PageMotion";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { GUIDES } from "@/lib/guides";
 import { SITE_URL } from "@/lib/site";
@@ -88,6 +88,28 @@ export default function Home() {
                 </Link>
               </div>
             </details>
+            {/* 応援(OFUSE)。見返りのない投げ銭。URL は環境変数 SUPPORT_URL。空なら出さない */}
+            {process.env.SUPPORT_URL && (
+              <details className="group rounded-xl border panel px-3.5 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between text-xs font-bold text-white/70">
+                  Tsudoro を応援する
+                  <ChevronDown className="size-3.5 text-muted transition-transform group-open:rotate-180" aria-hidden />
+                </summary>
+                <div className="pb-3.5 text-xs leading-relaxed text-white/70">
+                  <p>Tsudoro は、学生が1人で作っています。気に入ったら、応援してもらえるとうれしいです。</p>
+                  <p className="mt-1.5 text-white/55">応援は気持ちだけです。見返りはなく、機能が増えることもありません。</p>
+                  <a
+                    href={process.env.SUPPORT_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2.5 inline-flex min-h-9 items-center gap-1 font-bold text-white/85 underline underline-offset-2"
+                  >
+                    応援する(OFUSE)
+                    <ExternalLink className="size-3.5" aria-hidden />
+                  </a>
+                </div>
+              </details>
+            )}
           </div>
         }
       />

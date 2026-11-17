@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DARES, TRUTHS, WORD_PAIRS, drawCard, nextPlayer, wordWolf } from "./games";
+import { DARES, NG_WORDS, TRUTHS, WORD_PAIRS, drawCard, nextPlayer, ngWords, wordWolf } from "./games";
 
 describe("お題", () => {
   it("どのお題も、空でなく、ゆるめ・ちょい攻めの両方に十分な数がある", () => {
@@ -54,5 +54,18 @@ describe("wordWolf", () => {
   });
   it("お題の組は、同じ言葉どうしにならない", () => {
     expect(WORD_PAIRS.every(([a, b]) => a !== b)).toBe(true);
+  });
+});
+
+describe("ngWords", () => {
+  it("全員に、重ならないNGワードを配る(30人まで)", () => {
+    const names = Array.from({ length: 30 }, (_, i) => `n${i}`);
+    const r = ngWords(names);
+    expect(r).toHaveLength(30);
+    expect(new Set(r.map((d) => d.word)).size).toBe(30);
+    expect(r.every((d) => NG_WORDS.includes(d.word))).toBe(true);
+  });
+  it("言葉の一覧に、同じ言葉はない", () => {
+    expect(new Set(NG_WORDS).size).toBe(NG_WORDS.length);
   });
 });

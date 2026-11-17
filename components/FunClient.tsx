@@ -1,26 +1,25 @@
 "use client";
 
-import { Crown, Dices, ExternalLink, Eye, EyeOff, Flame, Heart, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
+import { Ban, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, kingGame, parseNames, pickIndex, splitTeams, type KingDraw } from "@/lib/fun";
-import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, wordWolf, type CardKind, type Level } from "@/lib/games";
+import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
-// 有料プレミアムの「Play」(真実か挑戦・ワードウルフ・王様ゲーム・ルーレット・チーム分け + 応援)。
+// 有料プレミアムの「Play」(真実か挑戦・ワードウルフ・王様ゲーム・NGワード・ルーレット・チーム分け)。
 // 買う前は「デモ版」: 見本の名前で全部の道具を試せるが、自分たちの名前は入れられない。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "truth" | "wolf" | "king" | "wheel" | "team" | "support";
+type Tool = "truth" | "wolf" | "king" | "ng" | "wheel" | "team";
 const TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "king", label: "王様ゲーム", icon: Crown },
+  { key: "ng", label: "NGワード", icon: Ban },
   { key: "wheel", label: "ルーレット", icon: Dices },
   { key: "team", label: "チーム分け", icon: Users },
-  // 応援(OFUSE)。遊びではないので、名前の入力と鍵の印は出さない
-  { key: "support", label: "応援", icon: Heart },
 ];
 
 /** 有料プレミアムの印。鍵のマークだけ(デモ版かどうかは、上の案内に書く) */
@@ -116,7 +115,6 @@ export function FunClient() {
       </div>
 
       {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける */}
-      {tool !== "support" && (
       <section className="mx-4 mt-4 rounded-3xl border panel px-4 py-4">
         <label className="flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-white/70" htmlFor="fun-names">
           <span className="flex items-center gap-2">
@@ -151,15 +149,14 @@ export function FunClient() {
         )}
         {!locked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
       </section>
-      )}
 
       <div className="mt-4">
         {tool === "truth" && <TruthDare names={names} locked={locked} />}
         {tool === "wolf" && <Wolf names={names} locked={locked} />}
         {tool === "king" && <King names={names} locked={locked} />}
+        {tool === "ng" && <NgWord names={names} locked={locked} />}
         {tool === "wheel" && <Wheel names={names} locked={locked} />}
         {tool === "team" && <Teams names={names} locked={locked} />}
-        {tool === "support" && <Support />}
       </div>
     </div>
   );
@@ -605,31 +602,97 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-// ───── 応援(OFUSE)─────
-// 見返りのない投げ銭。URL は環境変数 SUPPORT_URL(next.config.ts で画面に渡す)。空なら出さない。お金は Tsudoro では預からない
-function Support() {
-  const url = process.env.SUPPORT_URL;
+// ───── NGワード ─────
+function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
+  const [deals, setDeals] = useState<{ name: string; word: string }[] | null>(null);
+  const [open, setOpen] = useState<number | null>(null);
+  const [outs, setOuts] = useState<number[]>([]);
+  const [left, setLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (left === null || left <= 0) return;
+    const t = window.setTimeout(() => setLeft((v) => (v === null ? v : v - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [left]);
+
+  function start() {
+    const d = ngWords(names);
+    setDeals(d);
+    setOpen(null);
+    setOuts(d.map(() => 0));
+    setLeft(null);
+  }
+
   return (
-    <section className="mx-4 rounded-3xl border panel px-4 py-5">
-      <h2 className="mb-3 flex items-center gap-2 text-lg font-black">
-        <Heart className="size-5 text-accent" aria-hidden />
-        Tsudoro を応援する
-      </h2>
-      <p className="text-sm leading-relaxed text-white/75">
-        Tsudoro は、学生が1人で作っています。気に入ったら、応援してもらえるとうれしいです。
+    <Box title="NGワード" locked={locked}>
+      <p className="text-sm text-white/70">
+        1人に1つ、NGワードが決まります。<b className="text-white">その人以外の</b>みんなだけが、その言葉を見ます。会話の中で、自分のNGワードを言ってしまったら、アウトです。
       </p>
-      <p className="mt-2 text-xs text-muted">応援は気持ちだけです。見返りはなく、機能が増えることもありません。</p>
-      {url && (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 text-base font-black text-accent-text active:scale-[0.97]"
-        >
-          応援する(OFUSE)
-          <ExternalLink className="size-4" aria-hidden />
-        </a>
+      {deals && (
+        <>
+          <ul className="mt-4 grid grid-cols-2 gap-2">
+            {deals.map((d, i) => {
+              const shown = open === i;
+              return (
+                <li key={d.name} className="rounded-2xl bg-surface-2 p-2 ring-1 ring-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setOpen(shown ? null : i)}
+                    aria-pressed={shown}
+                    className="flex min-h-14 w-full flex-col items-center justify-center rounded-xl px-1 py-1 transition active:scale-95"
+                  >
+                    <span className="max-w-full truncate text-sm font-bold">{d.name}さん</span>
+                    <span className={`mt-0.5 inline-flex items-center gap-1 text-xs font-black ${shown ? "text-accent" : "text-muted"}`}>
+                      {shown ? (
+                        <>
+                          <Eye className="size-3.5" aria-hidden />
+                          {d.word}
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="size-3.5" aria-hidden />
+                          NGワードを見る
+                        </>
+                      )}
+                    </span>
+                  </button>
+                  <div className="mt-1 flex items-center justify-between gap-1 border-t border-border pt-1.5">
+                    <span className="text-[11px] font-bold text-muted tabular-nums">アウト {outs[i] ?? 0}回</span>
+                    <button
+                      type="button"
+                      aria-label={`${d.name}さんがNGワードを言った(アウトを1回足す)`}
+                      onClick={() => setOuts(outs.map((n, k) => (k === i ? n + 1 : n)))}
+                      className="grid size-9 place-items-center rounded-lg bg-white/8 ring-1 ring-white/12 active:scale-90"
+                    >
+                      <Plus className="size-4" aria-hidden />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="mt-2 text-xs text-muted">言葉を見るときは、その人に画面を見られないようにしてください。言ってしまったら「＋」を押します。</p>
+          <div className="mt-3 flex items-center gap-2">
+            <button type="button" onClick={() => setLeft(300)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
+              <Timer className="size-4" aria-hidden />
+              5分でスタート
+            </button>
+            {left !== null && (
+              <span className="text-lg font-black tabular-nums">
+                {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
+                {left === 0 && <span className="ml-2 text-sm text-accent">時間です。アウトの数をくらべましょう</span>}
+              </span>
+            )}
+          </div>
+        </>
       )}
-    </section>
+      <div className="mt-4">
+        <RerollButton onClick={start} disabled={names.length < 2}>
+          <Ban className="size-4" aria-hidden />
+          {deals ? "NGワードを配り直す" : "NGワードを配る"}
+        </RerollButton>
+        {names.length < 2 && <p className="mt-2 text-center text-xs text-muted">2人から遊べます</p>}
+      </div>
+    </Box>
   );
 }
