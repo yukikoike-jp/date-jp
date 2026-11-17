@@ -76,7 +76,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true }: { fe
         <Lock className="size-5 text-accent" aria-hidden />
         {feature}は有料の機能
       </p>
-      <p className="mt-1 text-sm text-muted">有料プレミアム(月額) ・ いつでも解約できます</p>
+      <p className="mt-1 text-sm text-muted">有料プレミアム(月額) ・ いつでも解約できます。</p>
       <ul className="mt-4 space-y-1.5 text-sm">
         {["盛り上がる遊びがぜんぶ", "これからふえる遊びも、契約中はずっと"].map((t) => (
           <li key={t} className="flex items-center gap-2">

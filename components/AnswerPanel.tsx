@@ -330,7 +330,7 @@ export function AnswerPanel({
             options={[{ value: UNLIMITED_BUDGET, label: "こだわらない" }, ...ANSWER_BUDGETS.map((b) => ({ value: b, label: `${yen(b)}くらいまで` }))]}
             onChange={(b) => set({ budget: b })}
           />
-          <p className="mt-3 text-xs text-muted">誰が選んだかは幹事にも非公開 ・ お店はみんなの真ん中の額で探します</p>
+          <p className="mt-3 text-xs text-muted">誰が選んだかは幹事にも非公開 ・ お店はみんなの真ん中の額で探します。</p>
         </fieldset>
 
         <fieldset className="px-5 py-5">
@@ -341,7 +341,7 @@ export function AnswerPanel({
           </p>
           {/* 駅は全国から選べる。みんなの駅から、集まりやすい駅の近くでお店を探す */}
           <StationPicker value={form.station ?? null} onChange={(station) => set({ station, areas: [] })} />
-          <p className="mt-3 text-xs text-muted">みんなの駅から集まりやすい駅を自動で決定</p>
+          <p className="mt-3 text-xs text-muted">みんなの駅から集まりやすい駅を自動で決定。</p>
         </fieldset>
 
         {/* お酒と、苦手なもの・アレルギー。幹事に言い出しにくいことを、答えと一緒に聞く */}
@@ -359,7 +359,7 @@ export function AnswerPanel({
               飲まない
             </Choice>
           </div>
-          <p className="mt-2 text-xs text-muted">「飲まない」なら、会計で「飲まない」の区分に</p>
+          <p className="mt-2 text-xs text-muted">「飲まない」なら、会計で「飲まない」の区分に。</p>
 
           {/* 社会人の会(プライベート・会社)では、喫煙できるお店かどうかが大事なので聞く(人数だけを幹事に見せる) */}
           {isAdult(audience) && (
@@ -376,7 +376,7 @@ export function AnswerPanel({
                   吸わない
                 </Choice>
               </div>
-              <p className="mt-2 text-xs text-muted">吸える店を優先・誰が吸うかは非公開</p>
+              <p className="mt-2 text-xs text-muted">吸える店を優先・誰が吸うかは非公開。</p>
             </>
           )}
 
@@ -403,7 +403,7 @@ export function AnswerPanel({
             maxLength={MAX_AVOID_NOTE}
             aria-label="そのほかの苦手なもの"
           />
-          <p className="mt-2 text-xs text-muted">誰が選んだかは幹事にも非公開</p>
+          <p className="mt-2 text-xs text-muted">誰が選んだかは幹事にも非公開。</p>
         </fieldset>
 
         {/* 食べたいもの。多いものから、お店を自動でおすすめする */}
@@ -415,7 +415,7 @@ export function AnswerPanel({
           </p>
           {/* アレルギーと同じく、▼ で選んで足していく */}
           <AddPicker label="食べたいもの" groups={[{ options: GENRES }]} selected={form.likes ?? []} onToggle={toggleLike} tone="green" />
-          <p className="mt-2 text-xs text-muted">多かったものからお店を自動で選定</p>
+          <p className="mt-2 text-xs text-muted">多かったものからお店を自動で選定。</p>
         </fieldset>
 
         <label className="block border-t border-border px-5 py-5">

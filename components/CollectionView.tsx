@@ -237,7 +237,7 @@ export function CollectionView({
               <Users className="size-5" aria-hidden />
               みんなにこのページを送る
             </h2>
-            <p className="mt-1 text-sm text-muted">一人ずつの金額入りの案内文</p>
+            <p className="mt-1 text-sm text-muted">一人ずつの金額入りの案内文。</p>
             <SendButtons mainLabel="共有してみんなに送る" share={{ text: askText }} copy={askText} copyLabel="送る文をコピー" canShare={canShare} />
           </section>
 

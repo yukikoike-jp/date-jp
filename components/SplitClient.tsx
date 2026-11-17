@@ -566,7 +566,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
             </div>
           </>
         ) : (
-          <p className="px-5 pt-2 pb-5 text-sm text-muted">合計を入れると、一人ずつの金額を表示</p>
+          <p className="px-5 pt-2 pb-5 text-sm text-muted">合計を入れると、一人ずつの金額を表示。</p>
         )}
       </section>
 
@@ -589,7 +589,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
             </p>
           )}
           {!result ? (
-            <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">上でお会計の合計を入れると、集金のページを作成</p>
+            <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">上でお会計の合計を入れると、集金のページを作成。</p>
           ) : collection ? (
             <div className="mt-4 grid gap-2">
               <Link href={`/c/${collection.id}?token=${collection.token}`} className={`${BUTTON_PRIMARY} w-full gap-2`}>

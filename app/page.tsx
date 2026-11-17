@@ -40,7 +40,7 @@ export default function Home() {
                 <ChevronDown className="size-3 text-muted transition-transform group-open:rotate-180" aria-hidden />
               </summary>
               <div className="pb-3.5 text-white/70">
-                <h2 className="text-xs font-black leading-[1.5] text-white/85">Tsudoro は飲み会の幹事の負担を減らす基本無料のアプリです</h2>
+                <h2 className="text-xs font-black leading-[1.5] text-white/85">Tsudoro は幹事の負担を減らす基本無料のアプリです。</h2>
                 <dl className="mt-2.5 grid gap-2 text-xs leading-[1.5]">
                   {FEATURES.map(([t, d]) => (
                     <div key={t}>
@@ -77,11 +77,11 @@ export default function Home() {
               <div className="pb-3.5 text-xs leading-[1.5] text-white/70">
                 <ul className="grid gap-1.5">
                   <li>会員登録はありません。氏名・住所・電話番号・メールアドレスを登録のために求めることもありません。</li>
-                  <li>お預かりするのは、会のタイトル・候補日・答えた名前(ニックネーム可)・行ける日・予算などです</li>
+                  <li>お預かりするのは、会のタイトル・候補日・答えた名前(ニックネーム可)・行ける日・予算などです。</li>
                   <li>会のURLを知っている人は、その会の回答を見られます。予算はほかの参加者に個別には見せません。</li>
-                  <li>アクセス解析と行動を追跡する広告は使っていません</li>
+                  <li>アクセス解析と行動を追跡する広告は使っていません。</li>
                   <li>お店や予約サイトへのリンクは、提携リンク(アフィリエイト広告)を経由することがあります。その場合は「PR」または「#アフィリエイト広告」と表示します。</li>
-                  <li>ご本人の同意なく第三者に情報を提供することはありません(法令にもとづく場合を除く)</li>
+                  <li>ご本人の同意なく第三者に情報を提供することはありません(法令にもとづく場合を除く)。</li>
                 </ul>
                 <Link href="/privacy" className="mt-2.5 inline-flex min-h-9 items-center font-bold text-white/85 underline underline-offset-2">
                   全文を読む

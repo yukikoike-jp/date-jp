@@ -164,7 +164,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
             <PartyPopper className="size-5" aria-hidden />
             決まったことを知らせる
           </p>
-          <p className="mt-1 text-sm text-muted">日にち・時間・お店入りの案内文</p>
+          <p className="mt-1 text-sm text-muted">日にち・時間・お店入りの案内文。</p>
           {/* お店に予約するときの人数の目安。「たぶん」の人は別に数える */}
           <p className="mt-3 rounded-xl bg-surface-2 px-4 py-3 text-sm">
             予約の人数: <span className="font-black">{attendees.length}人</span>
@@ -232,7 +232,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
         ranking.some((r) => r.ok > 0) && (
           <section className="mt-4 mx-4 rounded-3xl border panel px-4 py-6">
             <h2 className="text-lg font-black">幹事が決める</h2>
-            <p className="mt-1 text-sm text-muted">みんなの答えから選んだ、いちばん良さそうな日とお店</p>
+            <p className="mt-1 text-sm text-muted">みんなの答えから選んだ、いちばん良さそうな日とお店。</p>
             <MustPicker partyId={partyId} token={token} names={names} must={must} />
             <StepHead tone="blue" icon={<CalendarDays className="size-4" aria-hidden />}>
               日にち

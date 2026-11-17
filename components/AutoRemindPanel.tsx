@@ -133,14 +133,14 @@ export function AutoRemindPanel({
         {locked ? (
           showBuy && <ProPaywall feature="催促をアプリにまかせる" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : access.loading ? null : !pushReady ? (
-          <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">通知の準備がまだできていません。しばらく待ってからお試しください</p>
+          <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">通知の準備がまだできていません。しばらく待ってからお試しください。</p>
         ) : autoOn ? (
           <div className="mt-3 rounded-2xl border border-accent/40 px-4 py-3">
             <p className="flex items-center gap-1.5 text-sm font-black text-accent">
               <Bell className="size-4" aria-hidden />
               オン ・ 通知を受け取る人 {subscribed}人 / まだの人 {unpaid}人
             </p>
-            {subscribed < unpaid && <p className="mt-1 text-xs text-muted">集金のページを送るとき、「通知をオンにしてね」と一言そえると、受け取る人が増えます</p>}
+            {subscribed < unpaid && <p className="mt-1 text-xs text-muted">集金のページを送るとき、「通知をオンにしてね」と一言そえると、受け取る人が増えます。</p>}
             <button
               type="button"
               disabled={pending}

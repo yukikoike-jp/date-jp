@@ -78,7 +78,7 @@ export function PushOptIn({
   return (
     <section className="mx-4 mt-3 rounded-3xl border panel px-5 py-5" aria-label="払い方とお知らせ">
       <h2 className="text-lg font-black">あなたの分</h2>
-      <p className="mt-1 text-sm text-muted">自分の名前を選んでください</p>
+      <p className="mt-1 text-sm text-muted">自分の名前を選んでください。</p>
       <ul className="mt-3 flex flex-wrap gap-2">
         {payers.map((p) => (
           <li key={p.id}>
@@ -113,7 +113,7 @@ export function PushOptIn({
               <ExternalLink className="size-4" aria-hidden />
             </a>
           )}
-          {payLink && <p className="mt-1.5 text-xs text-muted">払ったら、幹事さんが受け取りを記録すると ✓ が付きます</p>}
+          {payLink && <p className="mt-1.5 text-xs text-muted">払ったら、幹事さんが受け取りを記録すると ✓ が付きます。</p>}
         </div>
       )}
 
@@ -134,10 +134,10 @@ export function PushOptIn({
               iPhone で通知を受け取るには、画面の下の共有ボタンから「ホーム画面に追加」をして、追加したアイコンからこのページを開いてください
             </p>
           ) : (
-            <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs text-muted">このブラウザでは、通知を受け取れません</p>
+            <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs text-muted">このブラウザでは、通知を受け取れません。</p>
           )}
-          {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると、受け取れます</p>}
-          {state === "error" && <p className="mt-2 text-xs font-bold text-danger">登録できませんでした。少し待ってからもう一度お試しください</p>}
+          {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると、受け取れます。</p>}
+          {state === "error" && <p className="mt-2 text-xs font-bold text-danger">登録できませんでした。少し待ってからもう一度お試しください。</p>}
           <p className="mt-2 text-xs text-muted">通知は、払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません。</p>
         </div>
       )}

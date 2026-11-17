@@ -103,7 +103,7 @@ export function StationPicker({
         </div>
       )}
       {!pending && results !== null && results.length === 0 && (
-        <p className="text-xs text-muted">見つからない駅名。「駅」を付けずに、正しい名前で</p>
+        <p className="text-xs text-muted">見つからない駅名。「駅」を付けずに、正しい名前で。</p>
       )}
       {!pending && results && results.length > 0 && (
         <ul id={listId} className="space-y-1.5" aria-label="見つかった駅">

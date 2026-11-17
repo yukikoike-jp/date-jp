@@ -606,7 +606,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
 
   return (
     <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
-      <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます</p>
+      <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます。</p>
       <div className="relative mx-auto mt-4 w-full max-w-[300px]">
         {/* 上の矢印 */}
         <div className="absolute top-[-6px] left-1/2 z-10 -translate-x-1/2 text-accent" aria-hidden>
