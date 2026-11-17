@@ -55,3 +55,12 @@ describe("answerNudgeText", () => {
     expect(answerNudgeText("忘年会", "https://x", 3)).toBe("「忘年会」の日程、いま3人が回答済み\nまだの人は30秒で入れてください\nhttps://x");
   });
 });
+
+describe("仕事の会の案内", () => {
+  it("招待・決定・前日・催促は、敬語にする(プライベートは今のまま)", () => {
+    expect(inviteText("忘年会", "https://x", 1140, "worker")).toBe("お疲れさまです。「忘年会」の日程調整のご案内です(19:00〜の予定です)。\nご都合のよい日をご入力ください。\nhttps://x");
+    expect(inviteText("忘年会", "https://x", 1140, "private")).toBe("「忘年会」の日程調整です(19:00〜)\n行ける日を入れてください\nhttps://x");
+    expect(dayBeforeText("忘年会", "2026-11-13", 1140, null, "https://x", "worker").startsWith("明日は「忘年会」です。")).toBe(true);
+    expect(answerNudgeText("忘年会", "https://x", 3, "worker")).toContain("お手数ですが");
+  });
+});

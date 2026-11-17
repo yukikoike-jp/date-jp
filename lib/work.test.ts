@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHECKLIST, OCCASIONS, SPEECHES, TOPICS, TOPIC_KINDS, drawIndex } from "./work";
+import { CHECKLIST, OCCASIONS, SPEECHES, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline } from "./work";
 
 describe("話題", () => {
   it("どのカテゴリにも十分な数があり、同じ話題や空の話題はない", () => {
@@ -39,5 +39,24 @@ describe("あいさつ", () => {
 describe("幹事の持ちもの", () => {
   it("同じ項目がない", () => {
     expect(new Set(CHECKLIST).size).toBe(CHECKLIST.length);
+  });
+});
+
+describe("timeline", () => {
+  it("開会から乾杯、ご歓談、締め(終わる20分前)、お開きの順に並べる", () => {
+    const t = timeline(1140, 120);
+    expect(t.map((s) => s.at)).toEqual([1140, 1150, 1160, 1240, 1260]);
+    expect(t[3].label).toContain("締め");
+  });
+  it("短い会でも、締めはご歓談より前にならない", () => {
+    const t = timeline(1140, 30);
+    expect(t[3].at).toBeGreaterThanOrEqual(t[2].at);
+  });
+});
+
+describe("お礼・ご連絡の文", () => {
+  it("どの種類にも例があり、キャンセル料の文には金額の置き場所がある", () => {
+    for (const k of THANKS_KINDS) expect(THANKS[k.key].length).toBeGreaterThan(0);
+    expect(THANKS.cancel.every((t) => t.includes("○○円"))).toBe(true);
   });
 });

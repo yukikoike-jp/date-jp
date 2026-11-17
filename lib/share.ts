@@ -20,7 +20,14 @@ export function teamsShareUrl(text: string): string {
 // アプリの宣伝の一言は付けない(URL を貼ると Tsudoro のカードが出るので、それで伝わる)
 
 /** start = 幹事が決めた開始時刻(分)。あれば「19:00〜」と添える */
-export function inviteText(title: string, url: string, start: number | null = null): string {
+export function inviteText(title: string, url: string, start: number | null = null, audience: Audience = "private"): string {
+  if (isFormal(audience)) {
+    return [
+      `お疲れさまです。「${title}」の日程調整のご案内です${start !== null ? `(${clock(start)}〜の予定です)` : ""}。`,
+      "ご都合のよい日をご入力ください。",
+      url,
+    ].join("\n");
+  }
   return [
     `「${title}」の日程調整です${start !== null ? `(${clock(start)}〜)` : ""}`,
     "行ける日を入れてください",
@@ -58,16 +65,25 @@ export function collectText(title: string, url: string, audience: Audience = "pr
     : [`${what}お会計です`, "自分の金額を見て、幹事に払ってね", ...(autoRemind ? ["ページで「通知をオン」にすると、払い忘れをアプリが教えてくれるよ"] : []), url].join("\n");
 }
 
-export function decidedText(title: string, date: string, start: number, shopName: string | null, url: string): string {
+export function decidedText(title: string, date: string, start: number, shopName: string | null, url: string, audience: Audience = "private"): string {
+  if (isFormal(audience)) {
+    return [`「${title}」の開催が決まりましたので、ご案内いたします。`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, "詳細はこちらをご確認ください。", url].join("\n");
+  }
   return [`「${title}」決まりました`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, url].join("\n");
 }
 
 /** 前日のお知らせ。グループに送るので、名前は出さない */
-export function dayBeforeText(title: string, date: string, start: number, shopName: string | null, url: string): string {
+export function dayBeforeText(title: string, date: string, start: number, shopName: string | null, url: string, audience: Audience = "private"): string {
+  if (isFormal(audience)) {
+    return [`明日は「${title}」です。`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, "場所と地図はこちらをご確認ください。", url].join("\n");
+  }
   return [`明日は「${title}」`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, "場所と地図はこちら", url].join("\n");
 }
 
 /** まだ答えていない人に、もう一度お願いする文。誰がまだかは書かない(グループに送るので、名指しにしない) */
-export function answerNudgeText(title: string, url: string, answered: number): string {
+export function answerNudgeText(title: string, url: string, answered: number, audience: Audience = "private"): string {
+  if (isFormal(audience)) {
+    return [`「${title}」の日程について、現在${answered}名の方からご回答をいただいています。`, "まだの方は、お手数ですが、ご入力をお願いいたします。", url].join("\n");
+  }
   return [`「${title}」の日程、いま${answered}人が回答済み`, "まだの人は30秒で入れてください", url].join("\n");
 }
