@@ -283,7 +283,8 @@ export async function collectionProgress(
 export async function findSecondShops(
   partyId: string,
   genre: string | null,
-): Promise<{ shops: Shop[]; size: number; near: string }> {
+  license: string | null = null,
+): Promise<{ shops: Shop[]; size: number; near: string; locked?: boolean }> {
   const view = await loadParty(partyId);
   if (!view?.party.decision) return { shops: [], size: 0, near: "" };
   const { party, summary } = view;
@@ -295,6 +296,9 @@ export async function findSecondShops(
       ? { lat: first.lat, lng: first.lng }
       : summary.meeting ?? { lat: area.lat, lng: area.lng };
   const size = summary.secondParty.length || summary.attendees.length;
+  const near = first?.lat != null ? (decision.shopName ?? first.name) : summary.meeting ? `${summary.meeting.name}駅` : area.label;
+  // 二次会のお店は、プライベートの会では有料プレミアム。仕事の会は無料のまま(鍵がないときはお店を渡さない)
+  if (party.audience !== "worker" && !(await hasFun(license))) return { shops: [], size, near, locked: true };
   const shops = await searchSecondShops({
     ...base,
     size,
@@ -302,11 +306,7 @@ export async function findSecondShops(
     exclude: decision.shopId,
     area: area.key,
   });
-  return {
-    shops,
-    size,
-    near: first?.lat != null ? (decision.shopName ?? first.name) : summary.meeting ? `${summary.meeting.name}駅` : area.label,
-  };
+  return { shops, size, near };
 }
 
 /**

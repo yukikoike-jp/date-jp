@@ -1,10 +1,11 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, Lock } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { findSecondShops } from "@/app/actions";
 import { SECOND_GENRES, type SecondGenreKey } from "@/lib/sendai";
 import type { Shop } from "@/lib/shops";
+import { ProPaywall, loadLicense, useFunAccess } from "./ProGate";
 import { ShopList } from "./ShopList";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 
@@ -13,16 +14,37 @@ import { PILL, PILL_OFF, PILL_ON } from "./ui";
 
 export function SecondPartyShops({ partyId }: { partyId: string }) {
   const [genre, setGenre] = useState<SecondGenreKey | null>(null);
-  const [result, setResult] = useState<{ shops: Shop[]; size: number; near: string } | null>(null);
+  const [result, setResult] = useState<{ shops: Shop[]; size: number; near: string; locked?: boolean } | null>(null);
+  const [asking, setAsking] = useState(false);
+  const access = useFunAccess();
   const [pending, start] = useTransition();
 
   useEffect(() => {
     start(async () => {
-      setResult(await findSecondShops(partyId, genre));
+      setResult(await findSecondShops(partyId, genre, loadLicense()));
     });
   }, [partyId, genre]);
 
   if (result && !result.near) return null;
+
+  // 有料プレミアムではないとき。お店は出さず、何が出るかと申し込みの案内だけを出す
+  if (result?.locked) {
+    return (
+      <div>
+        <p className="text-sm text-muted">
+          {result.near}の近くで、{result.size}人が残れる時刻まで開いているお店を、自動で出します。
+        </p>
+        {asking ? (
+          <ProPaywall feature="二次会のお店" price={access.price} purchasable={access.purchasable} onClose={() => setAsking(false)} />
+        ) : (
+          <button type="button" onClick={() => setAsking(true)} className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-white/8 px-4 text-sm font-bold ring-1 ring-white/12">
+            <Lock className="size-4 text-accent" aria-hidden />
+            二次会のお店を見る(有料プレミアム)
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className={`transition-opacity ${pending ? "opacity-60" : ""}`} aria-busy={pending}>
