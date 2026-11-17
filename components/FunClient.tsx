@@ -127,7 +127,7 @@ export function FunClient() {
               onClick={() => setShowBuy(true)}
               className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-accent px-4 text-sm font-black text-accent-text active:scale-95"
             >
-              有料プレミアムのくわしく
+              プレミアムの内容を見る
             </button>
           )}
         </section>
