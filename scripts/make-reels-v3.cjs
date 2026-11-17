@@ -22,37 +22,37 @@ const ENGINE = "http://127.0.0.1:50021";
 const W = 1080;
 const H = 1920;
 const FPS = 30;
-const XF = 0.2;
+const XF = 0.15;
 const GOLD = "0xf5b83d";
-const VOICE_NAME = process.argv[2] || "No.7";
-const VOICE_STYLE = process.argv[3] || "アナウンス";
+const VOICE_NAME = process.argv[2] || "玄野武宏";
+const VOICE_STYLE = process.argv[3] || "ノーマル";
 
 // 場面: img = 写真、tags = 黄色い帯、say = 読み上げ(読み方はカタカナで書く)、card = 重ねる絵、blur = ぼかす
 const REELS = {
   reel1: [
-    { img: "6669813", hook: true, tags: ["POV:", "飲み会の幹事になった"], say: "飲み会の幹事、日程調整で地獄見てない?" },
-    { img: "9898393", tags: ["既読スルー"], say: "ラインで聞いても、既読スルー。" },
-    { img: "6892902", tags: ["候補日 出し直し"], say: "候補日を出し直して、また出し直して。" },
+    { img: "6669813", hook: true, tags: ["POV:", "飲み会の幹事"], say: "幹事の日程調整、地獄じゃない?" },
+    { img: "9898393", tags: ["既読スルー"], say: "既読スルー。" },
+    { img: "6892902", tags: ["候補日 出し直し"], say: "候補日、出し直し。" },
     { img: "8197506", tags: ["もう無理…"], say: "もう無理。" },
-    { img: "6669784", blur: true, card: "app", tags: ["URL 1本", "○△×で答えるだけ"], say: "そんなときはツドロ。URLを1本送るだけで、みんなが丸、三角、バツで答えてくれる。" },
-    { img: "6605275", tags: ["日程もお店も", "一瞬で決定"], say: "日程もお店も、一瞬で決まる。" },
-    { end: "登録なし・無料", ask: "あなたの幹事あるあるは?", say: "登録なし、無料。プロフのリンクから。" },
+    { img: "6669784", blur: true, card: "app", tags: ["URL 1本", "○△×で答えるだけ"], say: "ツドロなら、URL一本。丸三角バツで答えるだけ。" },
+    { img: "6605275", tags: ["日程もお店も", "即決"], say: "日程もお店も、即決。" },
+    { end: "登録なし・無料", ask: "あなたの幹事あるあるは?", say: "プロフのリンクから。" },
   ],
   reel2: [
-    { img: "7680736", hook: true, tags: ["POV:", "飲み会のお会計"], say: "飲み会のあとの割り勘、地獄じゃない?" },
-    { img: "5900233", tags: ["先輩は1.3倍…"], say: "先輩は一点三倍で、後輩は少なめで。" },
-    { img: "6173661", tags: ["端数どうする…"], say: "端数、どうする?" },
-    { img: "9961852", blur: true, card: "split", tags: ["合計を入れるだけ", "一人ずつの金額が出る"], say: "ツドロなら、合計を入れるだけ。先輩多めの傾斜も、一瞬で計算。" },
-    { img: "9961849", tags: ["幹事も笑顔で", "お会計おわり"], say: "幹事も笑顔で、お会計おわり。" },
-    { end: "傾斜で割る", ask: "割り勘の悩み、コメントで教えて", say: "登録なし、無料。プロフのリンクから。" },
+    { img: "7680736", hook: true, tags: ["POV:", "飲み会のお会計"], say: "飲み会の割り勘、地獄じゃない?" },
+    { img: "5900233", tags: ["先輩は1.3倍…"], say: "先輩は一点三倍で…" },
+    { img: "6173661", tags: ["端数どうする…"], say: "端数どうする?" },
+    { img: "9961852", blur: true, card: "split", tags: ["合計を入れるだけ", "傾斜も一瞬"], say: "ツドロなら、合計を入れるだけ。傾斜も一瞬。" },
+    { img: "9961849", tags: ["お会計", "即おわり"], say: "お会計、即おわり。" },
+    { end: "傾斜で割る", ask: "割り勘の悩み、コメントで教えて", say: "プロフのリンクから。" },
   ],
   reel3: [
-    { img: "6173675", hook: true, tags: ["2次会で", "急に静かになる"], say: "二次会で、急に静かになる、あの空気。" },
-    { img: "9898393", tags: ["そんなときは"], say: "そんなときは。" },
-    { img: "9961851", blur: true, card: "cards", tags: ["ワードウルフ", "1人だけ違うお題"], say: "ワードウルフ。みんなに同じお題、一人だけ違うお題。" },
-    { img: "8153998", tags: ["ウルフは", "誰だ!?"], say: "ウルフは、誰だ?" },
-    { img: "3851302", tags: ["配るだけで", "一気に盛り上がる"], say: "スマホで配るだけで、一気に盛り上がる。" },
-    { end: "Play", ask: "次の2次会で使ってみて", say: "ツドロのプレイで。プロフのリンクから。" },
+    { img: "6173675", hook: true, tags: ["2次会で", "急に静かになる"], say: "二次会で、急に静かになるやつ。" },
+    { img: "9898393", tags: ["そんなときは"], say: "そんなときは、" },
+    { img: "9961851", blur: true, card: "cards", tags: ["ワードウルフ", "1人だけ違うお題"], say: "ワードウルフ。一人だけ違うお題。" },
+    { img: "8153998", tags: ["ウルフは", "誰だ!?"], say: "ウルフは誰だ?" },
+    { img: "3851302", tags: ["配るだけで", "一気に盛り上がる"], say: "配るだけで、一気に盛り上がる。" },
+    { end: "Play", ask: "次の2次会で使ってみて", say: "プロフのリンクから。" },
   ],
 };
 
@@ -70,8 +70,8 @@ async function speakerId(name) {
 async function synth(text, speaker, file) {
   const q = await fetch(`${ENGINE}/audio_query?text=${encodeURIComponent(text)}&speaker=${speaker}`, { method: "POST" });
   const query = await q.json();
-  query.speedScale = 1.12; // 少し早口(ショート動画向け)
-  query.intonationScale = 1.15;
+  query.speedScale = 1.3; // 早口(ショート動画はテンポが命)
+  query.intonationScale = 1.2;
   query.prePhonemeLength = 0.05;
   query.postPhonemeLength = 0.08;
   const s = await fetch(`${ENGINE}/synthesis?speaker=${speaker}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(query) });
@@ -245,7 +245,7 @@ function join(name, scenes, files, work) {
     mix.push(`[pd${k}]`);
   });
   filters.push(`${mix.join("")}amix=inputs=${mix.length}:normalize=0,apad,atrim=0:${total.toFixed(3)},loudnorm=I=-14:TP=-1.5:LRA=11,aformat=sample_rates=44100:channel_layouts=stereo[a]`);
-  args.push("-filter_complex", filters.join(";"), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", path.join(OUT, `v3_${name}.mp4`));
+  args.push("-filter_complex", filters.join(";"), "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-crf", "19", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", path.join(OUT, `v4_${name}.mp4`));
   execFileSync("ffmpeg", args, { cwd: work, stdio: ["ignore", "ignore", "pipe"] });
   return total;
 }
@@ -269,7 +269,7 @@ async function main() {
         const f = path.join(work, `v_${name}_${k}.wav`);
         await synth(scenes[k].say, voice.id, f);
         // 声の長さ + 少しの余白。短すぎる場面は 1.2 秒にそろえる。最後の場面は長めに見せる
-        scenes[k].d = Math.max(1.2, duration(f) + 0.35) + (scenes[k].end ? 1.2 : 0);
+        scenes[k].d = Math.max(0.9, duration(f) + 0.18) + (scenes[k].end ? 0.9 : 0);
       }
       const files = scenes.map((sc, i) => scene(sc, i, name, work, credit));
       const total = join(name, scenes, files, work);
