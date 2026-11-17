@@ -131,14 +131,14 @@ export function PushOptIn({
             </button>
           ) : support === "needs-install" ? (
             <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs leading-relaxed text-muted">
-              iPhone で通知を受け取るには、画面の下の共有ボタンから「ホーム画面に追加」をして、追加したアイコンからこのページを開いてください。
+              iPhone で通知を受け取るには、画面の下の共有ボタンから「ホーム画面に追加」をして、追加したアイコンからこのページを開いてください
             </p>
           ) : (
-            <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs text-muted">このブラウザでは、通知を受け取れません。</p>
+            <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs text-muted">このブラウザでは、通知を受け取れません</p>
           )}
-          {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると、受け取れます。</p>}
-          {state === "error" && <p className="mt-2 text-xs font-bold text-danger">登録できませんでした。少し待ってからもう一度お試しください。</p>}
-          <p className="mt-2 text-xs text-muted">通知は、払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません。</p>
+          {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると、受け取れます</p>}
+          {state === "error" && <p className="mt-2 text-xs font-bold text-danger">登録できませんでした。少し待ってからもう一度お試しください</p>}
+          <p className="mt-2 text-xs text-muted">通知は、払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません</p>
         </div>
       )}
       {pushKey && state === "done" && (

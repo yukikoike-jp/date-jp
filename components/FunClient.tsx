@@ -7,17 +7,17 @@ import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type Ca
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
-// 有料プレミアムの「Play」(真実か挑戦・ワードウルフ・王様ゲーム・NGワード・ルーレット・チーム分け)。
+// 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
 // 買う前は「デモ版」: 見本の名前で全部の道具を試せるが、自分たちの名前は入れられない。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
 type Tool = "truth" | "wolf" | "king" | "ng" | "wheel" | "team";
 const TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
-  { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
-  { key: "king", label: "王様ゲーム", icon: Crown },
   { key: "ng", label: "NGワード", icon: Ban },
+  { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
+  { key: "king", label: "王様ゲーム", icon: Crown },
   { key: "wheel", label: "ルーレット", icon: Dices },
   { key: "team", label: "チーム分け", icon: Users },
 ];
@@ -39,7 +39,7 @@ function PackBadge({ locked }: { locked: boolean }) {
 export function FunClient() {
   const access = useFunAccess();
   const locked = !access.unlocked;
-  const [tool, setTool] = useState<Tool>("truth");
+  const [tool, setTool] = useState<Tool>("wolf");
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
 
@@ -69,7 +69,7 @@ export function FunClient() {
           <span className="font-logo">Play</span>
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">幹事がいる回を、もっと盛り上げる</p>
+        <p className="mt-1 text-sm text-muted">幹事がいる回がもっと楽しく</p>
       </div>
 
       {/* デモ版のとき: 何が起きているか、どうすれば使えるかを最初に伝える */}
@@ -80,7 +80,7 @@ export function FunClient() {
             いまはデモ版です
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            見本の名前({DEMO_NAMES.slice(0, 3).join("・")}…)で、ぜんぶの道具を試せます。自分たちの名前で使うには、有料プレミアムが必要です。
+            見本の名前({DEMO_NAMES.slice(0, 3).join("・")}…)でぜんぶの遊びを試せます。自分たちの名前で使うには有料プレミアムが必要です
           </p>
           {!showBuy && (
             <button
@@ -253,7 +253,7 @@ function King({ names, locked }: { names: string[]; locked: boolean }) {
   const [order, setOrder] = useState<string | null>(null);
   return (
     <Box title="王様ゲーム" locked={locked}>
-      <p className="text-sm text-white/70">くじを引いたら、自分の名前を押して、こっそりカードを見ます。見たらもう一度押して隠します。</p>
+      <p className="text-sm text-white/70">くじを引いたら自分の名前を押してこっそりカードを見ます。見たらもう一度押して隠します</p>
       {draw && (
         <ul className="mt-4 grid grid-cols-2 gap-2">
           {draw.map((d, i) => {
@@ -344,7 +344,7 @@ function TruthDare({ names, locked }: { names: string[]; locked: boolean }) {
 
   return (
     <Box title="真実か挑戦" locked={locked}>
-      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければ、パスしても大丈夫です。</p>
+      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければパスしても大丈夫です</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="盛り上がり度">
         {LEVELS.map((l) => (
           <button
@@ -429,7 +429,7 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
   return (
     <Box title="ワードウルフ" locked={locked}>
       <p className="text-sm text-white/70">
-        全員にお題の言葉が配られますが、1人だけ(ウルフ)は、少し違う言葉です。自分の名前を押して、こっそり言葉を見たら、見せずに話し合い、ウルフを当てます。
+        全員にお題の言葉が配られますが1人だけ(ウルフ)は少し違う言葉です。自分の名前を押してこっそり言葉を見たら、見せずに話し合ってウルフを当てます
       </p>
       {game && (
         <>
@@ -484,13 +484,13 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
               <p className="text-sm" aria-live="polite">
                 ウルフは <span className="text-lg font-black text-accent">{game.wolf}</span> さん!
                 <span className="mt-1 block text-xs text-muted">
-                  みんなの言葉は「{game.majorityWord}」、ウルフは「{game.wolfWord}」でした
+                  みんなの言葉は「{game.majorityWord}」でウルフは「{game.wolfWord}」でした
                 </span>
               </p>
             ) : (
               <button type="button" onClick={() => setReveal(true)} className="inline-flex min-h-11 items-center gap-1.5 text-sm font-black text-accent underline underline-offset-2">
                 <PartyPopper className="size-4" aria-hidden />
-                投票が終わったら、答え合わせ
+                投票が終わったら答え合わせ
               </button>
             )}
           </div>
@@ -550,7 +550,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
 
   return (
     <Box title="ルーレット" locked={locked}>
-      <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を、運で決めます。</p>
+      <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます</p>
       <div className="relative mx-auto mt-4 w-full max-w-[300px]">
         {/* 上の矢印 */}
         <div className="absolute top-[-6px] left-1/2 z-10 -translate-x-1/2 text-accent" aria-hidden>
@@ -626,7 +626,7 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
   return (
     <Box title="NGワード" locked={locked}>
       <p className="text-sm text-white/70">
-        1人に1つ、NGワードが決まります。<b className="text-white">その人以外の</b>みんなだけが、その言葉を見ます。会話の中で、自分のNGワードを言ってしまったら、アウトです。
+        1人に1つNGワードが決まります<b className="text-white">その人以外の</b>みんなだけがその言葉を見ます。会話の中で自分のNGワードを言ってしまったらアウトです
       </p>
       {deals && (
         <>
@@ -671,7 +671,7 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
               );
             })}
           </ul>
-          <p className="mt-2 text-xs text-muted">言葉を見るときは、その人に画面を見られないようにしてください。言ってしまったら「＋」を押します。</p>
+          <p className="mt-2 text-xs text-muted">言葉を見るときはその人に画面を見られないように。言ってしまったら「＋」を押します</p>
           <div className="mt-3 flex items-center gap-2">
             <button type="button" onClick={() => setLeft(300)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
               <Timer className="size-4" aria-hidden />

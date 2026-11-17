@@ -209,7 +209,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
             決定を取り消す
           </button>
           <BottomSheet open={confirmUndo} onClose={() => setConfirmUndo(false)} title="決定を取り消しますか?">
-            <p className="text-sm leading-relaxed text-muted">日にちとお店の決定を取り消して、選び直せる状態に戻します。みんなの回答は消えません。</p>
+            <p className="text-sm leading-relaxed text-muted">日にちとお店の決定を取り消して、選び直せる状態に戻します。みんなの回答は消えません</p>
             <div className="mt-5 grid gap-2">
               <button
                 type="button"

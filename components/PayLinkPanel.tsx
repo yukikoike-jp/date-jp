@@ -52,7 +52,7 @@ export function PayLinkPanel({ collectionId, hostToken, initialPayLink }: { coll
         </button>
       </div>
       <p className={`mt-1.5 text-xs ${linkBad ? "font-bold text-danger" : "text-muted"}`}>
-        {linkBad ? "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" : "貼ると、みんなの画面に「PayPay で払う」が出ます(空でもOK)"}
+        {linkBad ? "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" : "貼るとみんなの画面に「PayPay で払う」が出ます(空でもOK)"}
       </p>
       {error && (
         <p role="alert" className="mt-2 text-sm font-bold text-danger">

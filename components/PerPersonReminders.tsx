@@ -102,7 +102,7 @@ export function PerPersonReminders({
         <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
       </summary>
       <div className="pb-5">
-        <p className="text-sm text-muted">名前・金額・払い方入りの文を、1人ずつ送れます。送るたびに、言い方がやさしい順に変わります。</p>
+        <p className="text-sm text-muted">名前・金額・払い方入りの文を、1人ずつ送れます。送るたびに、言い方がやさしい順に変わります</p>
         <ul className="mt-3 space-y-2">
           {unpaid.map((p) => {
             const count = sent[p.id] ?? 0;

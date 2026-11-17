@@ -71,7 +71,7 @@ export function QuickCollect() {
         />
       </label>
       <label className="block">
-        <span className="text-sm font-bold text-white/70">割る人の名前(1行に1人。いちばん上が、立て替えたあなた)</span>
+        <span className="text-sm font-bold text-white/70">割る人の名前(1行に1人。いちばん上が立て替えたあなた)</span>
         <textarea
           value={names}
           onChange={(e) => setNames(e.target.value)}

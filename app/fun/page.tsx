@@ -5,8 +5,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 
 // 有料パックの「もりあげ道具」。買う前は、見本の名前で動くデモ版
 export const metadata: Metadata = {
-  title: "Play(真実か挑戦・ワードウルフ・王様ゲーム)",
-  description: "真実か挑戦・ワードウルフ・王様ゲーム・NGワード・ルーレット・チーム分け。飲み会を盛り上げる遊び",
+  title: "Play",
+  description: "幹事がいる回がもっと楽しくなる飲み会の遊び",
   robots: { index: false },
 };
 

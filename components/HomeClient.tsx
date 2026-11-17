@@ -119,19 +119,19 @@ const HOME_BY_AUDIENCE: Record<
   { lead: string; shops: string; split: string }
 > = {
   student: {
-    lead: "サークル・ゼミの飲み会を、URLひとつで",
+    lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "学割・飲み放題のお店",
     split: "先輩多めの傾斜も割り勘も",
   },
   private: {
-    lead: "友達との飲み会を、URLひとつで",
+    lead: "友達との飲み会をURLひとつで",
     shops: "飲み放題・個室のお店",
-    split: "割り勘も、年上多めも",
+    split: "割り勘も年上多めも",
   },
   worker: {
-    lead: "歓送迎会・忘年会を、URLひとつで",
+    lead: "歓送迎会・忘年会をURLひとつで",
     shops: "個室・喫煙できるお店も",
-    split: "会社の補助も、上司多めも",
+    split: "会社の補助も上司多めも",
   },
 };
 
@@ -377,7 +377,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
             title="Play"
-            sub="真実か挑戦・ワードウルフ・王様ゲーム・ルーレット…。幹事がいる回が、もっと楽しく"
+            sub="幹事がいる回がもっと楽しく"
             lockOnly
             wide
           />
