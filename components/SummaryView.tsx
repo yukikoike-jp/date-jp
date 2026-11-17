@@ -94,7 +94,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
       value: summary.bestDates.length > 1 ? summary.bestDates.map(dateLabel).join(" ・ ") : dateLabel(summary.date),
       sub:
         summary.bestDates.length > 1
-          ? `どの日も ○${summary.ranking[0].ok}人で同じ。時間とお店は ${dateLabel(summary.date)} の答えから`
+          ? `どの日も ○${summary.ranking[0].ok}人${summary.ranking[0].maybe > 0 ? ` △${summary.ranking[0].maybe}人` : ""}で同じ。時間とお店は ${dateLabel(summary.date)} の答えから`
           : `行ける人 ${summary.attendees.length}人${summary.maybes.length > 0 ? ` ・ たぶん ${summary.maybes.length}人` : ""}`,
     },
     {

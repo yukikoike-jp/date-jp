@@ -99,15 +99,16 @@ export function rankDates(dates: string[], answers: Answer[], must: string[] = [
 }
 
 /**
- * いちばん上の日と同じ(○の数が同じ、必ず来てほしい人の都合も同じ)日を、すべて返す(日付の順)。
- * 5人で ○3 の日が2つあれば、2つとも「いちばん良い日」として出す(△の数が違っても同じ扱い)。
+ * いちばん上の日と同じ(○の数と△の数が同じ、必ず来てほしい人の都合も同じ)日を、すべて返す(日付の順)。
+ * 5人で ○3・△1 の日が2つあれば、2つとも「いちばん良い日」として出す。
+ * ○が同じでも、△が少なく × が多い日は、おすすめにしない(× があるぶん、ほかの日より悪いため)。
  * 誰も行けない(いちばん上が ○0)ときは空
  */
 export function topDates(ranking: DateRank[]): string[] {
   const top = ranking[0];
   if (!top || top.ok === 0) return [];
   return ranking
-    .filter((r) => r.ok === top.ok && r.mustOk === top.mustOk)
+    .filter((r) => r.ok === top.ok && r.maybe === top.maybe && r.mustOk === top.mustOk)
     .map((r) => r.date)
     .sort();
 }

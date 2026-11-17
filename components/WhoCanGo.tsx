@@ -72,7 +72,7 @@ export function WhoCanGo({ summary }: { summary: Summary }) {
         </table>
       </div>
       <p className="mt-1.5 text-[11px] text-muted">
-        ○ 行ける ・ △ たぶん ・ × 無理{summary.bestDates.length > 0 ? " ・ ★ いちばん行ける人(○)が多い日" : ""}
+        ○ 行ける ・ △ たぶん ・ × 無理{summary.bestDates.length > 0 ? " ・ ★ いちばん行ける人が多く、×が少ない日" : ""}
         {must.length > 0 ? " ・ 冠は必ず来てほしい人" : ""}
       </p>
     </div>

@@ -162,7 +162,7 @@ describe("middleBudget(予算の真ん中)", () => {
   });
 });
 
-describe("同じ人数の日は、全部おすすめにする", () => {
+describe("同じ人数の日は、おすすめにする", () => {
   const D3 = "2026-11-15";
   // 5人。D1 は ○3・△1、D2 は ○3・△2、D3 は ○2
   const people = [
@@ -173,12 +173,22 @@ describe("同じ人数の日は、全部おすすめにする", () => {
     answer("e", { dates: { [D1]: "no", [D2]: "maybe", [D3]: "no" } }),
   ];
 
-  it("○の数が同じでいちばん多い日を、△の数が違っても全部返す", () => {
-    expect(topDates(rankDates([D1, D2, D3], people))).toEqual([D1, D2]);
+  it("○の数が同じでも、△が少なく × が多い日は、おすすめにしない", () => {
+    // D1 は × が1人いるが、D2 は × がいない
+    expect(topDates(rankDates([D1, D2, D3], people))).toEqual([D2]);
     const s = summarize([D1, D2, D3], people);
-    expect(s.bestDates).toEqual([D1, D2]);
-    // 時間とお店は、同じ ○ の中で △ が多い日(D2)の答えから決める
+    expect(s.bestDates).toEqual([D2]);
     expect(s.date).toBe(D2);
+  });
+
+  it("○も△も同じ数の日は、全部おすすめにする", () => {
+    const same = [
+      answer("a", { dates: { [D1]: "ok", [D2]: "ok", [D3]: "no" } }),
+      answer("b", { dates: { [D1]: "ok", [D2]: "ok", [D3]: "no" } }),
+      answer("c", { dates: { [D1]: "maybe", [D2]: "maybe", [D3]: "ok" } }),
+      answer("d", { dates: { [D1]: "no", [D2]: "no", [D3]: "no" } }),
+    ];
+    expect(topDates(rankDates([D1, D2, D3], same))).toEqual([D1, D2]);
   });
 
   it("1つだけいちばん多ければ、その日だけ", () => {

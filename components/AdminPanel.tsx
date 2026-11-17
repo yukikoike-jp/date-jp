@@ -238,7 +238,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
               日にち
             </StepHead>
             {bestDates.length > 1 && (
-              <p className="mb-2 text-xs text-muted">★ のついた日は、行ける人(○)の数が同じでいちばん多い日です。どれを選んでもOK。</p>
+              <p className="mb-2 text-xs text-muted">★ のついた日は、行ける人(○)もたぶん(△)も同じ数で、いちばん良い日です。どれを選んでもOK。</p>
             )}
             <div className="tier-blue grid grid-cols-2 gap-1.5">
               {ranking
