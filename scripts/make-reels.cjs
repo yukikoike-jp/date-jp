@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 // Tsudoro のリール動画(縦 1080x1920)を作る。文字だけの動き(参考のリールと同じ、暗い背景に大きな文字を1つずつ出す形)。
 // 実行: node scripts/make-reels.cjs   (ffmpeg が要る。出力は marketing/reels/)
 // 音は付けない。Instagram で、流行の音源をあとから選ぶ
