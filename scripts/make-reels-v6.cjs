@@ -181,7 +181,7 @@ async function synth(text, id, file) {
 const duration = (f) => Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", f]).toString().trim());
 
 // ---------- 場面 ----------
-function scene(sc, i, work, credit) {
+function scene(sc, i, work) {
   const out = `s_${i}.mp4`;
   const d = sc.d;
   const inputs = ["-loop", "1", "-t", String(d), "-i", "city.png"];
@@ -333,7 +333,7 @@ async function main() {
   const total = SCENES.reduce((a, s) => a + s.d, 0) - XF * (SCENES.length - 1);
   audioFx(work, total);
   try {
-    const files = SCENES.map((sc, i) => scene(sc, i, work, credit));
+    const files = SCENES.map((sc, i) => scene(sc, i, work));
     join(SCENES, files, work, total);
     console.log("ok v6_wordwolf", `${total.toFixed(1)}s`, credit);
   } catch (e) {
