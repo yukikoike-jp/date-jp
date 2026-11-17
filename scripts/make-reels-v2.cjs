@@ -258,4 +258,6 @@ async function main() {
   }
 }
 
-main();
+module.exports = { card };
+
+if (require.main === module) main();
