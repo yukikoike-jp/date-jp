@@ -11,7 +11,7 @@ import { openBillingPortal } from "@/app/actions";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
 // 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
-// 買う前は「デモ版」: 見本の名前で全部の道具を試せるが、自分たちの名前は入れられない。
+// 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
@@ -58,7 +58,7 @@ function PackBadge({ locked }: { locked: boolean }) {
     <span
       className="inline-grid size-7 shrink-0 place-items-center rounded-full border border-accent/50 text-accent"
       role="img"
-      aria-label={locked ? "有料プレミアム(デモ版)" : "有料プレミアム(契約中)"}
+      aria-label={locked ? "有料プレミアム(未契約)" : "有料プレミアム(契約中)"}
     >
       <Icon className="size-3.5" aria-hidden />
     </span>
@@ -111,15 +111,15 @@ export function FunClient() {
         <p className="mt-1 text-sm text-muted">{company ? "会話もあいさつも準備もスムーズに" : "幹事がいる会をもっと楽しく"}</p>
       </div>
 
-      {/* デモ版のとき: 何が起きているか、どうすれば使えるかを最初に伝える */}
+      {/* 買う前は、遊びの名前だけ見せる(中身は見せない)。何が起きているか、どうすれば使えるかを最初に伝える */}
       {!access.loading && locked && (
         <section className="mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-5" aria-label="デモ版の案内">
           <p className="flex items-center gap-2 text-base font-black">
             <Lock className="size-5 text-accent" aria-hidden />
-            いまはデモ版です
+            いまは見るだけです
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            {company ? "一部の話題やあいさつを試せます。ぜんぶ使ってメモを残すには有料プレミアムが必要です。" : `見本の名前(${DEMO_NAMES.slice(0, 3).join("・")}…)でぜんぶの遊びを試せます。自分たちの名前で使うには有料プレミアムが必要です。`}
+            {company ? "道具の名前だけ見られます。使うには有料プレミアムが必要です。" : "遊びの名前だけ見られます。遊ぶには有料プレミアムが必要です。"}
           </p>
           {!showBuy && (
             <button
@@ -158,7 +158,7 @@ export function FunClient() {
       </div>
 
       {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける(話題・ひとこと・メモでは出さない) */}
-      {NEEDS_NAMES.includes(tool) && (
+      {!locked && NEEDS_NAMES.includes(tool) && (
       <section className="mx-4 mt-4 rounded-3xl border panel px-4 py-4">
         <label className="flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-white/70" htmlFor="fun-names">
           <span className="flex items-center gap-2">
@@ -196,15 +196,28 @@ export function FunClient() {
       )}
 
       <div className="mt-4">
-        {tool === "truth" && <TruthDare names={names} locked={locked} />}
-        {tool === "wolf" && <Wolf names={names} locked={locked} />}
-        {tool === "king" && <King names={names} locked={locked} />}
-        {tool === "ng" && <NgWord names={names} locked={locked} />}
-        {tool === "wheel" && <Wheel names={names} locked={locked} />}
-        {tool === "team" && <Teams names={names} locked={locked} />}
-        {tool === "topic" && <Topic locked={locked} />}
-        {tool === "speech" && <Speech locked={locked} />}
-        {tool === "memo" && <Memo locked={locked} />}
+        {locked ? (
+          // 買う前は、名前だけ。遊び方や中身は出さない
+          <section className={`tone-${TOOL_TONE[tool]} mx-4 rounded-3xl border border-accent/35 panel px-4 py-10 text-center`}>
+            <span className="mx-auto grid size-12 place-items-center rounded-full border border-accent/50 text-accent">
+              <Lock className="size-5" aria-hidden />
+            </span>
+            <p className="mt-3 text-lg font-black">{TOOLS.find((t) => t.key === tool)?.label}</p>
+            <p className="mt-1 text-sm text-muted">有料プレミアムで使えます。</p>
+          </section>
+        ) : (
+          <>
+            {tool === "truth" && <TruthDare names={names} locked={locked} />}
+            {tool === "wolf" && <Wolf names={names} locked={locked} />}
+            {tool === "king" && <King names={names} locked={locked} />}
+            {tool === "ng" && <NgWord names={names} locked={locked} />}
+            {tool === "wheel" && <Wheel names={names} locked={locked} />}
+            {tool === "team" && <Teams names={names} locked={locked} />}
+            {tool === "topic" && <Topic locked={locked} />}
+            {tool === "speech" && <Speech locked={locked} />}
+            {tool === "memo" && <Memo locked={locked} />}
+          </>
+        )}
       </div>
 
       {/* 契約中のとき: 契約の確認・解約(Stripe のカスタマーポータル)。解約の入口を、いつでも見える場所に置く */}

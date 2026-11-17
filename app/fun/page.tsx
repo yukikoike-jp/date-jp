@@ -3,7 +3,7 @@ import { FunClient } from "@/components/FunClient";
 import { PageMotion } from "@/components/PageMotion";
 import { SiteHeader } from "@/components/SiteHeader";
 
-// 有料パックの「もりあげ道具」。買う前は、見本の名前で動くデモ版
+// 有料パックの「もりあげ道具」。買う前は、遊びの名前だけ見せる
 export const metadata: Metadata = {
   title: "Play",
   description: "幹事がいる会をもっと楽しくする飲み会の遊び",
