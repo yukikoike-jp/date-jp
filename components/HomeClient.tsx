@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Heart, Dices, Hourglass, Lock, Store, Wrench } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Dices, Hourglass, Lock, Store, Wrench } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
@@ -376,8 +376,8 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           <ToolTile
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
-            title="もりあげ道具"
-            sub="真実か挑戦・ワードウルフ・王様ゲーム・チーム分け。幹事がいる回が、もっと楽しく"
+            title="Play"
+            sub="真実か挑戦・ワードウルフ・王様ゲーム・ルーレット…。幹事がいる回が、もっと楽しく"
             lockOnly
             wide
           />
@@ -386,20 +386,6 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
 
       <InstallHint />
 
-      {/* 応援(OFUSE)。見返りのない投げ銭なので、色を使わず控えめに置く */}
-      {process.env.SUPPORT_URL && (
-        <p className="pt-2 text-center text-xs">
-          <a
-            href={process.env.SUPPORT_URL}
-            target="_blank"
-            rel="noopener"
-            className="inline-flex min-h-11 items-center gap-1.5 font-bold text-white/60 underline underline-offset-2 hover:text-white/80"
-          >
-            <Heart className="size-3.5" aria-hidden />
-            Tsudoro を応援する(OFUSE)
-          </a>
-        </p>
-      )}
       {/* いちばん下。方針へのリンクと説明は小さくまとめ、ホームの上にだけ出す(起動の演出や選ぶ画面には出さない) */}
       <div className="space-y-1.5 pt-1">
         {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く(プライバシーポリシーは、下の説明の行の中) */}

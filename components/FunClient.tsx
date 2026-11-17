@@ -1,23 +1,26 @@
 "use client";
 
-import { Crown, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Crown, Dices, ExternalLink, Eye, EyeOff, Flame, Heart, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, kingGame, parseNames, pickIndex, splitTeams, type KingDraw } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { ProPaywall, useFunAccess } from "./ProGate";
 
-// 有料プレミアムの「もりあげ道具」(真実か挑戦・ワードウルフ・王様ゲーム・チーム分け)。
+// 有料プレミアムの「Play」(真実か挑戦・ワードウルフ・王様ゲーム・ルーレット・チーム分け + 応援)。
 // 買う前は「デモ版」: 見本の名前で全部の道具を試せるが、自分たちの名前は入れられない。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "truth" | "wolf" | "king" | "team";
+type Tool = "truth" | "wolf" | "king" | "wheel" | "team" | "support";
 const TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "king", label: "王様ゲーム", icon: Crown },
+  { key: "wheel", label: "ルーレット", icon: Dices },
   { key: "team", label: "チーム分け", icon: Users },
+  // 応援(OFUSE)。遊びではないので、名前の入力と鍵の印は出さない
+  { key: "support", label: "応援", icon: Heart },
 ];
 
 /** 有料プレミアムの印。鍵のマークだけ(デモ版かどうかは、上の案内に書く) */
@@ -63,11 +66,11 @@ export function FunClient() {
   return (
     <div className="mx-auto max-w-xl pt-6 pb-16">
       <div className="px-4">
-        <h1 className="flex items-center gap-2 text-[22px] font-black tracking-tight">
-          もりあげ道具
+        <h1 className="flex items-center gap-2 text-[26px] font-black tracking-tight">
+          <span className="font-logo">Play</span>
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">真実か挑戦・ワードウルフ・王様ゲーム・チーム分け</p>
+        <p className="mt-1 text-sm text-muted">幹事がいる回を、もっと盛り上げる</p>
       </div>
 
       {/* デモ版のとき: 何が起きているか、どうすれば使えるかを最初に伝える */}
@@ -91,10 +94,10 @@ export function FunClient() {
           )}
         </section>
       )}
-      {locked && showBuy && <ProPaywall feature="もりあげ道具" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
+      {locked && showBuy && <ProPaywall feature="Play" fun price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
 
       {/* 道具の切り替え */}
-      <div className="mx-4 mt-4 grid grid-cols-4 gap-1 rounded-2xl bg-surface-2 p-1" role="tablist" aria-label="道具">
+      <div className="mx-4 mt-4 grid grid-cols-3 gap-1 rounded-2xl bg-surface-2 p-1" role="tablist" aria-label="遊び">
         {TOOLS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -113,6 +116,7 @@ export function FunClient() {
       </div>
 
       {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける */}
+      {tool !== "support" && (
       <section className="mx-4 mt-4 rounded-3xl border panel px-4 py-4">
         <label className="flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-white/70" htmlFor="fun-names">
           <span className="flex items-center gap-2">
@@ -147,12 +151,15 @@ export function FunClient() {
         )}
         {!locked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
       </section>
+      )}
 
       <div className="mt-4">
         {tool === "truth" && <TruthDare names={names} locked={locked} />}
         {tool === "wolf" && <Wolf names={names} locked={locked} />}
         {tool === "king" && <King names={names} locked={locked} />}
+        {tool === "wheel" && <Wheel names={names} locked={locked} />}
         {tool === "team" && <Teams names={names} locked={locked} />}
+        {tool === "support" && <Support />}
       </div>
     </div>
   );
@@ -500,5 +507,129 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
         {names.length < 3 && <p className="mt-2 text-center text-xs text-muted">3人から遊べます</p>}
       </div>
     </Box>
+  );
+}
+
+// ───── ルーレット ─────
+function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
+  const [angle, setAngle] = useState(0);
+  const [winner, setWinner] = useState<number | null>(null);
+  const [spinning, setSpinning] = useState(false);
+  const n = names.length;
+  const ok = n >= 2;
+  const key = names.join("\u0000");
+  const last = useRef(key);
+  useEffect(() => {
+    if (last.current !== key) {
+      last.current = key;
+      setWinner(null);
+    }
+  }, [key]);
+
+  function spin() {
+    if (!ok || spinning) return;
+    const w = pickIndex(n);
+    const slice = 360 / n;
+    // 上の矢印に、勝った人のまん中が来るように回す。何周か回してから止める
+    const target = Math.ceil(angle / 360) * 360 + 360 * 5 - (w + 0.5) * slice;
+    setWinner(null);
+    setSpinning(true);
+    setAngle(target);
+    window.setTimeout(() => {
+      setWinner(w);
+      setSpinning(false);
+    }, 4200);
+  }
+
+  const R = 140;
+  const slices = names.map((name, i) => {
+    const a0 = ((i / n) * 360 - 90) * (Math.PI / 180);
+    const a1 = (((i + 1) / n) * 360 - 90) * (Math.PI / 180);
+    const large = 360 / n > 180 ? 1 : 0;
+    const d = `M0 0 L${R * Math.cos(a0)} ${R * Math.sin(a0)} A${R} ${R} 0 ${large} 1 ${R * Math.cos(a1)} ${R * Math.sin(a1)} Z`;
+    const mid = (((i + 0.5) / n) * 360 - 90) * (Math.PI / 180);
+    return { name, d, tx: R * 0.62 * Math.cos(mid), ty: R * 0.62 * Math.sin(mid), rot: ((i + 0.5) / n) * 360 - 90 };
+  });
+
+  return (
+    <Box title="ルーレット" locked={locked}>
+      <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を、運で決めます。</p>
+      <div className="relative mx-auto mt-4 w-full max-w-[300px]">
+        {/* 上の矢印 */}
+        <div className="absolute top-[-6px] left-1/2 z-10 -translate-x-1/2 text-accent" aria-hidden>
+          <svg width="26" height="22" viewBox="0 0 26 22">
+            <path d="M13 22 L1 2 H25 Z" fill="currentColor" />
+          </svg>
+        </div>
+        <svg viewBox="-150 -150 300 300" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
+          <g style={{ transform: `rotate(${angle}deg)`, transition: spinning ? "transform 4s cubic-bezier(0.12, 0.7, 0.1, 1)" : "none" }}>
+            {slices.map((s, i) => (
+              <g key={s.name}>
+                <path d={s.d} fill={winner === i ? "var(--accent)" : i % 2 === 0 ? "#2a2a2a" : "#1d1d1d"} stroke="#000" strokeWidth="1.5" />
+                <text
+                  x={s.tx}
+                  y={s.ty}
+                  transform={`rotate(${s.rot} ${s.tx} ${s.ty})`}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  fontSize={n > 12 ? 9 : 13}
+                  fontWeight="800"
+                  fill={winner === i ? "#000" : "#fff"}
+                >
+                  {s.name.length > 6 ? `${s.name.slice(0, 5)}…` : s.name}
+                </text>
+              </g>
+            ))}
+            <circle r="14" fill="#000" stroke="var(--accent)" strokeWidth="3" />
+          </g>
+        </svg>
+      </div>
+      <p className="mt-3 min-h-7 text-center text-lg font-black" aria-live="polite">
+        {winner !== null ? (
+          <>
+            <span className="text-accent">{names[winner]}</span> さんに決まり!
+          </>
+        ) : spinning ? (
+          "…"
+        ) : (
+          ""
+        )}
+      </p>
+      <div className="mt-2">
+        <RerollButton onClick={spin} disabled={!ok || spinning}>
+          <Dices className="size-4" aria-hidden />
+          {spinning ? "回っています…" : winner !== null ? "もう一度回す" : "回す"}
+        </RerollButton>
+      </div>
+    </Box>
+  );
+}
+
+// ───── 応援(OFUSE)─────
+// 見返りのない投げ銭。URL は環境変数 SUPPORT_URL(next.config.ts で画面に渡す)。空なら出さない。お金は Tsudoro では預からない
+function Support() {
+  const url = process.env.SUPPORT_URL;
+  return (
+    <section className="mx-4 rounded-3xl border panel px-4 py-5">
+      <h2 className="mb-3 flex items-center gap-2 text-lg font-black">
+        <Heart className="size-5 text-accent" aria-hidden />
+        Tsudoro を応援する
+      </h2>
+      <p className="text-sm leading-relaxed text-white/75">
+        Tsudoro は、学生が1人で作っています。気に入ったら、応援してもらえるとうれしいです。
+      </p>
+      <p className="mt-2 text-xs text-muted">応援は気持ちだけです。見返りはなく、機能が増えることもありません。</p>
+      {url && (
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 text-base font-black text-accent-text active:scale-[0.97]"
+        >
+          応援する(OFUSE)
+          <ExternalLink className="size-4" aria-hidden />
+        </a>
+      )}
+    </section>
   );
 }
