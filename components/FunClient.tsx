@@ -33,6 +33,20 @@ const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "team", label: "チーム分け", icon: Users },
 ];
 
+/** 道具ごとの色(飽きないように、黄色と黒だけにしない)。色の定義は app/globals.css の .tone-* */
+type Tone = "gold" | "red" | "blue" | "green" | "purple" | "orange" | "cyan";
+const TOOL_TONE: Record<Tool, Tone> = {
+  wolf: "purple",
+  ng: "red",
+  truth: "blue",
+  king: "gold",
+  wheel: "orange",
+  team: "green",
+  topic: "cyan",
+  speech: "gold",
+  memo: "purple",
+};
+
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
 const NEEDS_NAMES: Tool[] = ["wolf", "ng", "truth", "king", "wheel", "team"];
 
@@ -131,11 +145,11 @@ export function FunClient() {
             className={`${
               // 余りが2つのとき(TOOLS.length が3で割って2余る)は、最後の2つが3列ぶんずつ。それ以外は2列ぶん(3つずつ)
               TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : "col-span-2"
-            } flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
-              tool === key ? "bg-surface text-text shadow" : "text-muted hover:text-text"
+            } tone-${TOOL_TONE[key]} flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
+              tool === key ? "bg-accent/18 text-text shadow ring-1 ring-accent/60" : "text-muted hover:text-text"
             }`}
           >
-            <Icon className="size-5" aria-hidden />
+            <Icon className="size-5 text-accent" aria-hidden />
             {label}
           </button>
         ))}
@@ -194,12 +208,22 @@ export function FunClient() {
   );
 }
 
+/** ルーレットのひと切れずつの色。あざやかな色を順にくり返す。最後と最初が同じ色にならないよう、ずらす */
+const WHEEL_COLORS = ["#ff5d73", "#4d9bff", "#34d98b", "#b078ff", "#ff8a3d", "#ffd23f", "#22d3ee"];
+function sliceColor(i: number, n: number): string {
+  const len = WHEEL_COLORS.length;
+  return WHEEL_COLORS[i === n - 1 && n > 1 && i % len === 0 ? 1 : i % len];
+}
+
 /** 道具の箱。デモ版のときは右上に印を付ける */
-function Box({ title, locked, children }: { title: string; locked: boolean; children: React.ReactNode }) {
+function Box({ title, tone, locked, children }: { title: string; tone: Tone; locked: boolean; children: React.ReactNode }) {
   return (
-    <section className="mx-4 rounded-3xl border panel px-4 py-5">
+    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5 shadow-[0_0_32px_-14px_var(--accent)]`}>
       <h2 className="mb-3 flex items-center justify-between text-lg font-black">
-        {title}
+        <span className="flex items-center gap-2">
+          <span className="h-5 w-1.5 rounded-full bg-accent" aria-hidden />
+          {title}
+        </span>
         <PackBadge locked={locked} />
       </h2>
       {children}
@@ -228,7 +252,7 @@ function Teams({ names, locked }: { names: string[]; locked: boolean }) {
   const max = Math.max(2, Math.min(6, names.length));
   const n = Math.min(count, max);
   return (
-    <Box title="チーム分け" locked={locked}>
+    <Box title="チーム分け" tone={TOOL_TONE.team} locked={locked}>
       <div className="flex items-center gap-2" role="group" aria-label="チームの数">
         {[2, 3, 4, 5, 6].map((c) => (
           <button
@@ -284,7 +308,7 @@ function King({ names, locked }: { names: string[]; locked: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   const [order, setOrder] = useState<string | null>(null);
   return (
-    <Box title="王様ゲーム" locked={locked}>
+    <Box title="王様ゲーム" tone={TOOL_TONE.king} locked={locked}>
       <p className="text-sm text-white/70">くじを引いたら自分の名前を押してこっそりカードを見ます。見たらもう一度押して隠します</p>
       {draw && (
         <ul className="mt-4 grid grid-cols-2 gap-2">
@@ -375,7 +399,7 @@ function TruthDare({ names, locked }: { names: string[]; locked: boolean }) {
   const total = TRUTHS[level].length + DARES[level].length;
 
   return (
-    <Box title="真実か挑戦" locked={locked}>
+    <Box title="真実か挑戦" tone={TOOL_TONE.truth} locked={locked}>
       <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければパスしても大丈夫です</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="盛り上がり度">
         {LEVELS.map((l) => (
@@ -459,7 +483,7 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
   }
 
   return (
-    <Box title="ワードウルフ" locked={locked}>
+    <Box title="ワードウルフ" tone={TOOL_TONE.wolf} locked={locked}>
       <p className="text-sm text-white/70">
         全員にお題の言葉が配られますが1人だけ(ウルフ)は少し違う言葉です。自分の名前を押してこっそり言葉を見たら、見せずに話し合ってウルフを当てます
       </p>
@@ -581,7 +605,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   });
 
   return (
-    <Box title="ルーレット" locked={locked}>
+    <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
       <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます</p>
       <div className="relative mx-auto mt-4 w-full max-w-[300px]">
         {/* 上の矢印 */}
@@ -594,7 +618,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
           <g style={{ transform: `rotate(${angle}deg)`, transition: spinning ? "transform 4s cubic-bezier(0.12, 0.7, 0.1, 1)" : "none" }}>
             {slices.map((s, i) => (
               <g key={s.name}>
-                <path d={s.d} fill={winner === i ? "var(--accent)" : i % 2 === 0 ? "#2a2a2a" : "#1d1d1d"} stroke="#000" strokeWidth="1.5" />
+                <path d={s.d} fill={sliceColor(i, n)} opacity={winner === null || winner === i ? 1 : 0.4} stroke={winner === i ? "#fff" : "#000"} strokeWidth={winner === i ? 3 : 1.5} />
                 <text
                   x={s.tx}
                   y={s.ty}
@@ -603,7 +627,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
                   dominantBaseline="middle"
                   fontSize={n > 12 ? 9 : 13}
                   fontWeight="800"
-                  fill={winner === i ? "#000" : "#fff"}
+                  fill="#000"
                 >
                   {s.name.length > 6 ? `${s.name.slice(0, 5)}…` : s.name}
                 </text>
@@ -656,7 +680,7 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
   }
 
   return (
-    <Box title="NGワード" locked={locked}>
+    <Box title="NGワード" tone={TOOL_TONE.ng} locked={locked}>
       <p className="text-sm text-white/70">
         1人に1つNGワードが決まります<b className="text-white">その人以外の</b>みんなだけがその言葉を見ます。会話の中で自分のNGワードを言ってしまったらアウトです
       </p>
@@ -742,7 +766,7 @@ function Topic({ locked }: { locked: boolean }) {
   }
 
   return (
-    <Box title="話題ガチャ" locked={locked}>
+    <Box title="話題ガチャ" tone={TOOL_TONE.topic} locked={locked}>
       <p className="text-sm text-white/70">会話に困ったら引いてみてください。みんなに順番に聞いても盛り上がります</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="話題の種類">
         {TOPIC_KINDS.map((k, i) => {
@@ -791,7 +815,7 @@ function Speech({ locked }: { locked: boolean }) {
   const text = list[n % list.length];
 
   return (
-    <Box title="ひとこと" locked={locked}>
+    <Box title="ひとこと" tone={TOOL_TONE.speech} locked={locked}>
       <p className="text-sm text-white/70">乾杯と〆のあいさつの例です。そのまま読んでも 少し変えても使えます</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="会の種類">
         {OCCASIONS.map((o, i) => {
@@ -878,7 +902,7 @@ function Memo({ locked }: { locked: boolean }) {
   const done = checked.filter(Boolean).length;
 
   return (
-    <Box title="幹事メモ" locked={locked}>
+    <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked}>
       <p className="text-sm text-white/70">当日までにやることと 自由なメモをまとめます{locked ? "(デモ版は保存されません)" : "(この端末に残ります)"}</p>
       <p className="mt-2 text-xs font-bold text-muted tabular-nums">
         {done} / {CHECKLIST.length} 終わった

@@ -243,3 +243,13 @@ h3 {
 /* 回す選び方(components/WheelPicker.tsx)のスクロールバーを隠す */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Play の道具ごとの色。--accent を差し替えるので、中の text-accent / bg-accent / border-accent がその色になる */
+.tone-gold { --accent: #f5b83d; --accent-strong: #ffc85c; }
+.tone-red { --accent: #ff5d73; --accent-strong: #ff7d8e; }
+.tone-blue { --accent: #4d9bff; --accent-strong: #75b2ff; }
+.tone-green { --accent: #34d98b; --accent-strong: #5fe5a6; }
+.tone-purple { --accent: #b078ff; --accent-strong: #c496ff; }
+.tone-orange { --accent: #ff8a3d; --accent-strong: #ffa166; }
+.tone-cyan { --accent: #22d3ee; --accent-strong: #5ae0f3; }
+
