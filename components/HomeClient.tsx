@@ -135,7 +135,7 @@ const HOME_BY_AUDIENCE: Record<
     shops: "個室・喫煙できるお店も",
     split: "会社の補助も上司多めも",
     // 会社の会では、ゲームではなく、会話・あいさつ・準備(話題ガチャ・ひとこと・幹事メモ)
-    play: "会話もあいさつも準備もスムーズに",
+    play: "ごあいさつも席替えも、おまかせください",
   },
 };
 
@@ -380,7 +380,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           <ToolTile
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
-            title="Play"
+            title={audience === "worker" ? "幹事サポート" : "Play"}
             sub={home.play}
             lockOnly
             wide

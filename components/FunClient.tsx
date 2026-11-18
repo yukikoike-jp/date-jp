@@ -3,13 +3,13 @@
 import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, Mic, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
-import { clock } from "@/lib/sendai";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { loadAudience } from "@/lib/audience";
 import { CHECKLIST, OCCASIONS, SPEECHES, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type Occasion, type ThanksKind, type TopicKind } from "@/lib/work";
-import { openBillingPortal } from "@/app/actions";
 import { ProPaywall, useFunAccess } from "./ProGate";
+import { clock, yen } from "@/lib/sendai";
+import { SampleCard } from "./FunSamples";
 
 // 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
 // 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
@@ -85,7 +85,6 @@ export function FunClient() {
   const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
-  const [portalError, setPortalError] = useState<string | null>(null);
 
   // 買ったあと(鍵が開いたあと)は、前に入れた名前を思い出す
   useEffect(() => {
@@ -110,7 +109,7 @@ export function FunClient() {
     <div className="mx-auto max-w-xl pt-6 pb-16">
       <div className="px-4">
         <h1 className="flex items-center gap-2 text-[26px] font-black tracking-tight">
-          <span className="font-logo">Play</span>
+          <span className={company ? "" : "font-logo"}>{company ? "幹事サポート" : "Play"}</span>
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
         <p className="mt-1 text-sm text-muted">{company ? "幹事のお仕事を、しっかりサポートいたします" : "幹事がいる会をもっと楽しく"}</p>
@@ -118,13 +117,13 @@ export function FunClient() {
 
       {/* 買う前は、遊びの名前だけ見せる(中身は見せない)。何が起きているか、どうすれば使えるかを最初に伝える */}
       {!access.loading && locked && (
-        <section className="mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-5" aria-label="デモ版の案内">
+        <section className="mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-5" aria-label="買い切りの案内">
           <p className="flex items-center gap-2 text-base font-black">
             <Lock className="size-5 text-accent" aria-hidden />
-            いまは見るだけです
+            見本をご覧いただけます
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            {company ? "機能の名前だけご覧いただけます。ご利用には有料プレミアムが必要です。" : "遊びの名前だけ見られます。遊ぶには有料プレミアムが必要です。"}
+            {company ? `タブを押すと、機能の見本が見られます。気に入っていただけたら、${yen(access.price)}の買い切りで、すべてご利用いただけます。` : `タブを押すと、遊びの見本が見られます。気に入ったら、${yen(access.price)}の買い切りで、ぜんぶ遊べます。`}
           </p>
           {!showBuy && (
             <button
@@ -132,12 +131,12 @@ export function FunClient() {
               onClick={() => setShowBuy(true)}
               className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-accent px-4 text-sm font-black text-accent-text active:scale-95"
             >
-              有料プレミアムをくわしく
+              {yen(access.price)}の買い切りをくわしく
             </button>
           )}
         </section>
       )}
-      {locked && showBuy && <ProPaywall feature="Play" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
+      {locked && showBuy && <ProPaywall feature={company ? "幹事サポート" : "Play"} work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
 
       {/* 道具の切り替え */}
       {/* 3つずつ並べる。余りが2つのとき(5つのとき)は、下の段の2つを広げて、きれいにそろえる */}
@@ -202,14 +201,8 @@ export function FunClient() {
 
       <div className="mt-4">
         {locked ? (
-          // 買う前は、名前だけ。遊び方や中身は出さない
-          <section className={`tone-${TOOL_TONE[tool]} mx-4 rounded-3xl border border-accent/35 panel px-4 py-10 text-center`}>
-            <span className="mx-auto grid size-12 place-items-center rounded-full border border-accent/50 text-accent">
-              <Lock className="size-5" aria-hidden />
-            </span>
-            <p className="mt-3 text-lg font-black">{TOOLS.find((t) => t.key === tool)?.label}</p>
-            <p className="mt-1 text-sm text-muted">有料プレミアムでご利用いただけます。</p>
-          </section>
+          // 買う前は、見本を1つ見せる(中身の全部は出さない)。気に入ったら、買い切りの案内へ
+          <SampleCard tool={tool} label={TOOLS.find((t) => t.key === tool)?.label ?? ""} tone={TOOL_TONE[tool]} price={access.price} onBuy={() => setShowBuy(true)} work={company} />
         ) : (
           <>
             {tool === "truth" && <TruthDare names={names} locked={locked} />}
@@ -228,28 +221,6 @@ export function FunClient() {
         )}
       </div>
 
-      {/* 契約中のとき: 契約の確認・解約(Stripe のカスタマーポータル)。解約の入口を、いつでも見える場所に置く */}
-      {!access.loading && !locked && access.license && (
-        <div className="mt-6 px-4">
-          <button
-            type="button"
-            onClick={async () => {
-              setPortalError(null);
-              const r = await openBillingPortal(access.license, "/fun");
-              if (r.ok) location.href = r.url;
-              else setPortalError(r.error);
-            }}
-            className="flex min-h-11 items-center text-xs font-bold text-muted underline underline-offset-2"
-          >
-            契約の確認・解約
-          </button>
-          {portalError && (
-            <p role="alert" className="text-xs font-bold text-danger">
-              {portalError}
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }

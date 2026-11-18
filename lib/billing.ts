@@ -2,13 +2,13 @@ import "server-only";
 import { cleanEnv } from "./env";
 import { signLicense, verifyLicense } from "./license";
 
-// 有料プレミアム(月額のサブスク。エンタメの Play だけ)。
-// Stripe のお会計のページ(Checkout、mode=subscription)を使い、カードの情報はこちらで持たない。
+// 有料の機能(Play と、仕事の会の幹事サポート)。2026-11-18 に、月額から買い切り(1回払い)に変えた。
+// Stripe のお会計のページ(Checkout、mode=payment)を使い、カードの情報はこちらで持たない。
 // STRIPE_SECRET_KEY と LICENSE_SECRET がそろうまでは、買えない。
 // 支払いのあとは /pro/done に戻り、Stripe に支払いを確かめてから、端末に鍵(lib/license.ts)を渡す。
 // 鍵は「Stripe のお会計の id」に署名したもの。使うたびに、Stripe でその契約がまだ続いているか(解約されていないか)を確かめる
 
-/** 月額(円・税込)。PRO_PRICE で変えられる */
+/** 買い切りの値段(円・税込)。PRO_PRICE で変えられる */
 export function proPrice(): number {
   const n = Number(cleanEnv(process.env.PRO_PRICE));
   return Number.isInteger(n) && n >= 100 ? n : 500;
@@ -90,16 +90,18 @@ export async function hasFun(license: unknown): Promise<boolean> {
 /** お会計のページを作り、その URL を返す。origin はこのサイトの URL、back は買ったあとに戻るページ */
 export async function createProCheckout(origin: string, back: string): Promise<string> {
   const params = new URLSearchParams({
-    mode: "subscription",
+    mode: "payment",
+    // 買ったときのメールアドレスで、別の端末でも使えるように戻せる(お客さんを必ず作る)
+    customer_creation: "always",
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "jpy",
     "line_items[0][price_data][unit_amount]": String(proPrice()),
-    "line_items[0][price_data][recurring][interval]": "month",
-    "line_items[0][price_data][product_data][name]": "Tsudoro 有料プレミアム",
+    "line_items[0][price_data][product_data][name]": "Tsudoro Play・幹事サポート(買い切り)",
+    "line_items[0][price_data][product_data][description]": "6つの遊び(Play)と、仕事の会の6つの幹事サポートが、ずっと使えます。1回のお支払いだけで、月額や自動更新はありません。",
     // Stripe の Managed Payments(最初からオン)では、商品の税コードが必要。電子的に提供するサービス(一般)
     "line_items[0][price_data][product_data][tax_code]": "txcd_10000000",
     "metadata[kind]": "pro",
-    "subscription_data[metadata][kind]": "pro",
+    "payment_intent_data[metadata][kind]": "pro",
     success_url: `${origin}/pro/done?session={CHECKOUT_SESSION_ID}&back=${encodeURIComponent(back)}`,
     cancel_url: `${origin}${back}`,
   });
