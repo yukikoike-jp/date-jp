@@ -1,6 +1,6 @@
 import "server-only";
 import { cleanEnv } from "./env";
-import { signLicense, verifyLicense } from "./license";
+import { signLicense, verifyLicense, licenseFromRestoreToken, signRestoreToken } from "./license";
 
 // 有料の機能(Play と、仕事の会の幹事サポート)。2026-11-18 に、月額から買い切り(1回払い)に変えた。
 // Stripe のお会計のページ(Checkout、mode=payment)を使い、カードの情報はこちらで持たない。
@@ -22,6 +22,20 @@ function secretKey(): string | null {
 
 function licenseSecret(): string | null {
   return cleanEnv(process.env.LICENSE_SECRET);
+}
+
+/** 確認メールのリンクの合言葉を作る */
+export function restoreToken(license: string): string | null {
+  const secret = licenseSecret();
+  return secret ? signRestoreToken(license, secret) : null;
+}
+
+/** 確認メールのリンクから、使える鍵を取り出す(返金されていたら null) */
+export async function licenseFromToken(token: unknown): Promise<string | null> {
+  const secret = licenseSecret();
+  if (!secret) return null;
+  const license = licenseFromRestoreToken(token, secret);
+  return license && (await proActive(license)) ? license : null;
 }
 
 /** 有料にしているか(Stripe のキーと、鍵に署名する秘密が入っているか) */
