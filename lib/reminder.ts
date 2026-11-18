@@ -70,6 +70,6 @@ export function personalReminder({ audience, title, name, amount, tone, payLink,
 export function doneText(audience: Audience, title: string, total: number): string {
   const what = title.trim() ? `「${title.trim()}」` : isFormal(audience) ? "先日の会" : "この前の飲み会";
   return isFormal(audience)
-    ? `${what}のお会計(合計 ${yen(total)})は、全員分のお支払いを確認できました。ご協力ありがとうございました。`
-    : `${what}のお会計(合計 ${yen(total)})、全員ぶん確認できました!ありがとう!`;
+    ? `${what}のお会計 合計${yen(total)}は、全員分のお支払いを確認できました。ご協力ありがとうございました。`
+    : `${what}のお会計 合計${yen(total)}、全員ぶん確認できました!ありがとう!`;
 }

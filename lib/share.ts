@@ -23,13 +23,13 @@ export function teamsShareUrl(text: string): string {
 export function inviteText(title: string, url: string, start: number | null = null, audience: Audience = "private"): string {
   if (isFormal(audience)) {
     return [
-      `お疲れさまです。「${title}」の日程調整のご案内です${start !== null ? `(${clock(start)}〜の予定です)` : ""}。`,
+      `お疲れさまです。「${title}」の日程調整のご案内です。${start !== null ? `${clock(start)}〜の予定です。` : ""}`,
       "ご都合のよい日をご入力ください。",
       url,
     ].join("\n");
   }
   return [
-    `「${title}」の日程調整${start !== null ? `(${clock(start)}〜)` : ""}`,
+    `「${title}」の日程調整${start !== null ? ` ${clock(start)}〜` : ""}`,
     "行ける日を入れてね",
     url,
   ].join("\n");
@@ -85,5 +85,5 @@ export function answerNudgeText(title: string, url: string, answered: number, au
   if (isFormal(audience)) {
     return [`「${title}」の日程について、現在${answered}名の方からご回答をいただいています。`, "まだの方はお手数ですが、ご入力をお願いいたします。", url].join("\n");
   }
-  return [`「${title}」の日程、いま${answered}人が回答済み`, "まだの人は入れてね(30秒で答えられるよ)", url].join("\n");
+  return [`「${title}」の日程、いま${answered}人が回答済み`, "まだの人は入れてね", "30秒で答えられるよ", url].join("\n");
 }
