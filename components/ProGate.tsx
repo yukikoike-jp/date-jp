@@ -28,7 +28,7 @@ export function saveLicense(license: string) {
 
 export type FunAccess = { loading: boolean; purchasable: boolean; unlocked: boolean; price: number; license: string | null };
 
-/** 有料プレミアムの機能(催促をアプリにまかせる)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
+/** Tsudoro Plus(Play と Support)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
 export function useFunAccess(): FunAccess {
   const [state, setState] = useState<FunAccess>({ loading: true, purchasable: false, unlocked: false, price: 500, license: null });
   useEffect(() => {
@@ -45,7 +45,6 @@ export function useFunAccess(): FunAccess {
 const PLUS_ITEMS: { name?: string; body: string }[] = [
   { name: "Play", body: "ワードウルフ・NGワード・王様ゲームなど6つの遊び" },
   { name: "Support", body: "話題・ごあいさつ・お礼・席替え・進行表など幹事の6つの道具" },
-  { body: "集金の催促もアプリにまかせられる" },
   { body: "これからふえる機能も追加料金なし" },
 ];
 
