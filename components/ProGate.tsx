@@ -54,7 +54,6 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
   const [error, setError] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
 
   function buy() {
     setError(null);
@@ -73,7 +72,8 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
         setError(r.error);
         return;
       }
-      setSent(true);
+      saveLicense(r.license);
+      location.reload();
     });
   }
 
@@ -81,7 +81,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
     <section className="anim-rise mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-6" aria-live="polite">
       <p className="flex items-center gap-2 text-lg font-black">
         <Lock className="size-5 text-accent" aria-hidden />
-        {feature} でできること
+        {feature} で Play も Support も使える
       </p>
       <p className="mt-1 text-sm text-muted">{yen(price)}の買い切り。1回払えばどちらもずっと使えます。月額も自動更新もありません。</p>
       {/* 買うと使えるようになるもの。プライベートでも仕事でも、両方とも使える */}
@@ -110,18 +110,14 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
           特定商取引法に基づく表記
         </a>
       </p>
-      {sent ? (
-        <p className="mt-4 rounded-2xl bg-surface-2 px-4 py-3 text-sm leading-relaxed text-white/80">
-          {work ? "確認のメールをお送りしました。使いたい端末で、メールのリンクを開いてください。購入の記録がないアドレスには届きません。" : "確認のメールを送りました。使いたい端末で、メールのリンクを開いてね。買った記録がないアドレスには届きません。"}
-        </p>
-      ) : restoring ? (
+      {restoring ? (
         <div className="mt-4 flex gap-2">
           <label className="min-w-0 flex-1">
             <span className="sr-only">買ったときのメールアドレス</span>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="買ったときのメールアドレス" className={INPUT} />
           </label>
           <button type="button" onClick={restore} disabled={pending || !email.trim()} className="shrink-0 rounded-2xl bg-white/8 px-4 text-sm font-bold ring-1 ring-white/12 disabled:opacity-40">
-            メールを送る
+            戻す
           </button>
         </div>
       ) : (

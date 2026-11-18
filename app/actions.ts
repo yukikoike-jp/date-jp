@@ -2,8 +2,7 @@
 
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience, normalizeAudience } from "@/lib/audience";
-import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice, restoreToken } from "@/lib/billing";
-import { mailReady, sendMail } from "@/lib/mail";
+import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
 import { parsePushSub } from "@/lib/pushRemind";
 import { cleanPayLink } from "@/lib/reminder";
@@ -401,45 +400,14 @@ export async function buyPro(back: string): Promise<{ ok: true; url: string } | 
   }
 }
 
-/** 同じメールアドレスに、確認メールを続けて送らない(いたずらで何通も送られないように)。サーバーごとの目安 */
-const restoreSentAt = new Map<string, number>();
-
-/**
- * 別の端末で使うとき。買ったときのメールアドレスに、確認のリンクを送る(リンクを開いた端末で使えるようになる)。
- * メールアドレスを知っているだけの人が使えないようにするため、鍵は画面に返さない。
- * 買った記録があるかどうかは画面に出さない(誰が買ったかを調べられないように)
- */
-export async function restorePro(email: string): Promise<{ ok: true } | Fail> {
+/** 別の端末で使うとき。買ったときのメールアドレスから、支払いを確かめて鍵を返す */
+export async function restorePro(email: string): Promise<{ ok: true; license: string } | Fail> {
   if (!billingEnabled()) return { ok: false, error: "いまは支払いを受け付けていません" };
-  if (!mailReady()) return { ok: false, error: "メールで戻す準備をしています。お手数ですが、お問い合わせください" };
   const e = typeof email === "string" ? email.trim().toLowerCase() : "";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) || e.length > 200) return { ok: false, error: "メールアドレスを確かめてください" };
-  const last = restoreSentAt.get(e) ?? 0;
-  if (Date.now() - last < 2 * 60 * 1000) return { ok: true };
-  restoreSentAt.set(e, Date.now());
   try {
     const license = await licenseForEmail(e);
-    if (!license) return { ok: true };
-    const token = restoreToken(license);
-    if (!token) return { ok: false, error: "いまは支払いを受け付けていません" };
-    const h = await headers();
-    const host = h.get("x-forwarded-host") ?? h.get("host");
-    const proto = h.get("x-forwarded-proto") ?? "https";
-    const url = `${proto}://${host}/pro/restore?t=${encodeURIComponent(token)}`;
-    const sent = await sendMail(
-      e,
-      "Tsudoro Plus をこの端末で使うためのリンク",
-      [
-        "Tsudoro Plus をほかの端末で使うためのリンクです。",
-        "使いたい端末で、下のリンクを開いてください。30分で使えなくなります。",
-        "",
-        url,
-        "",
-        "心当たりがない場合は、このメールは捨ててください。",
-        "Tsudoro",
-      ].join("\n"),
-    );
-    return sent ? { ok: true } : { ok: false, error: "メールを送れませんでした。少し待ってからもう一度お試しください" };
+    return license ? { ok: true, license } : { ok: false, error: "このメールアドレスでの購入が見つかりません" };
   } catch (err) {
     console.error("[billing] 購入を確かめられませんでした", err);
     return { ok: false, error: "確かめられませんでした。少し待ってからもう一度お試しください" };
