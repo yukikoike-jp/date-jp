@@ -109,7 +109,8 @@ export function FunClient() {
       <div className="px-4">
         <h1 className="flex items-center gap-2 text-[26px] font-black tracking-tight">
           <span className={company ? "" : "font-logo"}>{company ? "幹事サポート" : "Play"}</span>
-          {!access.loading && <PackBadge locked={locked} />}
+          {/* 買う前は、もやの上のボタンだけにする(黄色いものを2つ出さない)。買ったあとは開いた鍵の印 */}
+          {!access.loading && !locked && <PackBadge locked={locked} />}
         </h1>
         <p className="mt-1 text-sm text-muted">{company ? "幹事のお仕事をしっかりサポートいたします" : "幹事がいる会をもっと楽しく"}</p>
       </div>
@@ -252,7 +253,7 @@ function Box({ title, tone, locked, children }: { title: string; tone: Tone; loc
           <span className="h-5 w-1.5 rounded-full bg-accent" aria-hidden />
           {title}
         </span>
-        <PackBadge locked={locked} />
+        {!locked && <PackBadge locked={locked} />}
       </h2>
       {children}
     </section>

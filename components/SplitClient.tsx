@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Crown, ExternalLink, NotebookPen, PencilLine, Plus, RotateCcw, Users, Wallet, X } from "lucide-react";
+import { Crown, ExternalLink, NotebookPen, Plus, RotateCcw, Users, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
@@ -11,7 +11,7 @@ import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
 import { SendButtons, useCanShare } from "./SendButtons";
 import { ROUND_UNITS, WEIGHTS, splitBill, subsidyTotal, tenthsFromInput, type Weight } from "@/lib/split";
-import { BUTTON_PRIMARY, BUTTON_SUB } from "./ui";
+import { BUTTON_SUB } from "./ui";
 
 // 会計。最初は全員同じ額の割り勘で、「傾斜で割る」に切り替えると区分や倍率を選べる(学生やプライベートでは傾斜はあまり使わないため)。
 // 傾斜では hasuru と同じく、区分ごとに色・記号・頭文字の丸で人を見分ける(色だけに頼らない)
@@ -62,17 +62,6 @@ function Avatar({ name, tone, size = "md" }: { name: string; tone: Weight["tone"
       }`}
     >
       {initial}
-    </span>
-  );
-}
-
-function TierTag({ w }: { w: Weight }) {
-  return (
-    <span
-      className={`tier-${w.tone} inline-flex shrink-0 items-center gap-0.5 rounded-md bg-[var(--ts)] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[var(--tc)]`}
-    >
-      <span aria-hidden>{w.mark}</span>
-      {w.label}
     </span>
   );
 }
@@ -282,33 +271,31 @@ export function SplitClient({ from = null }: { from?: string | null }) {
         </section>
       )}
 
-      {/* 何の会計かのメモ。催促の文にも入る */}
-      <label className="mx-4 mb-3 flex items-center gap-3 rounded-3xl border panel px-5 py-3">
-        <NotebookPen className="size-5 shrink-0 text-accent" aria-hidden />
-        <input
-          className="min-h-11 w-full min-w-0 bg-transparent font-bold outline-none placeholder:font-normal placeholder:text-muted"
-          value={title}
-          onChange={(e) => setTitle(e.target.value.slice(0, 30))}
-          placeholder="何の会計?(例: ゼミの打ち上げ 10/30)"
-          aria-label="何の会計かのメモ"
-        />
-      </label>
-
-      {/* 合計 */}
-      <label className="mx-4 block rounded-3xl border panel px-5 py-5">
-        <span className="text-sm font-bold text-muted">お会計の合計</span>
-        <span className="mt-2 flex items-baseline gap-2">
-          <span className="text-2xl font-black text-muted">¥</span>
+      {/* 何の会計か(催促の文にも入る)と合計を、1つの枠にまとめる */}
+      <div className="mx-4 rounded-3xl border panel px-4 py-3">
+        <label className="flex items-center gap-2">
+          <NotebookPen className="size-4 shrink-0 text-accent" aria-hidden />
           <input
-            className="w-full min-w-0 bg-transparent text-4xl font-black tracking-tight tabular-nums outline-none placeholder:text-border"
+            className="min-h-9 w-full min-w-0 bg-transparent text-sm font-bold outline-none placeholder:font-normal placeholder:text-muted"
+            value={title}
+            onChange={(e) => setTitle(e.target.value.slice(0, 30))}
+            placeholder="何の会計?(例: ゼミの打ち上げ 10/30)"
+            aria-label="何の会計かのメモ"
+          />
+        </label>
+        <label className="mt-1 flex items-baseline gap-2 border-t border-border pt-2">
+          <span className="shrink-0 text-xs font-bold text-muted">合計</span>
+          <span className="text-xl font-black text-muted">¥</span>
+          <input
+            className="w-full min-w-0 bg-transparent text-3xl font-black tracking-tight tabular-nums outline-none placeholder:text-border"
             inputMode="numeric"
             value={total === "" ? "" : Number(total).toLocaleString("ja-JP")}
             onChange={(e) => setTotal(e.target.value.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 7))}
             placeholder="0"
             aria-label="お会計の合計(円)"
           />
-        </span>
-      </label>
+        </label>
+      </div>
 
       {/* 会社や部署からの補助(会社の会だけ)。入れると、その分を引いた残りをみんなで割る。最初は 0円 */}
       {isFormal(audience) && (
@@ -346,115 +333,99 @@ export function SplitClient({ from = null }: { from?: string | null }) {
         </p>
       )}
 
-      {/* 全員同じ額の割り勘か(左・最初の選択)、傾斜で割るか(右) */}
-      <div className="mx-4 mt-4 grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1" role="group" aria-label="割り方">
-        {([false, true] as const).map((v) => (
-          <button
-            key={String(v)}
-            type="button"
-            aria-pressed={weighted === v}
-            onClick={() => setWeighted(v)}
-            className={`min-h-11 rounded-xl text-sm font-bold transition-colors ${
-              weighted === v ? "bg-surface text-text shadow" : "text-muted hover:text-text"
-            }`}
-          >
-            {v ? "傾斜で割る" : "割り勘"}
-          </button>
-        ))}
+      {/* 割り方(割り勘・傾斜)と、何円単位にそろえるか。1行にまとめる */}
+      <div className="mx-4 mt-3 flex items-center gap-2">
+        <div className="grid flex-1 grid-cols-2 gap-0.5 rounded-xl bg-surface-2 p-0.5" role="group" aria-label="割り方">
+          {([false, true] as const).map((v) => (
+            <button
+              key={String(v)}
+              type="button"
+              aria-pressed={weighted === v}
+              onClick={() => setWeighted(v)}
+              className={`min-h-10 rounded-lg text-sm font-bold transition-colors ${weighted === v ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
+            >
+              {v ? "傾斜" : "割り勘"}
+            </button>
+          ))}
+        </div>
+        <select
+          value={unit}
+          onChange={(e) => setUnit(Number(e.target.value) as typeof unit)}
+          aria-label="何円単位にそろえるか"
+          className="min-h-10 shrink-0 rounded-xl bg-surface-2 px-2 text-sm font-bold outline-none"
+        >
+          {ROUND_UNITS.map((u) => (
+            <option key={u} value={u}>
+              {u}円単位
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* 区分の見本 */}
-      {weighted && (
-      <div className="anim-rise mx-4 mt-3 flex flex-wrap gap-1.5" aria-label="傾斜の区分">
-        {weights.map((w) => (
-          <span key={w.key} className={`tier-${w.tone} inline-flex items-center gap-1 rounded-full bg-[var(--ts)] px-2.5 py-1 text-xs font-bold text-[var(--tc)]`}>
-            <span aria-hidden>{w.mark}</span>
-            {w.label} ×{(w.tenths / 10).toFixed(1)}
-          </span>
-        ))}
-      </div>
-      )}
-
-      {/* 払う人 */}
-      <ul className="mx-4 mt-3 space-y-2">
+      {/* 払う人。1人1行に、名前・区分・金額を並べる。顔のマークを押すと幹事(端数を受け持つ人) */}
+      <ul className="mx-4 mt-2 divide-y divide-border overflow-hidden rounded-2xl border bg-surface" aria-live="polite">
         {people.map((p, i) => {
           const w = weightOf(p);
           const customOn = p.weight === "custom";
           const customBad = customOn && p.custom.trim() !== "" && tenthsFromInput(p.custom) === null;
           return (
-            <li key={p.id} className={`tier-${w.tone} rounded-3xl border border-[var(--tb)]/30 bg-surface p-3`}>
-              <div className="flex items-center gap-2.5">
-                <Avatar name={nameOf(p, i)} tone={w.tone} />
-                <input
-                  className="min-h-11 w-full min-w-0 rounded-xl bg-surface-2 px-3 font-bold outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
-                  value={p.name}
-                  onChange={(e) => update(p.id, { name: e.target.value.slice(0, 20) })}
-                  placeholder={`${i + 1}人目の名前`}
-                  aria-label={`${i + 1}人目の名前`}
-                />
+            <li key={p.id} className={`tier-${w.tone} px-2 py-1.5`}>
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setOrganizer(i)}
                   aria-pressed={organizer === i}
                   aria-label={`${nameOf(p, i)}を幹事にする(端数を受け持つ)`}
-                  className={`grid size-11 shrink-0 place-items-center rounded-full ${
-                    organizer === i ? "bg-accent text-accent-text" : "text-muted hover:text-text"
-                  }`}
+                  className="relative grid size-9 shrink-0 place-items-center"
                 >
-                  <Crown className="size-5" aria-hidden />
+                  <Avatar name={nameOf(p, i)} tone={w.tone} size="sm" />
+                  {organizer === i && (
+                    <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-accent text-accent-text" aria-hidden>
+                      <Crown className="size-2.5" />
+                    </span>
+                  )}
                 </button>
+                <input
+                  className="min-h-9 w-full min-w-0 rounded-lg bg-surface-2 px-2 text-sm font-bold outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
+                  value={p.name}
+                  onChange={(e) => update(p.id, { name: e.target.value.slice(0, 20) })}
+                  placeholder={`${i + 1}人目`}
+                  aria-label={`${i + 1}人目の名前`}
+                />
+                {weighted && (
+                  <select
+                    value={p.weight}
+                    onChange={(e) => update(p.id, { weight: e.target.value as typeof p.weight })}
+                    aria-label={`${nameOf(p, i)}の区分`}
+                    className="min-h-9 w-[6.4rem] shrink-0 rounded-lg bg-[var(--ts)] px-1 text-xs font-bold text-[var(--tc)] outline-none"
+                  >
+                    {weights.map((opt) => (
+                      <option key={opt.key} value={opt.key}>
+                        {opt.label} ×{(opt.tenths / 10).toFixed(1)}
+                      </option>
+                    ))}
+                    <option value="custom">倍率を入力</option>
+                  </select>
+                )}
+                <span className="w-[4.2rem] shrink-0 text-right text-sm font-black tabular-nums">{result ? yen(result.amounts[i]) : "—"}</span>
                 {people.length > 1 && (
                   <button
                     type="button"
                     onClick={() => remove(i)}
                     aria-label={`${nameOf(p, i)}を外す`}
-                    className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:text-text"
+                    className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:text-text"
                   >
-                    <X className="size-5" aria-hidden />
+                    <X className="size-4" aria-hidden />
                   </button>
                 )}
               </div>
-              {weighted && (
-              <div className="mt-2.5 flex flex-wrap gap-1.5">
-                {weights.map((opt) => {
-                  const on = p.weight === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => update(p.id, { weight: opt.key })}
-                      className={`tier-${opt.tone} inline-flex min-h-10 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors ${
-                        on
-                          ? "border-[var(--tb)] bg-[var(--ts)] text-[var(--tc)]"
-                          : "border-border text-muted hover:text-text"
-                      }`}
-                    >
-                      <span aria-hidden>{on ? <Check className="size-3" /> : opt.mark}</span>
-                      {opt.label}
-                    </button>
-                  );
-                })}
-                <button
-                  type="button"
-                  aria-pressed={customOn}
-                  onClick={() => update(p.id, { weight: "custom" })}
-                  className={`tier-gray inline-flex min-h-10 items-center gap-1 rounded-full border px-3 text-xs font-bold transition-colors ${
-                    customOn ? "border-[var(--tb)] bg-[var(--ts)] text-[var(--tc)]" : "border-border text-muted hover:text-text"
-                  }`}
-                >
-                  <span aria-hidden>{customOn ? <Check className="size-3" /> : <PencilLine className="size-3" />}</span>
-                  倍率を入れる
-                </button>
-              </div>
-              )}
               {weighted && customOn && (
-                <label className="mt-2.5 flex items-center gap-2">
-                  <span className="text-lg font-black text-[var(--tc)]" aria-hidden>
+                <label className="mt-1 ml-10 flex items-center gap-1.5">
+                  <span className="text-sm font-black text-[var(--tc)]" aria-hidden>
                     ×
                   </span>
                   <input
-                    className="min-h-11 w-24 rounded-xl bg-surface-2 px-3 text-lg font-black tabular-nums outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
+                    className="min-h-8 w-16 rounded-lg bg-surface-2 px-2 text-sm font-black tabular-nums outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
                     inputMode="decimal"
                     value={p.custom}
                     onChange={(e) => update(p.id, { custom: e.target.value.slice(0, 4) })}
@@ -462,154 +433,81 @@ export function SplitClient({ from = null }: { from?: string | null }) {
                     aria-label={`${nameOf(p, i)}の倍率`}
                     autoFocus
                   />
-                  <span className={`text-xs ${customBad ? "font-bold text-danger" : "text-muted"}`}>
-                    {customBad ? "0.1〜5.0 の数で書いてください" : "ふつうの人を 1.0 として、0.1〜5.0 で入力"}
-                  </span>
+                  <span className={`text-[11px] ${customBad ? "font-bold text-danger" : "text-muted"}`}>{customBad ? "0.1〜5.0 の数で" : "ふつうが1.0"}</span>
                 </label>
               )}
             </li>
           );
         })}
+        <li>
+          <button
+            type="button"
+            onClick={() => setPeople((ps) => [...ps, person("normal")])}
+            disabled={people.length >= 30}
+            className="flex min-h-10 w-full items-center justify-center gap-1.5 text-sm font-bold text-muted hover:text-text disabled:opacity-40"
+          >
+            <Plus className="size-4" aria-hidden />
+            人を足す
+          </button>
+        </li>
       </ul>
-      <div className="mx-4 mt-2">
-        <button
-          type="button"
-          onClick={() => setPeople((ps) => [...ps, person("normal")])}
-          disabled={people.length >= 30}
-          className={`${BUTTON_SUB} w-full gap-2 whitespace-nowrap px-3`}
-        >
-          <Plus className="size-4" aria-hidden />
-          人を足す
-        </button>
-      </div>
+      <p className="mx-4 mt-1 px-1 text-[11px] text-muted">顔のマークを押した人が幹事(端数を受け持ちます)</p>
 
-      {/* 結果 */}
-      <section className="glow mx-4 mt-5 overflow-hidden rounded-3xl border border-accent/40 bg-surface" aria-live="polite">
-        <div className="flex items-baseline justify-between px-5 pt-5">
-          <h2 className="text-lg font-black">1人いくら?</h2>
-          {/* 何円単位にそろえるか。結果のすぐそばで切り替える */}
-          {result && (
-            <div className="flex items-center gap-0.5 rounded-xl bg-surface-2 p-0.5" role="group" aria-label="何円単位にそろえるか">
-              {ROUND_UNITS.map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  aria-pressed={unit === u}
-                  onClick={() => setUnit(u)}
-                  className={`min-h-9 rounded-lg px-2.5 text-xs font-bold ${unit === u ? "bg-accent text-accent-text" : "text-muted"}`}
-                >
-                  {u}円
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        {result ? (
-          <>
-            {/* 誰がどれだけ持つかを、区分の色の帯で見せる */}
-            <div className="mx-5 mt-3 flex h-3 overflow-hidden rounded-full" aria-hidden>
-              {people.map((p, i) => (
-                <span
-                  key={p.id}
-                  className={`tier-${weightOf(p).tone} h-full bg-[var(--tb)] [&:not(:first-child)]:border-l-2 [&:not(:first-child)]:border-surface`}
-                  style={{ width: `${(result.amounts[i] / Math.max(1, result.amounts.reduce((a, b) => a + b, 0))) * 100}%` }}
-                />
-              ))}
-            </div>
-            <ul className="mt-3 divide-y divide-border">
-              {people.map((p, i) => {
-                const w = weightOf(p);
-                return (
-                  <li key={p.id} className="flex min-h-14 items-center gap-2.5 px-4">
-                    <Avatar name={nameOf(p, i)} tone={w.tone} size="sm" />
-                    {/* 名前を1行目、区分と幹事の印を2行目に置き、スマホの幅でも名前が切れにくいようにする */}
-                    <span className="min-w-0 flex-1 py-2">
-                      <span className="block truncate font-bold">{nameOf(p, i)}</span>
-                      <span className="mt-1 flex items-center gap-1">
-                        {weighted && <TierTag w={w} />}
-                        {organizer === i && (
-                          <span className="inline-flex shrink-0 items-center gap-0.5 rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-bold leading-none text-accent-text">
-                            <Crown className="size-3" aria-hidden />
-                            幹事
-                          </span>
-                        )}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-lg font-black tabular-nums">{yen(result.amounts[i])}</span>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="flex items-baseline justify-between border-t-2 border-text/80 px-5 py-3">
-              <span className="text-sm font-bold">合計</span>
-              <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
-            </div>
-            {/* 端数が出たときだけ、誰が持つかを書く */}
-            {result.surplus > 0 && (
-              <p className="px-5 text-xs text-muted">
-                全員 {yen(result.amounts[0])} で同じ額。{yen(result.surplus)} のお釣りが出ます(幹事が預かる){unit > 1 && "。1円にすると、お釣りが小さくなります"}
-              </p>
-            )}
-            {result.organizerDiff !== 0 && (
-              <p className="px-5 text-xs text-muted">
-                端数の{yen(Math.abs(result.organizerDiff))}ぶん、幹事が{result.organizerDiff > 0 ? "多め" : "少なめ"}に
-              </p>
-            )}
-            <div className="px-5 pb-5">
-              <SendButtons
-                mainLabel="共有して金額を送る"
-                share={{ text: shareText }}
-                copy={shareText}
-                copyLabel="金額をコピー"
-                canShare={canShare}
-              />
-            </div>
-          </>
-        ) : (
-          <p className="px-5 pt-2 pb-5 text-sm text-muted">合計を入れると一人ずつの金額を表示。</p>
-        )}
-      </section>
-
-      {/* 集金。一人ずつの金額のページを作ってみんなに送り、幹事はそこで受け取りの記録と催促をする */}
-      {/* 集金はここ1か所にまとめる。作った集金の「誰が払ったか」も、ここから開く */}
-      <section id="collect" className="mx-4 mt-4 scroll-mt-20 rounded-3xl border panel px-5 py-5">
-          <h2 className="flex items-center gap-2 text-lg font-black">
-            <Wallet className="size-5" aria-hidden />
-            集金
-          </h2>
-          <p className="mt-1 text-sm text-muted">
-            まだの人にだけ催促できる集金のページ ・{" "}
-            <Link href="/collect" className="font-bold text-text underline underline-offset-2">
-              作った集金を見る
-            </Link>
+      {/* 合計と送る。金額は上の一覧に出ているので、ここは合計と送るボタンだけ */}
+      {result ? (
+        <section className="mx-4 mt-3 rounded-3xl border border-accent/40 bg-surface px-4 py-3">
+          <p className="flex items-baseline justify-between">
+            <span className="text-sm font-bold">合計</span>
+            <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
           </p>
+          {result.surplus > 0 && (
+            <p className="text-xs text-muted">
+              全員 {yen(result.amounts[0])} で同じ額。{yen(result.surplus)} のお釣りが出ます(幹事が預かる)
+            </p>
+          )}
+          {result.organizerDiff !== 0 && (
+            <p className="text-xs text-muted">
+              端数の{yen(Math.abs(result.organizerDiff))}ぶん幹事が{result.organizerDiff > 0 ? "多め" : "少なめ"}です
+            </p>
+          )}
+          <SendButtons mainLabel="共有して金額を送る" share={{ text: shareText }} copy={shareText} copyLabel="金額をコピー" canShare={canShare} subtleCopy />
+        </section>
+      ) : (
+        <p className="mx-4 mt-3 px-1 text-sm text-muted">合計を入れると一人ずつの金額が出ます。</p>
+      )}
+
+      {/* 集金。金額が出たあとだけ、1つのボタンで出す。作った集金の一覧は小さなリンクで */}
+      {result && (
+        <section id="collect" className="mx-4 mt-3 scroll-mt-20">
           {collectError && (
-            <p role="alert" className="mt-3 text-sm font-bold text-danger">
+            <p role="alert" className="mb-2 text-sm font-bold text-danger">
               {collectError}
             </p>
           )}
-          {!result ? (
-            <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">上でお会計の合計を入れると集金のページを作成。</p>
-          ) : collection ? (
-            <div className="mt-4 grid gap-2">
-              <Link href={`/c/${collection.id}?token=${collection.token}`} className={`${BUTTON_PRIMARY} w-full gap-2`}>
-                <ExternalLink className="size-5" aria-hidden />
-                集金のページを開く
+          {collection ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Link href={`/c/${collection.id}?token=${collection.token}`} className={`${BUTTON_SUB} gap-1.5 text-sm`}>
+                <ExternalLink className="size-4" aria-hidden />
+                集金のページ
               </Link>
-              <button type="button" onClick={makeCollection} disabled={collecting} className={`${BUTTON_SUB} w-full text-sm`}>
-                {collecting ? "作っています…" : "金額を変えたので作り直す"}
+              <button type="button" onClick={makeCollection} disabled={collecting} className={`${BUTTON_SUB} text-sm`}>
+                {collecting ? "作っています…" : "作り直す"}
               </button>
             </div>
           ) : (
-            <button type="button" onClick={makeCollection} disabled={collecting} className={`${BUTTON_PRIMARY} mt-4 w-full gap-2`}>
-              <Wallet className="size-5" aria-hidden />
-              {collecting ? "作っています…" : "集金のページを作る"}
+            <button type="button" onClick={makeCollection} disabled={collecting} className={`${BUTTON_SUB} w-full gap-2 text-sm`}>
+              <Wallet className="size-4" aria-hidden />
+              {collecting ? "作っています…" : "集金のページを作る(まだの人にだけ催促できる)"}
             </button>
           )}
-      </section>
+        </section>
+      )}
 
-      <div className="mx-4 mt-3 text-center">
-        <button type="button" onClick={startOver} className="inline-flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
+      <div className="mx-4 mt-2 flex items-center justify-center gap-4">
+        <Link href="/collect" className="inline-flex min-h-11 items-center px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
+          作った集金を見る
+        </Link>
+        <button type="button" onClick={startOver} className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
           <RotateCcw className="size-3.5" aria-hidden />
           新しい会計を始める
         </button>
