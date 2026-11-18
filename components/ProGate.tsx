@@ -41,6 +41,14 @@ export function useFunAccess(): FunAccess {
 }
 
 /** 有料の機能を使おうとしたときに出す案内。買う、または別の端末で買ったものを戻す */
+/** Tsudoro Plus で使えるようになるもの(購入の案内のチェック項目) */
+const PLUS_ITEMS: { name?: string; body: string }[] = [
+  { name: "Play", body: "ワードウルフ・NGワード・王様ゲームなど6つの遊び" },
+  { name: "Support", body: "話題・ごあいさつ・お礼・席替え・進行表など幹事の6つの道具" },
+  { body: "集金の催促もアプリにまかせられる" },
+  { body: "これからふえる機能も追加料金なし" },
+];
+
 export function ProPaywall({ feature, price, onClose, purchasable = true, work = false }: { feature: string; price: number; onClose?: () => void; purchasable?: boolean; work?: boolean }) {
   const pathname = usePathname();
   const [pending, start] = useTransition();
@@ -74,14 +82,18 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
     <section className="anim-rise mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-6" aria-live="polite">
       <p className="flex items-center gap-2 text-lg font-black">
         <Lock className="size-5 text-accent" aria-hidden />
-        {feature}は買い切り{yen(price)}
+        {feature} で Play も Support も使える
       </p>
-      <p className="mt-1 text-sm text-muted">{work ? "1回のお支払いだけでずっとご利用いただけます。月額や自動更新はございません。" : "1回のお支払いだけでずっと使えます。月額も自動更新もありません。"}</p>
-      <ul className="mt-4 space-y-1.5 text-sm">
-        {(work ? ["話題・ごあいさつ・お礼・席替え・進行表など6つ", "キャンセル料のお願いもやわらかい文でお伝えできます", "これからふえる機能も追加料金なし"] : ["ワードウルフ・NGワード・王様ゲームなど6つの遊び", "席替えやチーム分けもワンタップ", "これからふえる遊びも追加料金なし"]).map((t) => (
-          <li key={t} className="flex items-center gap-2">
-            <Check className="size-4 shrink-0 text-accent" aria-hidden />
-            {t}
+      <p className="mt-1 text-sm text-muted">{yen(price)}の買い切り。1回払えばどちらもずっと使えます。月額も自動更新もありません。</p>
+      {/* 買うと使えるようになるもの。プライベートでも仕事でも、両方とも使える */}
+      <ul className="mt-4 space-y-2 text-sm">
+        {(work ? [PLUS_ITEMS[1], PLUS_ITEMS[0], ...PLUS_ITEMS.slice(2)] : PLUS_ITEMS).map((t) => (
+          <li key={t.body} className="flex items-start gap-2">
+            <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
+            <span>
+              {t.name && <span className="mr-1.5 font-logo font-black text-accent">{t.name}</span>}
+              {t.body}
+            </span>
           </li>
         ))}
       </ul>

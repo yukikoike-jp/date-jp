@@ -108,11 +108,11 @@ export function FunClient() {
     <div className="mx-auto max-w-xl pt-6 pb-16">
       <div className="px-4">
         <h1 className="flex items-center gap-2 text-[26px] font-black tracking-tight">
-          <span className={company ? "" : "font-logo"}>{company ? "幹事サポート" : "Play"}</span>
+          <span className="font-logo">{company ? "Support" : "Play"}</span>
           {/* 買う前は、もやの上のボタンだけにする(黄色いものを2つ出さない)。買ったあとは開いた鍵の印 */}
           {!access.loading && !locked && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">{company ? "幹事のお仕事をしっかりサポートいたします" : "幹事がいる会をもっと楽しく"}</p>
+        <p className="mt-1 text-sm text-muted">{company ? "幹事の仕事を徹底的にサポート" : "幹事がいる会をもっと楽しく"}</p>
       </div>
 
       {/* 道具の切り替え */}
