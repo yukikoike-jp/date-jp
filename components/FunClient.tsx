@@ -238,7 +238,7 @@ export function FunClient() {
 }
 
 /** ルーレットのひと切れずつの色。やわらかい色を順にくり返す。最後と最初が同じ色にならないよう、ずらす */
-const WHEEL_COLORS = ["#b8233b", "#1f4fa8", "#0f7d5c", "#6b3fb8", "#c4601c", "#a8811a", "#0f7b91"];
+const WHEEL_COLORS = ["#d64157", "#3b6fd4", "#1c9a72", "#8456d0", "#de7a2b", "#c09a1c", "#1a95b0"];
 function sliceColor(i: number, n: number): string {
   const len = WHEEL_COLORS.length;
   return WHEEL_COLORS[i === n - 1 && n > 1 && i % len === 0 ? 1 : i % len];
@@ -623,78 +623,48 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
     }, 4200);
   }
 
-  const R = 132;
+  const R = 140;
   const uid = useId().replace(/:/g, "");
-  const BULBS = 24;
   const slices = names.map((name, i) => {
     const a0 = ((i / n) * 360 - 90) * (Math.PI / 180);
     const a1 = (((i + 1) / n) * 360 - 90) * (Math.PI / 180);
     const large = 360 / n > 180 ? 1 : 0;
     const d = `M0 0 L${R * Math.cos(a0)} ${R * Math.sin(a0)} A${R} ${R} 0 ${large} 1 ${R * Math.cos(a1)} ${R * Math.sin(a1)} Z`;
     const mid = (((i + 0.5) / n) * 360 - 90) * (Math.PI / 180);
-    return { name, d, tx: R * 0.62 * Math.cos(mid), ty: R * 0.62 * Math.sin(mid), rot: ((i + 0.5) / n) * 360 - 90 };
+    return { name, d, tx: R * 0.62 * Math.cos(mid), ty: R * 0.62 * Math.sin(mid), rot: ((i + 0.5) / n) * 360 - 90 + (Math.cos(mid) < 0 ? 180 : 0) }; // 左半分は名前が逆さまにならないよう、180度まわす
   });
 
   return (
     <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
       <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます。</p>
-      <div className="relative mx-auto mt-4 w-full max-w-[320px]">
-        <svg viewBox="-170 -176 340 352" className="block h-auto w-full drop-shadow-[0_18px_28px_rgba(0,0,0,0.6)]" role="img" aria-label={`ルーレット(${n}人)`}>
+      <div className="relative mx-auto mt-4 w-full max-w-[300px]">
+        <svg viewBox="-160 -168 320 330" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
           <defs>
-            {/* 金の縁(上が明るく、下が暗い) */}
-            <linearGradient id={`gold${uid}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#fff1b8" />
-              <stop offset="0.35" stopColor="#e2b23c" />
-              <stop offset="0.7" stopColor="#9a6d12" />
-              <stop offset="1" stopColor="#5c3d05" />
-            </linearGradient>
-            {/* 盤の立体感(真ん中が明るく、外が少し暗い) */}
+            {/* 盤に少しだけ立体感(真ん中が明るい) */}
             <radialGradient id={`shine${uid}`} cx="0" cy="0" r={R} gradientUnits="userSpaceOnUse">
-              <stop offset="0" stopColor="#fff" stopOpacity="0.28" />
-              <stop offset="0.55" stopColor="#fff" stopOpacity="0.04" />
-              <stop offset="1" stopColor="#000" stopOpacity="0.35" />
-            </radialGradient>
-            <radialGradient id={`hub${uid}`} cx="-0.3" cy="-0.35" r="1.2">
-              <stop offset="0" stopColor="#fff6d0" />
-              <stop offset="0.5" stopColor="#d9a52e" />
-              <stop offset="1" stopColor="#6b4808" />
+              <stop offset="0" stopColor="#fff" stopOpacity="0.16" />
+              <stop offset="0.7" stopColor="#fff" stopOpacity="0" />
+              <stop offset="1" stopColor="#000" stopOpacity="0.18" />
             </radialGradient>
           </defs>
-          {/* 外の縁と電球(回っているあいだ、交互に光る) */}
-          <circle r="160" fill="#1a1208" />
-          <circle r="153" fill="none" stroke={`url(#gold${uid})`} strokeWidth="14" />
-          {Array.from({ length: BULBS }, (_, i) => {
-            const a = (i / BULBS) * Math.PI * 2;
-            const on = spinning ? (i + Math.floor(angle)) % 2 === 0 : i % 2 === 0;
-            return (
-              <circle
-                key={i}
-                cx={153 * Math.cos(a)}
-                cy={153 * Math.sin(a)}
-                r="3.6"
-                fill={on ? "#fffbe6" : "#7a5a1c"}
-                className={spinning && i % 2 === 0 ? "animate-pulse" : undefined}
-                style={on ? { filter: "drop-shadow(0 0 3px #ffe08a)" } : undefined}
-              />
-            );
-          })}
-          <circle r={R + 6} fill="#0b0a09" />
+          {/* 縁。細く、目立ちすぎない */}
+          <circle r={R + 8} fill="#16181c" stroke="rgba(255,255,255,0.14)" strokeWidth="2" />
           <g style={{ transform: `rotate(${angle}deg)`, transition: spinning ? "transform 4s cubic-bezier(0.12, 0.7, 0.1, 1)" : "none" }}>
             {slices.map((s, i) => (
-              <g key={s.name} opacity={winner === null || winner === i ? 1 : 0.45}>
-                <path d={s.d} fill={sliceColor(i, n)} stroke="#e7c066" strokeWidth={winner === i ? 3.5 : 1.4} strokeLinejoin="round" />
+              <g key={s.name} opacity={winner === null || winner === i ? 1 : 0.4}>
+                <path d={s.d} fill={sliceColor(i, n)} stroke="#fff" strokeOpacity={winner === i ? 1 : 0.85} strokeWidth={winner === i ? 4 : 2} strokeLinejoin="round" />
                 <text
                   x={s.tx}
                   y={s.ty}
                   transform={`rotate(${s.rot} ${s.tx} ${s.ty})`}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize={n > 12 ? 10 : 14}
+                  fontSize={n > 12 ? 11 : 15}
                   fontWeight="900"
                   fill="#fff"
                   stroke="#000"
-                  strokeOpacity="0.35"
-                  strokeWidth="2.5"
+                  strokeOpacity="0.25"
+                  strokeWidth="3"
                   paintOrder="stroke"
                 >
                   {s.name.length > 6 ? `${s.name.slice(0, 5)}…` : s.name}
@@ -702,14 +672,12 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
               </g>
             ))}
             <circle r={R} fill={`url(#shine${uid})`} pointerEvents="none" />
-            {/* 中心の金の軸 */}
-            <circle r="26" fill={`url(#hub${uid})`} stroke="#3d2905" strokeWidth="2" />
-            <circle r="11" fill="#1a1208" stroke="#f3d27a" strokeWidth="2" />
+            <circle r="20" fill="#fff" stroke="#16181c" strokeWidth="4" />
+            <circle r="7" fill="var(--accent)" />
           </g>
-          {/* 上の針(金・影つき)。盤の縁に少しかかる */}
-          <g transform="translate(0 -150)" style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.6))" }}>
-            <path d="M0 30 L-15 -6 Q0 -18 15 -6 Z" fill={`url(#gold${uid})`} stroke="#3d2905" strokeWidth="2" strokeLinejoin="round" />
-            <circle cy="-3" r="5" fill="#fff6d0" stroke="#3d2905" strokeWidth="1.5" />
+          {/* 上の針 */}
+          <g transform={`translate(0 ${-R - 14})`} style={{ filter: "drop-shadow(0 2px 2px rgba(0,0,0,0.5))" }}>
+            <path d="M0 30 L-13 0 Q0 -8 13 0 Z" fill="var(--accent)" stroke="#16181c" strokeWidth="2.5" strokeLinejoin="round" />
           </g>
         </svg>
       </div>
@@ -893,7 +861,7 @@ function Speech({ locked }: { locked: boolean }) {
   return (
     <Box title="ひとこと" tone={TOOL_TONE.speech} locked={locked}>
       <p className="text-sm text-white/70">乾杯と締めのごあいさつの例です。そのままお読みいただいても少しアレンジしてお使いいただいても結構です。</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="会の種類">
+      <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="会の種類">
         {OCCASIONS.map((o, i) => {
           const closed = locked && i > 0;
           return (
@@ -906,7 +874,7 @@ function Speech({ locked }: { locked: boolean }) {
                 setOccasion(o.key);
                 setN(0);
               }}
-              className={`${PILL} disabled:opacity-50 ${occasion === o.key ? PILL_ON : PILL_OFF}`}
+              className={`${PILL} w-full px-2 disabled:opacity-50 ${occasion === o.key ? PILL_ON : PILL_OFF}`}
             >
               {closed ? <Lock className="size-3.5" aria-hidden /> : occasion === o.key && "✓ "}
               {o.label}
@@ -1124,7 +1092,7 @@ function Thanks({ locked }: { locked: boolean }) {
   return (
     <Box title="お礼・ご連絡" tone={TOOL_TONE.thanks} locked={locked}>
       <p className="text-sm text-white/70">会の翌日にお送りするお礼やご連絡の文の例です。キャンセル料のお願いもやわらかい言い方でお伝えできます。コピーしてそのままお使いいただけます。</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="送る相手">
+      <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="送る相手">
         {THANKS_KINDS.map((k) => (
           <button
             key={k.key}
@@ -1134,7 +1102,7 @@ function Thanks({ locked }: { locked: boolean }) {
               setKind(k.key);
               setN(0);
             }}
-            className={`${PILL} ${kind === k.key ? PILL_ON : PILL_OFF}`}
+            className={`${PILL} w-full px-2 text-[13px] ${kind === k.key ? PILL_ON : PILL_OFF}`}
           >
             {kind === k.key && "✓ "}
             {k.label}
