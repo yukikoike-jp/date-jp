@@ -9,7 +9,6 @@ import { loadAudience } from "@/lib/audience";
 import { CHECKLIST, OCCASIONS, SPEECHES, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type Occasion, type ThanksKind, type TopicKind } from "@/lib/work";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
-import { SampleCard } from "./FunSamples";
 
 // 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
 // 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
@@ -56,14 +55,14 @@ const TOOL_TONE: Record<Tool, Tone> = {
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
 const NEEDS_NAMES: Tool[] = ["wolf", "ng", "truth", "king", "wheel", "team", "seat"];
 
-/** 有料プレミアムの印。鍵のマークだけ(デモ版かどうかは、上の案内に書く) */
+/** Tsudoro Plus(有料・買い切り)の印。鍵のマークだけ(買う前かどうかは、上の案内に書く) */
 function PackBadge({ locked }: { locked: boolean }) {
   const Icon = locked ? Lock : LockOpen;
   return (
     <span
       className="inline-grid size-7 shrink-0 place-items-center rounded-full border border-accent/50 text-accent"
       role="img"
-      aria-label={locked ? "有料プレミアム(未契約)" : "有料プレミアム(契約中)"}
+      aria-label={locked ? "Tsudoro Plus(未購入)" : "Tsudoro Plus(購入済み)"}
     >
       <Icon className="size-3.5" aria-hidden />
     </span>
@@ -115,15 +114,15 @@ export function FunClient() {
         <p className="mt-1 text-sm text-muted">{company ? "幹事のお仕事を、しっかりサポートいたします" : "幹事がいる会をもっと楽しく"}</p>
       </div>
 
-      {/* 買う前は、遊びの名前だけ見せる(中身は見せない)。何が起きているか、どうすれば使えるかを最初に伝える */}
+      {/* 買う前は、本物の画面にもやをかけて見せる。何が起きているか、どうすれば使えるかを最初に伝える */}
       {!access.loading && locked && (
-        <section className="mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-5" aria-label="買い切りの案内">
+        <section className="mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-5" aria-label="Tsudoro Plus の案内">
           <p className="flex items-center gap-2 text-base font-black">
             <Lock className="size-5 text-accent" aria-hidden />
-            見本をご覧いただけます
+            Tsudoro Plus で使えます
           </p>
           <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            {company ? `タブを押すと、機能の見本が見られます。気に入っていただけたら、${yen(access.price)}の買い切りで、すべてご利用いただけます。` : `タブを押すと、遊びの見本が見られます。気に入ったら、${yen(access.price)}の買い切りで、ぜんぶ遊べます。`}
+            {company ? `もやの向こうが、実際の画面です。Tsudoro Plus(${yen(access.price)}・買い切り)で、すべての機能をご利用いただけます。` : `もやの向こうが、本物の画面です。Tsudoro Plus(${yen(access.price)}・買い切り)で、ぜんぶ遊べます。`}
           </p>
           {!showBuy && (
             <button
@@ -131,12 +130,12 @@ export function FunClient() {
               onClick={() => setShowBuy(true)}
               className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-accent px-4 text-sm font-black text-accent-text active:scale-95"
             >
-              {yen(access.price)}の買い切りをくわしく
+              Tsudoro Plus をくわしく
             </button>
           )}
         </section>
       )}
-      {locked && showBuy && <ProPaywall feature={company ? "幹事サポート" : "Play"} work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
+      {locked && showBuy && <ProPaywall feature="Tsudoro Plus" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
 
       {/* 道具の切り替え */}
       {/* 3つずつ並べる。余りが2つのとき(5つのとき)は、下の段の2つを広げて、きれいにそろえる */}
@@ -172,7 +171,7 @@ export function FunClient() {
           {locked && (
             <span className="inline-flex items-center gap-1 text-[11px] font-black text-accent">
               <Lock className="size-3" aria-hidden />
-              見本の名前(有料プレミアムで入力できます)
+              見本の名前(Tsudoro Plus で入力できます)
             </span>
           )}
         </label>
@@ -201,8 +200,44 @@ export function FunClient() {
 
       <div className="mt-4">
         {locked ? (
-          // 買う前は、見本を1つ見せる(中身の全部は出さない)。気に入ったら、買い切りの案内へ
-          <SampleCard tool={tool} label={TOOLS.find((t) => t.key === tool)?.label ?? ""} tone={TOOL_TONE[tool]} price={access.price} onBuy={() => setShowBuy(true)} work={company} />
+          // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
+          <div className="relative">
+            <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
+              {tool === "truth" && <TruthDare names={names} locked={locked} />}
+              {tool === "wolf" && <Wolf names={names} locked={locked} />}
+              {tool === "king" && <King names={names} locked={locked} />}
+              {tool === "ng" && <NgWord names={names} locked={locked} />}
+              {tool === "wheel" && <Wheel names={names} locked={locked} />}
+              {tool === "team" && <Teams names={names} locked={locked} />}
+              {tool === "topic" && <Topic locked={locked} />}
+              {tool === "speech" && <Speech locked={locked} />}
+              {tool === "memo" && <Memo locked={locked} />}
+              {tool === "thanks" && <Thanks locked={locked} />}
+              {tool === "seat" && <Seats names={names} locked={locked} />}
+              {tool === "schedule" && <Schedule locked={locked} />}
+            </div>
+            {/* もや(下にいくほど濃い) */}
+            <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
+            <div className="absolute inset-0 flex items-center justify-center px-8">
+              <button
+                type="button"
+                onClick={() => {
+                  // 案内は画面の上に開くので、そこまで戻る
+                  setShowBuy(true);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="flex min-h-14 items-center gap-3 rounded-2xl bg-bg/90 px-5 py-3 text-left ring-1 ring-accent/60 shadow-[0_0_32px_-12px_var(--accent)] active:scale-95"
+              >
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
+                  <Lock className="size-5" aria-hidden />
+                </span>
+                <span>
+                  <span className="block text-base font-black">Tsudoro Plus で使える</span>
+                  <span className="block text-xs text-muted">{yen(access.price)} ・ 買い切り</span>
+                </span>
+              </button>
+            </div>
+          </div>
         ) : (
           <>
             {tool === "truth" && <TruthDare names={names} locked={locked} />}

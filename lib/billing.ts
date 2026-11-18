@@ -96,8 +96,8 @@ export async function createProCheckout(origin: string, back: string): Promise<s
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": "jpy",
     "line_items[0][price_data][unit_amount]": String(proPrice()),
-    "line_items[0][price_data][product_data][name]": "Tsudoro Play・幹事サポート(買い切り)",
-    "line_items[0][price_data][product_data][description]": "6つの遊び(Play)と、仕事の会の6つの幹事サポートが、ずっと使えます。1回のお支払いだけで、月額や自動更新はありません。",
+    "line_items[0][price_data][product_data][name]": "Tsudoro Plus(買い切り)",
+    "line_items[0][price_data][product_data][description]": "Tsudoro Plus: 6つの遊び(Play)と、仕事の会の6つの幹事サポートが、ずっと使えます。1回のお支払いだけで、月額や自動更新はありません。",
     // Stripe の Managed Payments(最初からオン)では、商品の税コードが必要。電子的に提供するサービス(一般)
     "line_items[0][price_data][product_data][tax_code]": "txcd_10000000",
     "metadata[kind]": "pro",
