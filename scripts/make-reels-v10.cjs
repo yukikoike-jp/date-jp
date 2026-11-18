@@ -4,6 +4,8 @@
 //        下に字幕・VOICEVOX の落ち着いた語り・最後は少し心に残る一言)
 // 話: 忘年会の幹事をひとりで抱えた自分 → 「もしも、URL1本で終わったら?」 → 今年は幹事も乾杯できた
 // 語り: VOICEVOX:青山龍星(しっとり)。エンジン(127.0.0.1:50021)を先に起動しておく
+// BGM: このスクリプトの中で作る(著作権の心配がない)。話に合わせて曲調を変える:
+//   ひとりで抱える場面 = 短調のしずかなアルペジオ → 「もしも」= 音が消えて、上がっていく音 → 解決・乾杯 = 明るい長調とリズム → 最後 = やわらかい和音
 // 実行: node scripts/make-reels-v10.cjs   出力: marketing/reels/v10_moshimo.mp4
 
 const { spawn } = require("node:child_process");
@@ -346,6 +348,106 @@ function wavFile(samples, rate) {
   return b;
 }
 
+// ---- BGM(場面ごとに曲調を変える)。segs = [{ start, end, mood }]、mood = "sad" | "twist" | "happy" | "end"
+function bgm(seconds, segs) {
+  const n = Math.ceil(seconds * 44100);
+  const L = new Float32Array(n);
+  const R = new Float32Array(n);
+  const RATE = 44100;
+  const beat = 60 / 80;
+  const eighth = beat / 2;
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const SAD = [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]]; // Am F C G
+  const HAPPY = [[48, 52, 55], [55, 59, 62], [57, 60, 64], [53, 57, 60]]; // C G Am F
+  const pluck = (f, t) => (t < 0 ? 0 : (Math.sin(2 * Math.PI * f * t) + 0.45 * Math.sin(4 * Math.PI * f * t) + 0.18 * Math.sin(6 * Math.PI * f * t)) * Math.exp(-t * 3.2));
+  let seed = 11;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  for (let i = 0; i < n; i++) {
+    const t = i / RATE;
+    const seg = segs.find((x) => t >= x.start && t < x.end) ?? segs[segs.length - 1];
+    const lt = t - seg.start;
+    const segLen = seg.end - seg.start;
+    // 曲調の切り替わりで音がぶつからないよう、場面の頭と終わりを少しだけなめらかに
+    const edge = Math.min(1, lt / 0.08, (seg.end - t) / 0.08);
+    let l = 0;
+    let r = 0;
+    if (seg.mood === "sad" || seg.mood === "happy") {
+      const prog = seg.mood === "sad" ? SAD : HAPPY;
+      const bar = beat * 4;
+      const ci = Math.floor(t / bar) % 4;
+      const chord = prog[ci];
+      // アルペジオ(8分): 1-3-5-8-5-3…
+      const step = Math.floor((t % bar) / eighth);
+      const order = [0, 1, 2, 3, 2, 1, 2, 1];
+      const k = order[step % 8];
+      const note = k === 3 ? chord[0] + 12 : chord[k];
+      const nt = (t % bar) - step * eighth;
+      const arp = pluck(hz(note + 12), nt) * (seg.mood === "sad" ? 0.11 : 0.1);
+      // やわらかい和音(パッド)
+      let pad = 0;
+      chord.forEach((m) => (pad += Math.sin(2 * Math.PI * hz(m) * t) * 0.03 + Math.sin(2 * Math.PI * hz(m) * 1.003 * t) * 0.012));
+      const bt = t % (beat * 2);
+      const bass = Math.sin(2 * Math.PI * hz(chord[0] - 12) * t) * Math.exp(-bt * 2.2) * (seg.mood === "sad" ? 0.1 : 0.17);
+      l += arp * 0.8 + pad + bass;
+      r += arp + pad * 0.9 + bass;
+      if (seg.mood === "happy") {
+        const kt = t % beat;
+        const kick = kt < 0.25 ? Math.sin(2 * Math.PI * (50 + 80 * Math.exp(-kt * 30)) * kt) * Math.exp(-kt * 13) * 0.36 : 0;
+        const ct = (t + beat) % (beat * 2);
+        const clap = ct < 0.18 ? rnd() * Math.exp(-ct * 24) * 0.12 : 0;
+        const ht = (t + eighth / 2) % eighth;
+        const hat = ht < 0.04 ? rnd() * Math.exp(-ht * 110) * 0.05 : 0;
+        l += kick + clap + hat * 0.6;
+        r += kick + clap + hat;
+      }
+    } else if (seg.mood === "twist") {
+      // いったん静かになり、上がっていく音(期待させる)
+      const x = lt / segLen;
+      const f = 180 * Math.pow(5, x);
+      const phase = 2 * Math.PI * (180 * (Math.pow(5, x) - 1) / Math.log(5)) * segLen;
+      const riser = (Math.sin(phase) * 0.5 + rnd() * 0.25 * x) * x * x * 0.22;
+      void f;
+      const bell = pluck(hz(76), lt - 0.45) * 0.12 + pluck(hz(83), lt - 0.45) * 0.08;
+      l += riser + bell;
+      r += riser + bell;
+    } else {
+      // 最後: C の和音を、ゆっくり消していく
+      let pad = 0;
+      [48, 55, 64, 67].forEach((m) => (pad += Math.sin(2 * Math.PI * hz(m) * t) * 0.035));
+      const bell = pluck(hz(72), lt - 0.1) * 0.12 + pluck(hz(79), lt - 0.6) * 0.09 + pluck(hz(84), lt - 1.1) * 0.07;
+      const fadeOut = Math.min(1, (seg.end - t) / 2.2);
+      l += (pad + bell) * fadeOut;
+      r += (pad * 0.9 + bell) * fadeOut;
+    }
+    L[i] = l * edge;
+    R[i] = r * edge;
+  }
+  return [L, R];
+}
+
+function wavStereo(L, R) {
+  const n = L.length;
+  const b = Buffer.alloc(44 + n * 4);
+  b.write("RIFF", 0);
+  b.writeUInt32LE(36 + n * 4, 4);
+  b.write("WAVEfmt ", 8);
+  b.writeUInt32LE(16, 16);
+  b.writeUInt16LE(1, 20);
+  b.writeUInt16LE(2, 22);
+  b.writeUInt32LE(44100, 24);
+  b.writeUInt32LE(44100 * 4, 28);
+  b.writeUInt16LE(4, 32);
+  b.writeUInt16LE(16, 34);
+  b.write("data", 36);
+  b.writeUInt32LE(n * 4, 40);
+  const c = (x) => Math.max(-32768, Math.min(32767, Math.round(x * 32767)));
+  for (let i = 0; i < n; i++) {
+    b.writeInt16LE(c(L[i]), 44 + i * 4);
+    b.writeInt16LE(c(R[i]), 46 + i * 4);
+  }
+  return b;
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
   const RATE = 44100;
@@ -363,9 +465,34 @@ async function main() {
     mix.set(voices[i], Math.round((at + LEAD) * RATE));
     at += sc.sec;
   });
+  // 語りに BGM を重ねる(語りの間は BGM を下げる)
+  const MOODS = ["sad", "sad", "sad", "sad", "sad", "twist", "happy", "happy", "end"];
+  const segs = [];
+  let st = 0;
+  SCENES.forEach((sc, i) => {
+    segs.push({ start: st, end: st + sc.sec, mood: MOODS[i] });
+    st += sc.sec;
+  });
+  const [bl, br] = bgm(TOTAL, segs);
+  const L = new Float32Array(mix.length);
+  const R = new Float32Array(mix.length);
+  let env = 0;
+  let duck = 1;
+  for (let i = 0; i < mix.length; i++) {
+    const v = mix[i] / 32768;
+    env = Math.max(Math.abs(v), env * 0.9997);
+    duck += ((env > 0.02 ? 0.5 : 1) - duck) * 0.0004;
+    const t = i / RATE;
+    const g = 0.5 * duck * Math.min(1, t / 0.8);
+    L[i] = v * 0.95 + (bl[i] ?? 0) * g;
+    R[i] = v * 0.95 + (br[i] ?? 0) * g;
+  }
+  let peak = 0;
+  for (let i = 0; i < L.length; i++) peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i]));
+  if (peak > 0.97) for (let i = 0; i < L.length; i++) (L[i] *= 0.97 / peak), (R[i] *= 0.97 / peak);
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "reel10-"));
-  const wavPath = path.join(tmp, "voice.wav");
-  fs.writeFileSync(wavPath, wavFile(mix, RATE));
+  const wavPath = path.join(tmp, "mix.wav");
+  fs.writeFileSync(wavPath, wavStereo(L, R));
 
   const out = path.join(OUT, "v10_moshimo.mp4");
   const ff = spawn(
@@ -375,7 +502,7 @@ async function main() {
       "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", `${W}x${H}`, "-r", String(FPS), "-i", "-",
       "-i", wavPath,
       "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
-      "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2", "-shortest", "-movflags", "+faststart", out,
+      "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:a", "aac", "-b:a", "192k", "-ar", "44100", "-ac", "2", "-shortest", "-movflags", "+faststart", out,
     ],
     { stdio: ["pipe", "inherit", "inherit"] },
   );
