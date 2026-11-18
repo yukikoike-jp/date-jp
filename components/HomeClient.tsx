@@ -23,12 +23,12 @@ function HomeRow({ href, icon, title, sub }: { href: string; icon: React.ReactNo
   return (
     <Link
       href={href}
-      className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
+      className="flex w-full items-center gap-2.5 rounded-xl bg-surface px-3 py-2 ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
     >
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/6 text-accent">{icon}</span>
+      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-white/6 text-accent">{icon}</span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[15px] font-black tracking-tight text-white/90">{title}</span>
-        <span className="mt-0.5 block truncate text-xs font-medium text-white/60">{sub}</span>
+        <span className="block truncate text-sm font-black tracking-tight text-white/90">{title}</span>
+        <span className="block truncate text-[11px] font-medium text-white/55">{sub}</span>
       </span>
       <ChevronRight className="size-4 shrink-0 text-white/30" aria-hidden />
     </Link>
@@ -313,14 +313,12 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             type="button"
             aria-expanded={showParties}
             onClick={() => setShowParties((v) => !v)}
-            className="flex w-full items-center gap-3 rounded-2xl bg-surface px-4 py-3.5 text-left ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
+            className="flex min-h-11 w-full items-center gap-2.5 rounded-xl bg-surface px-3 py-2 text-left ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
           >
-            <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/6 text-accent">
-              <CalendarDays className="size-4" aria-hidden />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-black tracking-tight text-white/90">あなたの会</span>
-              <span className="mt-0.5 block truncate text-xs font-medium text-white/60">
+            <CalendarDays className="size-4 shrink-0 text-accent" aria-hidden />
+            <span className="flex min-w-0 flex-1 items-baseline gap-2">
+              <span className="shrink-0 text-sm font-black tracking-tight text-white/90">あなたの会</span>
+              <span className="truncate text-[11px] font-medium text-white/55">
                 {statuses === null
                   ? "読み込んでいます…"
                   : [

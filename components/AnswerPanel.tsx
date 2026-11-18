@@ -195,7 +195,7 @@ export function AnswerPanel({
 
   return (
     <section>
-      <h2 className="px-4 pb-3 text-lg font-black">{editing ? "回答を直す" : host ? "自分の予定を入れる" : "30秒で答える"}</h2>
+      <h2 className="px-4 pb-3 text-lg font-black">{editing ? "回答を直す" : host ? "自分の予定を入れる" : "30秒で答えられます"}</h2>
       <div className="mx-4 overflow-hidden rounded-3xl border panel">
         <label className="block border-b border-border px-5 py-5">
           <span className={LABEL}>

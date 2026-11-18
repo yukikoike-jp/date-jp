@@ -1,7 +1,7 @@
 "use client";
 
 import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, Mic, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
@@ -238,7 +238,7 @@ export function FunClient() {
 }
 
 /** ルーレットのひと切れずつの色。やわらかい色を順にくり返す。最後と最初が同じ色にならないよう、ずらす */
-const WHEEL_COLORS = ["#e07a88", "#7aa6dd", "#62bd96", "#a592dc", "#e09a6b", "#e3c46e", "#60b9c9"];
+const WHEEL_COLORS = ["#b8233b", "#1f4fa8", "#0f7d5c", "#6b3fb8", "#c4601c", "#a8811a", "#0f7b91"];
 function sliceColor(i: number, n: number): string {
   const len = WHEEL_COLORS.length;
   return WHEEL_COLORS[i === n - 1 && n > 1 && i % len === 0 ? 1 : i % len];
@@ -623,7 +623,9 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
     }, 4200);
   }
 
-  const R = 140;
+  const R = 132;
+  const uid = useId().replace(/:/g, "");
+  const BULBS = 24;
   const slices = names.map((name, i) => {
     const a0 = ((i / n) * 360 - 90) * (Math.PI / 180);
     const a1 = (((i + 1) / n) * 360 - 90) * (Math.PI / 180);
@@ -636,33 +638,78 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   return (
     <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
       <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます。</p>
-      <div className="relative mx-auto mt-4 w-full max-w-[300px]">
-        {/* 上の矢印 */}
-        <div className="absolute top-[-6px] left-1/2 z-10 -translate-x-1/2 text-accent" aria-hidden>
-          <svg width="26" height="22" viewBox="0 0 26 22">
-            <path d="M13 22 L1 2 H25 Z" fill="currentColor" />
-          </svg>
-        </div>
-        <svg viewBox="-150 -150 300 300" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
+      <div className="relative mx-auto mt-4 w-full max-w-[320px]">
+        <svg viewBox="-170 -176 340 352" className="block h-auto w-full drop-shadow-[0_18px_28px_rgba(0,0,0,0.6)]" role="img" aria-label={`ルーレット(${n}人)`}>
+          <defs>
+            {/* 金の縁(上が明るく、下が暗い) */}
+            <linearGradient id={`gold${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#fff1b8" />
+              <stop offset="0.35" stopColor="#e2b23c" />
+              <stop offset="0.7" stopColor="#9a6d12" />
+              <stop offset="1" stopColor="#5c3d05" />
+            </linearGradient>
+            {/* 盤の立体感(真ん中が明るく、外が少し暗い) */}
+            <radialGradient id={`shine${uid}`} cx="0" cy="0" r={R} gradientUnits="userSpaceOnUse">
+              <stop offset="0" stopColor="#fff" stopOpacity="0.28" />
+              <stop offset="0.55" stopColor="#fff" stopOpacity="0.04" />
+              <stop offset="1" stopColor="#000" stopOpacity="0.35" />
+            </radialGradient>
+            <radialGradient id={`hub${uid}`} cx="-0.3" cy="-0.35" r="1.2">
+              <stop offset="0" stopColor="#fff6d0" />
+              <stop offset="0.5" stopColor="#d9a52e" />
+              <stop offset="1" stopColor="#6b4808" />
+            </radialGradient>
+          </defs>
+          {/* 外の縁と電球(回っているあいだ、交互に光る) */}
+          <circle r="160" fill="#1a1208" />
+          <circle r="153" fill="none" stroke={`url(#gold${uid})`} strokeWidth="14" />
+          {Array.from({ length: BULBS }, (_, i) => {
+            const a = (i / BULBS) * Math.PI * 2;
+            const on = spinning ? (i + Math.floor(angle)) % 2 === 0 : i % 2 === 0;
+            return (
+              <circle
+                key={i}
+                cx={153 * Math.cos(a)}
+                cy={153 * Math.sin(a)}
+                r="3.6"
+                fill={on ? "#fffbe6" : "#7a5a1c"}
+                className={spinning && i % 2 === 0 ? "animate-pulse" : undefined}
+                style={on ? { filter: "drop-shadow(0 0 3px #ffe08a)" } : undefined}
+              />
+            );
+          })}
+          <circle r={R + 6} fill="#0b0a09" />
           <g style={{ transform: `rotate(${angle}deg)`, transition: spinning ? "transform 4s cubic-bezier(0.12, 0.7, 0.1, 1)" : "none" }}>
             {slices.map((s, i) => (
-              <g key={s.name}>
-                <path d={s.d} fill={sliceColor(i, n)} opacity={winner === null || winner === i ? 1 : 0.4} stroke={winner === i ? "#fff" : "#000"} strokeWidth={winner === i ? 3 : 1.5} />
+              <g key={s.name} opacity={winner === null || winner === i ? 1 : 0.45}>
+                <path d={s.d} fill={sliceColor(i, n)} stroke="#e7c066" strokeWidth={winner === i ? 3.5 : 1.4} strokeLinejoin="round" />
                 <text
                   x={s.tx}
                   y={s.ty}
                   transform={`rotate(${s.rot} ${s.tx} ${s.ty})`}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fontSize={n > 12 ? 9 : 13}
-                  fontWeight="800"
-                  fill="#000"
+                  fontSize={n > 12 ? 10 : 14}
+                  fontWeight="900"
+                  fill="#fff"
+                  stroke="#000"
+                  strokeOpacity="0.35"
+                  strokeWidth="2.5"
+                  paintOrder="stroke"
                 >
                   {s.name.length > 6 ? `${s.name.slice(0, 5)}…` : s.name}
                 </text>
               </g>
             ))}
-            <circle r="14" fill="#000" stroke="var(--accent)" strokeWidth="3" />
+            <circle r={R} fill={`url(#shine${uid})`} pointerEvents="none" />
+            {/* 中心の金の軸 */}
+            <circle r="26" fill={`url(#hub${uid})`} stroke="#3d2905" strokeWidth="2" />
+            <circle r="11" fill="#1a1208" stroke="#f3d27a" strokeWidth="2" />
+          </g>
+          {/* 上の針(金・影つき)。盤の縁に少しかかる */}
+          <g transform="translate(0 -150)" style={{ filter: "drop-shadow(0 3px 3px rgba(0,0,0,0.6))" }}>
+            <path d="M0 30 L-15 -6 Q0 -18 15 -6 Z" fill={`url(#gold${uid})`} stroke="#3d2905" strokeWidth="2" strokeLinejoin="round" />
+            <circle cy="-3" r="5" fill="#fff6d0" stroke="#3d2905" strokeWidth="1.5" />
           </g>
         </svg>
       </div>

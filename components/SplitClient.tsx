@@ -249,22 +249,20 @@ export function SplitClient({ from = null }: { from?: string | null }) {
     <>
       {/* 決まった会があれば、行く人の名前とお酒を飲まない人をそのまま読み込める */}
       {decidedParties.length > 0 && (
-        <section className="mx-4 mb-3">
-          <p className="mb-2 px-1 text-[10px] font-black tracking-[0.2em] text-stone-400">決まった会から名前を読み込む</p>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+        <section className="mx-4 mb-2">
+          <p className="mb-1 px-1 text-[10px] font-black tracking-[0.15em] text-stone-400">決まった会から名前を読み込む</p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
             {decidedParties.map(({ party: p, date }) => (
               <button
                 key={p.id}
                 type="button"
                 disabled={importing}
                 onClick={() => importParty(p)}
-                className="flex min-h-11 shrink-0 items-center gap-2 rounded-2xl bg-surface px-3.5 py-2 text-left ring-1 ring-white/12 transition hover:bg-stone-800 active:scale-95 disabled:opacity-50"
+                className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 text-left ring-1 ring-white/12 transition hover:bg-stone-800 active:scale-95 disabled:opacity-50"
               >
-                <Users className="size-4 shrink-0 text-accent" aria-hidden />
-                <span>
-                  <span className="block max-w-[10rem] truncate text-[13px] font-black">{p.title}</span>
-                  <span className="block text-[10px] text-white/40">{dateLabel(date)}</span>
-                </span>
+                <Users className="size-3.5 shrink-0 text-accent" aria-hidden />
+                <span className="max-w-[8rem] truncate text-xs font-black">{p.title}</span>
+                <span className="text-[10px] text-white/40">{dateLabel(date)}</span>
               </button>
             ))}
           </div>

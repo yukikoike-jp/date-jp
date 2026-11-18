@@ -22,7 +22,7 @@ export async function generateMetadata(props: PageProps<"/p/[id]">): Promise<Met
   const party = await getStore().getParty(id);
   // 会のページは、URLを知っている人だけのもの。検索には出さない
   if (!party) return { title: "飲み会が見つかりません", robots: { index: false } };
-  const description = "行ける日と予算を30秒で答えてください";
+  const description = "行ける日と予算を30秒で答えられます";
   return { title: party.title, description, robots: { index: false }, alternates: { canonical: null }, openGraph: { title: party.title, description } };
 }
 

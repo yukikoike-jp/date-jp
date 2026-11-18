@@ -29,8 +29,8 @@ export function inviteText(title: string, url: string, start: number | null = nu
     ].join("\n");
   }
   return [
-    `「${title}」の日程調整です${start !== null ? `(${clock(start)}〜)` : ""}`,
-    "行ける日を入れてください",
+    `「${title}」の日程調整${start !== null ? `(${clock(start)}〜)` : ""}`,
+    "行ける日を入れてね",
     url,
   ].join("\n");
 }
@@ -69,7 +69,7 @@ export function decidedText(title: string, date: string, start: number, shopName
   if (isFormal(audience)) {
     return [`「${title}」の開催が決まりましたので、ご案内いたします。`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, "詳細はこちらをご確認ください。", url].join("\n");
   }
-  return [`「${title}」決まりました`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, url].join("\n");
+  return [`「${title}」決まったよ`, `${dateLabel(date)} ${clock(start)}〜${shopName ? ` ${shopName}` : ""}`, url].join("\n");
 }
 
 /** 前日のお知らせ。グループに送るので、名前は出さない */
@@ -85,5 +85,5 @@ export function answerNudgeText(title: string, url: string, answered: number, au
   if (isFormal(audience)) {
     return [`「${title}」の日程について、現在${answered}名の方からご回答をいただいています。`, "まだの方はお手数ですが、ご入力をお願いいたします。", url].join("\n");
   }
-  return [`「${title}」の日程、いま${answered}人が回答済み`, "まだの人は30秒で入れてください", url].join("\n");
+  return [`「${title}」の日程、いま${answered}人が回答済み`, "まだの人は入れてね(30秒で答えられるよ)", url].join("\n");
 }
