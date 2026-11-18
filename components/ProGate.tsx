@@ -81,7 +81,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
     <section className="anim-rise mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-6" aria-live="polite">
       <p className="flex items-center gap-2 text-lg font-black">
         <Lock className="size-5 text-accent" aria-hidden />
-        {feature} で Play も Support も使える
+        {feature} でできること
       </p>
       <p className="mt-1 text-sm text-muted">{yen(price)}の買い切り。1回払えばどちらもずっと使えます。月額も自動更新もありません。</p>
       {/* 買うと使えるようになるもの。プライベートでも仕事でも、両方とも使える */}
