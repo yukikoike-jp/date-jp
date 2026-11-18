@@ -49,14 +49,18 @@ export function resetBillingCache() {
   cache.clear();
 }
 
-/** 契約が続いているか。月額は active / trialing の間だけ。前の買い切りは、支払い済みなら続いているとみなす */
+/** 契約が続いているか。月額は active / trialing の間だけ。買い切りは、支払い済みで、返金していなければ続いているとみなす(返金は一部でも使えなくする) */
 export function isActiveSession(session: Record<string, unknown>): boolean {
   if (session.metadata && (session.metadata as Record<string, string>).kind !== "pro") return false;
   if (session.mode === "subscription") {
     const sub = session.subscription as { status?: string } | string | null | undefined;
     return typeof sub === "object" && sub !== null && (sub.status === "active" || sub.status === "trialing");
   }
-  return session.payment_status === "paid";
+  if (session.payment_status !== "paid") return false;
+  const pi = session.payment_intent as { latest_charge?: unknown } | string | null | undefined;
+  const charge = typeof pi === "object" && pi !== null ? (pi.latest_charge as { refunded?: boolean; amount_refunded?: number } | string | null | undefined) : null;
+  if (typeof charge === "object" && charge !== null && (charge.refunded || (charge.amount_refunded ?? 0) > 0)) return false;
+  return true;
 }
 
 /** 鍵が本物で、契約が続いているか(有料にしていなければ false) */
@@ -67,7 +71,7 @@ export async function proActive(license: unknown): Promise<boolean> {
   const hit = cache.get(sessionId);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.active;
   try {
-    const session = await stripe(`/checkout/sessions/${encodeURIComponent(sessionId)}?expand%5B%5D=subscription`);
+    const session = await stripe(`/checkout/sessions/${encodeURIComponent(sessionId)}?expand%5B%5D=subscription&expand%5B%5D=payment_intent.latest_charge`);
     const active = isActiveSession(session);
     cache.set(sessionId, { at: Date.now(), active });
     return active;

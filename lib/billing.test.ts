@@ -38,6 +38,11 @@ describe("isActiveSession", () => {
   it("前の買い切りは、支払い済みなら続いている", () => {
     expect(isActiveSession({ mode: "payment", payment_status: "paid", metadata: { kind: "pro" } })).toBe(true);
     expect(isActiveSession({ mode: "payment", payment_status: "unpaid", metadata: { kind: "pro" } })).toBe(false);
+    // 返金したら使えない(全額でも一部でも)
+    const paid = (charge: Record<string, unknown>) => ({ mode: "payment", payment_status: "paid", metadata: { kind: "pro" }, payment_intent: { latest_charge: charge } });
+    expect(isActiveSession(paid({ refunded: false, amount_refunded: 0 }))).toBe(true);
+    expect(isActiveSession(paid({ refunded: true, amount_refunded: 500 }))).toBe(false);
+    expect(isActiveSession(paid({ refunded: false, amount_refunded: 100 }))).toBe(false);
   });
   it("有料プレミアムではない支払いは通さない", () => {
     expect(isActiveSession({ mode: "payment", payment_status: "paid", metadata: { kind: "other" } })).toBe(false);
