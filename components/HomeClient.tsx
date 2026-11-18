@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Dices, Hourglass, Lock, Store, Wrench } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Dices, Hourglass, Lock, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
@@ -372,7 +372,6 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
 
       <section>
         {/* ツールは「お店」と「会計」の2つだけ。集金は会計の中から開く */}
-        <SectionTitle icon={<Wrench className="size-3.5" aria-hidden />}>ツール</SectionTitle>
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店探し" sub={home.shops} />
           <ToolTile href="/split" icon={tierIcon} title="会計" sub={home.split} />

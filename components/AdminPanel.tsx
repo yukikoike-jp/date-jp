@@ -26,6 +26,8 @@ type Props = {
   token: string;
   created: boolean;
   ranking: DateRank[];
+  /** 答えた人の数。0 人のうちは「みんなに送る」だけを大きく出す */
+  answered: number;
   bestDate: string | null;
   /** ○の数が同じでいちばん多い日(同率なら全部) */
   bestDates: string[];
@@ -79,7 +81,7 @@ function BoxHead({ icon, title, note, tone }: { icon: React.ReactNode; title: st
   );
 }
 
-export function AdminPanel({ partyId, title, token, created, ranking, bestDate, bestDates, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed, scene }: Props) {
+export function AdminPanel({ partyId, title, token, created, ranking, answered, bestDate, bestDates, shops, decision, attendees, start: partyStart, names, must, maybes, otherArea, notice, basis, relaxed, scene }: Props) {
   const router = useRouter();
   const [origin, setOrigin] = useState("");
   const canShare = useCanShare();
@@ -100,6 +102,18 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
   const adminUrl = `${origin}/p/${partyId}/admin?token=${token}`;
   const adminNote = `「${title}」の幹事用URL(自分用)`;
   const decidedMessage = decision ? decidedText(title, decision.date, decision.start, decision.shopName, guestUrl, scene.audience ?? undefined) : "";
+
+  // 幹事用の URL を自分に送る(共有できない端末では、コピー)
+  async function saveAdmin() {
+    if (canShare) {
+      await navigator.share({ title: adminNote, text: adminNote, url: adminUrl }).catch(() => {});
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(adminUrl);
+      toast("幹事用のURLをコピーしました。自分あてに送っておきましょう");
+    } catch {}
+  }
 
   function submit(choice: { date: string; shopId: string | null } | null) {
     setError(null);
@@ -127,36 +141,28 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
           share={{ text: inviteText(title, guestUrl, partyStart, scene.audience ?? undefined) }}
           copy={guestUrl}
           canShare={canShare}
+          subtleCopy
         />
-        {/* 幹事用の URL は、なくすと会を開けなくなるので、たたまずにいつも出しておく */}
-        {/* スマホで作ってパソコンでも開く、といった使い方があるので、自分に送る枠は目立たせておく */}
-        <div className="mt-5 rounded-2xl border border-accent/40 bg-match-soft p-4">
-          <BoxHead
-            tone="key"
-            icon={<KeyRound className="size-5" />}
-            title="幹事用のURLを自分に残す"
-            note="日にちとお店を決める自分用のページ"
-          />
-          <p className="mt-3 flex items-start gap-1.5 rounded-xl bg-bg/40 px-3 py-2 text-xs text-match-text">
-            <Check className="mt-0.5 size-3.5 shrink-0" aria-hidden />
-            <span>
-              この端末ではトップの「あなたの会」にも保存済み
-            </span>
-          </p>
-          <SendButtons
-            mainLabel="共有して自分に残す"
-            share={{ title: adminNote, text: adminNote, url: adminUrl }}
-            copy={adminUrl}
-            canShare={canShare}
-          />
-        </div>
+        {/* 幹事用の URL。この端末には保存済みなので、自分に送るのは1行のボタンだけにする(なくすと会を開けなくなるので、いつも出しておく) */}
+        <button
+          type="button"
+          onClick={saveAdmin}
+          className="mt-4 flex min-h-12 w-full items-center gap-3 rounded-2xl border border-accent/40 bg-match-soft px-4 py-3 text-left transition active:scale-[0.99]"
+        >
+          <KeyRound className="size-5 shrink-0 text-match-text" aria-hidden />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-black text-match-text">幹事用のURLを自分にも送っておく</span>
+            <span className="block text-[11px] text-match-text/80">この端末には保存済み。ほかの端末で開くときに</span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-match-text" aria-hidden />
+        </button>
       </section>
   );
 
   // 決まったあとは「決まったよ」を先に出す
   return (
     <>
-      {!decision && invite}
+      {!decision && answered === 0 && invite}
 
       {decision ? (
         <section className="anim-rise mx-4 rounded-3xl border panel px-4 py-6">
@@ -232,7 +238,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
         ranking.some((r) => r.ok > 0) && (
           <section className="mt-4 mx-4 rounded-3xl border panel px-4 py-6">
             <h2 className="text-lg font-black">幹事が決める</h2>
-            <p className="mt-1 text-sm text-muted">みんなの答えから選んだ、いちばん良さそうな日とお店。</p>
+            <p className="mt-1 text-sm text-muted">{answered}人が答えました。いちばん良さそうな日とお店を、先に選んであります。</p>
             <MustPicker partyId={partyId} token={token} names={names} must={must} />
             <StepHead tone="blue" icon={<CalendarDays className="size-4" aria-hidden />}>
               日にち
@@ -321,7 +327,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
           basis={basis}
           relaxed={relaxed}
           scene={scene}
-          initial={8}
+          initial={decision ? 8 : 3}
           pick={
             decision
               ? // 日にちだけ決めたあとは、押したお店でそのまま決める
@@ -345,6 +351,12 @@ export function AdminPanel({ partyId, title, token, created, ranking, bestDate, 
             </button>
           </div>
         </div>
+      )}
+      {/* 答えが来はじめたら、招待はたたむ(まだの人に送り直すときに開く) */}
+      {!decision && answered > 0 && (
+        <Fold title="まだの人に送る" note="招待のURL・幹事用のURL">
+          {invite}
+        </Fold>
       )}
       {/* 決まったあとは、招待と幹事用の URL はたたんでおく(あとから入る人に送るとき・自分用に残すときに開く) */}
       {decision && (

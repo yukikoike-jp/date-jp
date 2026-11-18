@@ -61,11 +61,6 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
             <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />
           </div>
         )}
-        {/* 幹事も自分の予定を入れたり直したりできるように、ここに置く(日にちを決めたあとも、お酒を飲むかなどを直せる)。
-            作った直後は、みんなに送る欄の下に、入力欄を開いた形で出す */}
-        {created !== "1" && <div className="mb-4">
-          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-        </div>}
         <AdminPanel
           // 必ず来てほしい人を変えたら、いちばん良い日を選び直す
           key={party.must.join("|")}
@@ -74,6 +69,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           token={token}
           created={created === "1"}
           ranking={summary.ranking}
+          answered={summary.answered}
           bestDate={summary.date}
           bestDates={summary.bestDates}
           shops={shops}
@@ -89,20 +85,15 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           relaxed={view.relaxed}
           scene={{ audience: party.audience, budget: summary.budget }}
         />
-        {created === "1" && (
-          <div className="mt-4">
-            <AnswerPanel host hostOpen partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-          </div>
-        )}
-        {/* 決まったあとは、みんなの答えはたたんでおく。お店まで決まったら、ほかの候補のお店は出さない */}
-        {party.decision ? (
+        {/* 幹事も自分の予定を入れられる。ふだんは1行のボタンにたたみ、押すと開く */}
+        <div className="mt-4">
+          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
+        </div>
+        {/* みんなの答えの細かい表は、いつもたたんでおく(いちばん良い日は「幹事が決める」に出ている) */}
+        {summary.answered > 0 && (
           <Fold title={`みんなの答え(${summary.answered}人)`} note="日にち・時間・予算・場所">
             <SummaryView summary={summary} />
           </Fold>
-        ) : (
-          <div className="mt-4">
-            <SummaryView summary={summary} />
-          </div>
         )}
         {/* お店の一覧は AdminPanel の中に1つだけ出す(選ぶのと予約のリンクを同じ一覧に) */}
         {/* お店まで決まったら、二次会のお店も出す */}

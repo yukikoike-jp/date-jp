@@ -50,13 +50,15 @@ function CopyButton({ text, label, className }: { text: string; label: string; c
  * 送り方のボタン。学生も社会人も、共有のボタンを大きく置き(LINE・Slack・Teams・メールなど、送り先はスマホの共有の画面で選ぶ)、
  * その下にコピーを控えめに置く。共有のボタンはいつも出し、共有の画面がないブラウザでは押すと送る文をコピーする
  */
-export function SendButtons({ mainLabel, share, copy, copyLabel = "URLをコピー", canShare }: {
+export function SendButtons({ mainLabel, share, copy, copyLabel = "URLをコピー", canShare, subtleCopy = false }: {
   mainLabel: string;
   share: ShareData;
   copy: string;
   /** コピーのボタンの文字 */
   copyLabel?: string;
   canShare: boolean;
+  /** コピーを、ボタンではなく小さな文字のリンクで出す(大きなボタンを1つにしたいとき) */
+  subtleCopy?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   const apple = useIsApple();
@@ -82,7 +84,15 @@ export function SendButtons({ mainLabel, share, copy, copyLabel = "URLをコピ�
         </span>
         {copied ? "コピー済み" : mainLabel}
       </button>
-      <CopyButton text={copy} label={copyLabel} className={`${BUTTON_SUB} w-full gap-2 text-sm`} />
+      <CopyButton
+        text={copy}
+        label={copyLabel}
+        className={
+          subtleCopy
+            ? "mx-auto flex min-h-11 items-center gap-1.5 px-3 text-xs font-bold text-muted underline underline-offset-2 hover:text-text"
+            : `${BUTTON_SUB} w-full gap-2 text-sm`
+        }
+      />
     </div>
   );
 }

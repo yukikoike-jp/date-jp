@@ -32,8 +32,13 @@ export default function Home() {
     <PageMotion>
       <HomeClient
         about={
-          // アプリの説明と幹事のガイド。閉じた小さな行で置き、押すと開く。閉じていても中身はページに入っているので、検索エンジンには読める
-          <div className="divide-y divide-white/8 overflow-hidden rounded-xl border panel">
+          // アプリの説明・幹事のガイド・プライバシー・応援。ふだんは1行にたたみ、押すと4つの行が開く。閉じていても中身はページに入っているので、検索エンジンには読める
+          <details className="group/about [&_summary::-webkit-details-marker]:hidden">
+            <summary className="mx-auto flex min-h-11 w-fit cursor-pointer list-none items-center gap-1 px-3 text-[11px] font-bold text-white/50 hover:text-white/75">
+              Tsudoro について・ガイド・プライバシー
+              <ChevronDown className="size-3 transition-transform group-open/about:rotate-180" aria-hidden />
+            </summary>
+          <div className="mt-1 divide-y divide-white/8 overflow-hidden rounded-xl border panel">
             <details className="group px-3 [&_summary::-webkit-details-marker]:hidden">
               <summary className="flex min-h-9 cursor-pointer list-none items-center justify-between text-[11px] font-bold text-white/60">
                 Tsudoro について
@@ -110,6 +115,7 @@ export default function Home() {
               </details>
             )}
           </div>
+          </details>
         }
       />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\u003c") }} />
