@@ -379,7 +379,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           <ToolTile
             href="/fun"
             icon={<Dices className="size-6" aria-hidden />}
-            title={audience === "worker" ? "幹事サポート" : "Play"}
+            title="Tsudoro Plus"
             sub={home.play}
             lockOnly
             wide
