@@ -2,8 +2,10 @@
 // 「30秒でわかる Tsudoro の使い方」リール(2026-11)。
 // 参考: 「1分でわかる ○○の仕組み」型の解説リール(暗い背景・太い見出し・ブランド名だけ色・動く図・①②③で順に説明・最後に「保存して」)
 // 1コマずつ SVG で描いて、ffmpeg に流しこむ(文字が出る・棒がのびる・数がふえる、などの動きをつける)
-// 音声は入れない(無音の音を入れておく)。音源は Instagram に投稿するときにアプリの中で付ける
-// 実行: node scripts/make-reels-v9.cjs   出力: marketing/reels/v9_howto.mp4
+// 語り: VOICEVOX:青山龍星(ノーマル)。エンジン(127.0.0.1:50021)を先に起動しておく
+// BGM: このスクリプトの中で作る(ローファイ風の和音・ベース・軽いリズム)。著作権の心配がない。語りの間は音量を下げる
+// 場面の長さは、語りの長さに合わせてのびる
+// 実行: node scripts/make-reels-v9.cjs   出力: marketing/reels/v9_howto.mp4(語り・BGMつき)
 
 const { spawn } = require("node:child_process");
 const fs = require("node:fs");
@@ -65,6 +67,7 @@ const card = (x, y, w, h, fill = "#1a1d22") => `<rect x="${x}" y="${y}" width="$
 const SCENES = [
   {
     sec: 3.2,
+    say: "30秒でわかる、ツドロの使い方。",
     draw(t) {
       const ring = easeOut(t / 2.6);
       const r = 190;
@@ -87,6 +90,7 @@ const SCENES = [
   },
   {
     sec: 6,
+    say: "まず、飲み会の名前と、候補の日を選んで、URLを1本つくります。登録は、いりません。",
     draw(t) {
       const name = "サークルの忘年会";
       const typed = name.slice(0, Math.floor(clamp((t - 0.7) / 1.1) * name.length));
@@ -133,6 +137,7 @@ const SCENES = [
   },
   {
     sec: 6.4,
+    say: "そのURLを、ラインのグループに貼るだけ。みんなは登録なしで、30秒で答えられます。",
     draw(t) {
       const n = Math.round(clamp((t - 1.2) / 3.6) * 12);
       const friend = (start, y, s, w) =>
@@ -163,6 +168,7 @@ const SCENES = [
   },
   {
     sec: 6.8,
+    say: "答えが集まると、いちばん良い日が出ます。お店も、みんなの予算と駅から、自動で選びます。",
     draw(t) {
       const rows = [
         ["12/18(木)", 6],
@@ -204,6 +210,7 @@ const SCENES = [
   },
   {
     sec: 6,
+    say: "会計も、ワンタップ。飲まない人は少なめにできて、端数も自動で調整します。",
     draw(t) {
       const total = 46000 * easeOut((t - 0.4) / 1.0);
       const row = (start, y, label, sub, amount, color) =>
@@ -234,6 +241,7 @@ const SCENES = [
   },
   {
     sec: 4.6,
+    say: "幹事になったら、保存して見返してね。リンクは、プロフから。",
     draw(t) {
       return (
         pop(t, 0, 540, 600, `<image href="${ICON_URI}" x="390" y="450" width="300" height="300"/>`, 0.45) +
@@ -246,7 +254,7 @@ const SCENES = [
   },
 ];
 
-const TOTAL = SCENES.reduce((s, sc) => s + sc.sec, 0);
+let TOTAL = SCENES.reduce((s, sc) => s + sc.sec, 0);
 
 function background(globalT) {
   // 暗い紺の地に、上から金色の光。いちばん上に、全体の進み具合の細い線
@@ -261,18 +269,154 @@ function background(globalT) {
     <rect x="60" y="150" width="${prog.toFixed(1)}" height="8" rx="4" fill="${GOLD}"/>`;
 }
 
+// ---- 語り(VOICEVOX)
+const VOICE = { url: "http://127.0.0.1:50021", speaker: 13, speed: 1.12 };
+const RATE = 44100;
+async function speak(t) {
+  const q = await fetch(`${VOICE.url}/audio_query?speaker=${VOICE.speaker}&text=${encodeURIComponent(t)}`, { method: "POST" });
+  if (!q.ok) throw new Error("audio_query " + q.status);
+  const query = await q.json();
+  query.speedScale = VOICE.speed;
+  query.outputSamplingRate = RATE;
+  query.outputStereo = false;
+  const r = await fetch(`${VOICE.url}/synthesis?speaker=${VOICE.speaker}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(query) });
+  if (!r.ok) throw new Error("synthesis " + r.status);
+  const wav = Buffer.from(await r.arrayBuffer());
+  const at = wav.indexOf("data") + 8;
+  const n = Math.floor((wav.length - at) / 2);
+  const out = new Float32Array(n);
+  for (let i = 0; i < n; i++) out[i] = wav.readInt16LE(at + i * 2) / 32768;
+  return out;
+}
+
+// ---- BGM(ローファイ風)。96BPM、Fmaj7 → Em7 → Dm7 → Cmaj7 を2小節ずつ
+function bgm(seconds) {
+  const n = Math.ceil(seconds * RATE);
+  const L = new Float32Array(n);
+  const R = new Float32Array(n);
+  const beat = 60 / 96;
+  const hz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const chords = [
+    [53, 57, 60, 64],
+    [52, 55, 59, 62],
+    [50, 53, 57, 60],
+    [48, 52, 55, 59],
+  ];
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  const bar = beat * 4;
+  for (let i = 0; i < n; i++) {
+    const t = i / RATE;
+    const ci = Math.floor(t / (bar * 2)) % 4;
+    const ct = t % (bar * 2);
+    const env = Math.min(1, ct / 0.4) * Math.min(1, (bar * 2 - ct) / 0.3);
+    let pad = 0;
+    chords[ci].forEach((m, k) => {
+      const f = hz(m + 12);
+      pad += (Math.sin(2 * Math.PI * f * t) + 0.25 * Math.sin(2 * Math.PI * f * 2.003 * t)) * 0.045;
+      // 左右に少し広げる
+      if (k % 2) pad += Math.sin(2 * Math.PI * f * 1.004 * t) * 0.012;
+    });
+    pad *= env * (0.85 + 0.15 * Math.sin(2 * Math.PI * 0.25 * t));
+    // ベース: 1拍目と3拍目
+    const bt = t % (beat * 2);
+    const bass = Math.sin(2 * Math.PI * hz(chords[ci][0] - 12) * t) * Math.exp(-bt * 3.2) * 0.16;
+    // キック: 1拍目と3拍目
+    const kick = bt < 0.25 ? Math.sin(2 * Math.PI * (50 + 70 * Math.exp(-bt * 30)) * bt) * Math.exp(-bt * 14) * 0.32 : 0;
+    // スネア(やわらかい): 2拍目と4拍目
+    const st = (t + beat) % (beat * 2);
+    const snare = st < 0.2 ? rnd() * Math.exp(-st * 22) * 0.07 : 0;
+    // ハイハット: 8分の裏
+    const ht = (t + beat / 2) % beat;
+    const hat = ht < 0.05 ? rnd() * Math.exp(-ht * 90) * 0.035 : 0;
+    const mono = pad + bass + kick + snare;
+    L[i] = mono + hat * 0.7;
+    R[i] = mono + hat;
+  }
+  return [L, R];
+}
+
+function wav16Stereo(L, R) {
+  const n = L.length;
+  const b = Buffer.alloc(44 + n * 4);
+  b.write("RIFF", 0);
+  b.writeUInt32LE(36 + n * 4, 4);
+  b.write("WAVEfmt ", 8);
+  b.writeUInt32LE(16, 16);
+  b.writeUInt16LE(1, 20);
+  b.writeUInt16LE(2, 22);
+  b.writeUInt32LE(RATE, 24);
+  b.writeUInt32LE(RATE * 4, 28);
+  b.writeUInt16LE(4, 32);
+  b.writeUInt16LE(16, 34);
+  b.write("data", 36);
+  b.writeUInt32LE(n * 4, 40);
+  const c = (x) => Math.max(-32768, Math.min(32767, Math.round(x * 32767)));
+  for (let i = 0; i < n; i++) {
+    b.writeInt16LE(c(L[i]), 44 + i * 4);
+    b.writeInt16LE(c(R[i]), 46 + i * 4);
+  }
+  return b;
+}
+
+async function makeAudio() {
+  const LEAD = 0.3;
+  const voices = [];
+  for (const sc of SCENES) {
+    const v = await speak(sc.say);
+    voices.push(v);
+    sc.sec = Math.max(sc.sec, LEAD + v.length / RATE + 0.5);
+  }
+  TOTAL = SCENES.reduce((a, sc) => a + sc.sec, 0);
+  const n = Math.ceil(TOTAL * RATE);
+  const voice = new Float32Array(n);
+  let at = 0;
+  SCENES.forEach((sc, i) => {
+    voice.set(voices[i].subarray(0, Math.min(voices[i].length, n - Math.round((at + LEAD) * RATE))), Math.round((at + LEAD) * RATE));
+    at += sc.sec;
+  });
+  const [bl, br] = bgm(TOTAL);
+  // 語りの間は BGM を下げる(なめらかに)
+  const L = new Float32Array(n);
+  const R = new Float32Array(n);
+  let envl = 0;
+  let duck = 1;
+  for (let i = 0; i < n; i++) {
+    envl = Math.max(Math.abs(voice[i]), envl * 0.9997);
+    const target = envl > 0.02 ? 0.45 : 1;
+    duck += (target - duck) * 0.0004;
+    const t = i / RATE;
+    const fadeIn = Math.min(1, t / 0.6);
+    const fadeOut = Math.min(1, (TOTAL - t) / 1.8);
+    const g = 0.38 * duck * fadeIn * fadeOut;
+    L[i] = voice[i] * 0.95 + bl[i] * g;
+    R[i] = voice[i] * 0.95 + br[i] * g;
+  }
+  let peak = 0;
+  for (let i = 0; i < n; i++) peak = Math.max(peak, Math.abs(L[i]), Math.abs(R[i]));
+  const k = peak > 0.97 ? 0.97 / peak : 1;
+  for (let i = 0; i < n; i++) {
+    L[i] *= k;
+    R[i] *= k;
+  }
+  const file = path.join(require("node:os").tmpdir(), `reel9-${process.pid}.wav`);
+  fs.writeFileSync(file, wav16Stereo(L, R));
+  return file;
+}
+
 async function main() {
   fs.mkdirSync(OUT, { recursive: true });
+  const audio = await makeAudio();
   const out = path.join(OUT, "v9_howto.mp4");
   const ff = spawn(
     "ffmpeg",
     [
       "-y", "-loglevel", "error",
       "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", `${W}x${H}`, "-r", String(FPS), "-i", "-",
-      "-f", "lavfi", "-i", "anullsrc=r=44100:cl=stereo",
+      "-i", audio,
       "-t", TOTAL.toFixed(2),
       "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p",
-      "-c:a", "aac", "-b:a", "128k", "-shortest", "-movflags", "+faststart", out,
+      "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-ar", "44100", "-c:a", "aac", "-b:a", "192k", "-shortest", "-movflags", "+faststart", out,
     ],
     { stdio: ["pipe", "inherit", "inherit"] },
   );
