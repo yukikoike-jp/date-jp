@@ -225,7 +225,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
         `${title.trim() ? `「${title.trim()}」の` : ""}お会計 ${yen(totalYen)}(${people.length}人)`,
         ...(subsidy > 0 ? [`補助 ${yen(subsidy)} を引いて、${yen(totalYen - subsidy)} をみんなで`] : []),
         ...people.map((p, i) => `${weighted ? `${weightOf(p).mark} ` : "・"}${nameOf(p, i)} ${yen(result.amounts[i])}`),
-        ...(result.surplus > 0 ? [`(全員同じ額にしたので、${yen(result.surplus)} のお釣りが出ます)`] : []),
+        ...(result.surplus > 0 ? [`(全員同じ額にしたので ${yen(result.surplus)} のお釣りが出ます)`] : []),
       ].join("\n")
     : "";
 
@@ -566,7 +566,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
             </div>
           </>
         ) : (
-          <p className="px-5 pt-2 pb-5 text-sm text-muted">合計を入れると、一人ずつの金額を表示。</p>
+          <p className="px-5 pt-2 pb-5 text-sm text-muted">合計を入れると一人ずつの金額を表示。</p>
         )}
       </section>
 
@@ -589,7 +589,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
             </p>
           )}
           {!result ? (
-            <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">上でお会計の合計を入れると、集金のページを作成。</p>
+            <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">上でお会計の合計を入れると集金のページを作成。</p>
           ) : collection ? (
             <div className="mt-4 grid gap-2">
               <Link href={`/c/${collection.id}?token=${collection.token}`} className={`${BUTTON_PRIMARY} w-full gap-2`}>

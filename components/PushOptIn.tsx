@@ -113,7 +113,7 @@ export function PushOptIn({
               <ExternalLink className="size-4" aria-hidden />
             </a>
           )}
-          {payLink && <p className="mt-1.5 text-xs text-muted">払ったら、幹事さんが受け取りを記録すると ✓ が付きます。</p>}
+          {payLink && <p className="mt-1.5 text-xs text-muted">払ったあと幹事さんが受け取りを記録すると ✓ が付きます。</p>}
         </div>
       )}
 
@@ -127,24 +127,24 @@ export function PushOptIn({
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border-2 border-accent bg-transparent px-4 text-base font-black text-accent active:scale-[0.97] disabled:opacity-50"
             >
               <Bell className="size-4" aria-hidden />
-              {state === "busy" ? "登録しています…" : "払うまで、通知でお知らせしてもらう"}
+              {state === "busy" ? "登録しています…" : "払うまで通知でお知らせしてもらう"}
             </button>
           ) : support === "needs-install" ? (
             <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs leading-relaxed text-muted">
               iPhone で通知を受け取るには、画面の下の共有ボタンから「ホーム画面に追加」をして、追加したアイコンからこのページを開いてください
             </p>
           ) : (
-            <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs text-muted">このブラウザでは、通知を受け取れません。</p>
+            <p className="rounded-2xl bg-surface-2 px-4 py-3 text-xs text-muted">このブラウザでは通知を受け取れません。</p>
           )}
-          {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると、受け取れます。</p>}
+          {state === "denied" && <p className="mt-2 text-xs font-bold text-danger">通知が許可されませんでした。ブラウザの設定から許可すると受け取れます。</p>}
           {state === "error" && <p className="mt-2 text-xs font-bold text-danger">登録できませんでした。少し待ってからもう一度お試しください。</p>}
-          <p className="mt-2 text-xs text-muted">通知は、払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません。</p>
+          <p className="mt-2 text-xs text-muted">通知は払っていないあいだだけ届きます。幹事に名前や連絡先は伝わりません。</p>
         </div>
       )}
       {pushKey && state === "done" && (
         <p className="mt-4 flex items-center gap-1.5 text-sm font-bold text-accent" role="status">
           <Check className="size-4" aria-hidden />
-          通知をオンにしました。払い終わると、お知らせは止まります
+          通知をオンにしました。払い終わるとお知らせは止まります
         </p>
       )}
     </section>

@@ -17,7 +17,7 @@ const jsonLd = {
   applicationCategory: "LifestyleApplication",
   operatingSystem: "iOS, Android, Windows, macOS",
   inLanguage: "ja",
-  description: "飲み会の日程調整・お店探し・割り勘が、登録なしでできる無料のアプリ。URLをLINEに貼るだけで、みんなの行ける日と予算がまとまります。",
+  description: "飲み会の日程調整・お店探し・割り勘が登録なしでできる無料のアプリ。URLをLINEに貼るだけでみんなの行ける日と予算がまとまります。",
   offers: { "@type": "Offer", price: "0", priceCurrency: "JPY" },
 };
 

@@ -157,8 +157,8 @@ export function AnswerPanel({
           {saved
             ? passed
               ? `${mine.name}さん、今回は行けないと受け取りました。また誘いますね`
-              : `${mine.name}さんの答えを受け取りました、ありがとう!`
-            : `${mine.name}さんの答え、保存済み`}
+              : `${mine.name}さんの答えを受け取りました。ありがとう!`
+            : `${mine.name}さんの答えは保存済み`}
         </p>
         <button type="button" onClick={edit} disabled={pending} className={`${BUTTON_SUB} mt-3 w-full gap-2`}>
           <Pencil className="size-4" aria-hidden />
@@ -234,7 +234,7 @@ export function AnswerPanel({
               className="mt-3 min-h-11 w-full rounded-xl text-sm text-muted underline-offset-4 transition-colors enabled:hover:text-text enabled:hover:underline disabled:opacity-60"
             >
               {form.name.trim() === ""
-                ? "今回は行けないときは、名前を入れてここを押してください"
+                ? "今回行けないときは名前を入れてここを押してください"
                 : "今回は行けないときはこちら(理由は聞きません)"}
             </button>
           )}
@@ -358,7 +358,7 @@ export function AnswerPanel({
               飲まない
             </Choice>
           </div>
-          <p className="mt-2 text-xs text-muted">「飲まない」なら、会計で「飲まない」の区分に。</p>
+          <p className="mt-2 text-xs text-muted">「飲まない」なら会計で「飲まない」の区分に。</p>
 
           {/* 社会人の会(プライベート・会社)では、喫煙できるお店かどうかが大事なので聞く(人数だけを幹事に見せる) */}
           {isAdult(audience) && (

@@ -118,7 +118,7 @@ export function WheelPicker<T extends number>({
         className={`pointer-events-none absolute inset-x-2 rounded-xl border-y-2 ${chosen >= 0 ? "border-accent/70 bg-accent/10" : "border-white/25 bg-white/5"}`}
         style={{ top: ROW * Math.floor(VISIBLE / 2), height: ROW }}
       />
-      <p className="mt-2 text-center text-xs font-bold text-muted">{chosen >= 0 ? "✓ 決まりました(回すと変えられます)" : "回して、真ん中に合わせてください"}</p>
+      <p className="mt-2 text-center text-xs font-bold text-muted">{chosen >= 0 ? "✓ 決まりました(回すと変えられます)" : "回して真ん中に合わせてください"}</p>
     </div>
   );
 }

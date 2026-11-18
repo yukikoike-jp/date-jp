@@ -75,7 +75,7 @@ export function RankBars({ ranking, total, bests }: { ranking: DateRank[]; total
   }, []);
   if (ranking.length === 0) return null;
   return (
-    <ul ref={ref} className="space-y-3" aria-label={`候補の日ごとの、行ける人の数(${total}人中)`}>
+    <ul ref={ref} className="space-y-3" aria-label={`候補の日ごとの行ける人の数(${total}人中)`}>
       {ranking.map((r, i) => (
         <Row key={r.date} r={r} total={total} best={bests.includes(r.date)} i={i} go={go} />
       ))}

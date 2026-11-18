@@ -98,7 +98,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
         {/* お店の一覧は AdminPanel の中に1つだけ出す(選ぶのと予約のリンクを同じ一覧に) */}
         {/* お店まで決まったら、二次会のお店も出す */}
         {party.decision && (
-          <Fold title="二次会のお店" note="一次会のお店の近くで、遅くまで開いているお店">
+          <Fold title="二次会のお店" note="一次会のお店の近くで遅くまで開いているお店">
             <SecondPartyShops partyId={party.id} />
           </Fold>
         )}

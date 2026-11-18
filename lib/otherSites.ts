@@ -33,7 +33,7 @@ export function otherSites(station: string | null): OtherSite[] {
     {
       key: "ikyu",
       label: "記念日・接待向けの高級店",
-      note: station ? `${station}駅の近くの、ちょっといいお店を予約サイトで探す` : "ちょっといいお店を予約サイトで探す",
+      note: station ? `${station}駅の近くのちょっといいお店を予約サイトで探す` : "ちょっといいお店を予約サイトで探す",
       href: vcLink("892749796", station ? `https://restaurant.ikyu.com/search?term=${encodeURIComponent(station)}` : "https://restaurant.ikyu.com/"),
     },
     {

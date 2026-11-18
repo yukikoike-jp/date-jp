@@ -76,9 +76,9 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
         <Lock className="size-5 text-accent" aria-hidden />
         {feature}は買い切り{yen(price)}
       </p>
-      <p className="mt-1 text-sm text-muted">{work ? "1回のお支払いだけで、ずっとご利用いただけます。月額や自動更新はございません。" : "1回のお支払いだけで、ずっと使えます。月額も、自動更新もありません。"}</p>
+      <p className="mt-1 text-sm text-muted">{work ? "1回のお支払いだけでずっとご利用いただけます。月額や自動更新はございません。" : "1回のお支払いだけでずっと使えます。月額も自動更新もありません。"}</p>
       <ul className="mt-4 space-y-1.5 text-sm">
-        {(work ? ["話題・ごあいさつ・お礼・席替え・進行表など6つ", "キャンセル料のお願いも、やわらかい文でお伝えできます", "これからふえる機能も、追加料金なし"] : ["ワードウルフ・NGワード・王様ゲームなど6つの遊び", "席替えやチーム分けも、ワンタップ", "これからふえる遊びも、追加料金なし"]).map((t) => (
+        {(work ? ["話題・ごあいさつ・お礼・席替え・進行表など6つ", "キャンセル料のお願いもやわらかい文でお伝えできます", "これからふえる機能も追加料金なし"] : ["ワードウルフ・NGワード・王様ゲームなど6つの遊び", "席替えやチーム分けもワンタップ", "これからふえる遊びも追加料金なし"]).map((t) => (
           <li key={t} className="flex items-center gap-2">
             <Check className="size-4 shrink-0 text-accent" aria-hidden />
             {t}
@@ -94,7 +94,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
         {!purchasable ? `${yen(price)} ・ 購入の受付はもうすぐ始まります` : pending && !restoring ? "お支払いのページを開いています…" : `${yen(price)}で買う(1回だけ)`}
       </button>
       <p className="mt-2 text-center text-xs text-muted">
-        お支払いは Stripe のページで ・ カードの番号は Tsudoro に届きません。買ったあとの請求は、ありません。{" "}
+        お支払いは Stripe のページで ・ カードの番号は Tsudoro に届きません。買ったあとの請求はありません。{" "}
         <a href="/legal" className="underline underline-offset-2">
           特定商取引法に基づく表記
         </a>

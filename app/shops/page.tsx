@@ -6,7 +6,7 @@ import { PageMotion } from "@/components/PageMotion";
 
 export const metadata: Metadata = {
   title: "飲み会のお店を探す",
-  description: "駅・予算・料理・人数から、飲み会に合うお店をすぐ探せます。個室・飲み放題・喫煙可でも絞り込めます。",
+  description: "駅・予算・料理・人数から飲み会に合うお店をすぐ探せます。個室・飲み放題・喫煙可でも絞り込めます。",
   alternates: { canonical: "/shops" },
 };
 
@@ -17,7 +17,7 @@ export default function ShopsPage() {
       <div className="mx-auto max-w-xl pt-6 pb-16">
         <div className="px-4 pb-5">
           <h1 className="text-[22px] font-black tracking-tight">お店を探す</h1>
-          <p className="mt-1 text-sm text-muted">条件を選ぶと、下のお店がその場で更新。</p>
+          <p className="mt-1 text-sm text-muted">条件を選ぶと下のお店がその場で更新。</p>
         </div>
         <FavoriteShops />
         <ShopSearch />

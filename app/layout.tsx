@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL || "https://www.tsudoro.com"),
   title: { default: "Tsudoro | 飲み会の日程とお店がすぐ決まる", template: "%s | Tsudoro" },
   description:
-    "飲み会の日程調整・お店探し・割り勘を、登録なしで。URLをLINEに貼ってみんなが30秒で答えるだけで、日にちと予算とお店が決まります。幹事の負担を減らす無料のアプリ。",
+    "飲み会の日程調整・お店探し・割り勘を登録なしで。URLをLINEに貼ってみんなが30秒で答えるだけで、日にちと予算とお店が決まります。幹事の負担を減らす無料のアプリ。",
   applicationName: "Tsudoro",
   keywords: ["飲み会", "日程調整", "幹事", "お店探し", "割り勘", "傾斜", "忘年会", "新年会", "歓迎会", "サークル", "LINE"],
   // Google Search Console の確認用。値は Vercel の環境変数に入れる

@@ -52,13 +52,13 @@ export type ReminderInput = {
 export function personalReminder({ audience, title, name, amount, tone, payLink, pageUrl }: ReminderInput): string {
   const formal = isFormal(audience);
   const what = title.trim() ? `「${title.trim()}」` : formal ? "先日の会" : "この前の飲み会";
-  const how = payLink ? (formal ? `お支払いはこちらからお願いいたします。\n${payLink}` : `払うのはここからできるよ\n${payLink}`) : formal ? "お手すきの際に、幹事までお支払いください。" : "会ったときでもいいよ";
+  const how = payLink ? (formal ? `お支払いはこちらからお願いいたします。\n${payLink}` : `払うのはここからできるよ\n${payLink}`) : formal ? "お手すきの際に幹事までお支払いください。" : "会ったときでもいいよ";
   const page = formal ? `金額の確認はこちらです。\n${pageUrl}` : `金額の確認はこれ\n${pageUrl}`;
   const amountText = yen(amount);
 
   if (formal) {
-    const lead = tone === "soft" ? `お疲れさまです。${what}のお会計のご連絡です。` : tone === "normal" ? `お疲れさまです。${what}のお会計の件で、改めてご連絡いたします。` : `お疲れさまです。${what}のお会計につきまして、最後のご連絡です。`;
-    const body = tone === "last" ? `${name}さんのお支払い ${amountText} が、まだ確認できておりません。恐れ入りますが、今週中にお願いできますでしょうか。` : `${name}さんのお支払いは ${amountText} です。`;
+    const lead = tone === "soft" ? `お疲れさまです。${what}のお会計のご連絡です。` : tone === "normal" ? `お疲れさまです。${what}のお会計の件で改めてご連絡いたします。` : `お疲れさまです。${what}のお会計につきまして、最後のご連絡です。`;
+    const body = tone === "last" ? `${name}さんのお支払い ${amountText} がまだ確認できておりません。恐れ入りますが、今週中にお願いできますでしょうか。` : `${name}さんのお支払いは ${amountText} です。`;
     return [lead, body, how, page, "行き違いでお済みの場合は、ご容赦ください。"].join("\n");
   }
   const lead = tone === "soft" ? `${name}さん、${what}のお会計のお知らせ!` : tone === "normal" ? `${name}さん、${what}のお会計、もう一回だけ送るね` : `${name}さん、${what}のお会計、最後のお願い!`;

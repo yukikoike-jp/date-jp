@@ -61,8 +61,8 @@ export function collectText(title: string, url: string, audience: Audience = "pr
   const what = title ? `「${title}」の` : "";
   // 自動でお知らせをオンにしているときは、通知のオンを一言そえる(払い忘れを、幹事ではなくアプリが知らせる)
   return isFormal(audience)
-    ? [`${what}お会計のご案内です。`, "ご自身の金額をご確認のうえ、幹事までお支払いください。", ...(autoRemind ? ["ページで「通知をオンにする」を押すと、お支払いまでの間、アプリがお知らせします。"] : []), url].join("\n")
-    : [`${what}お会計です`, "自分の金額を見て、幹事に払ってね", ...(autoRemind ? ["ページで「通知をオン」にすると、払い忘れをアプリが教えてくれるよ"] : []), url].join("\n");
+    ? [`${what}お会計のご案内です。`, "ご自身の金額をご確認のうえ幹事までお支払いください。", ...(autoRemind ? ["ページで「通知をオンにする」を押すと、お支払いまでの間アプリがお知らせします。"] : []), url].join("\n")
+    : [`${what}お会計です`, "自分の金額を見て幹事に払ってね", ...(autoRemind ? ["ページで「通知をオン」にすると払い忘れをアプリが教えてくれるよ"] : []), url].join("\n");
 }
 
 export function decidedText(title: string, date: string, start: number, shopName: string | null, url: string, audience: Audience = "private"): string {
@@ -83,7 +83,7 @@ export function dayBeforeText(title: string, date: string, start: number, shopNa
 /** まだ答えていない人に、もう一度お願いする文。誰がまだかは書かない(グループに送るので、名指しにしない) */
 export function answerNudgeText(title: string, url: string, answered: number, audience: Audience = "private"): string {
   if (isFormal(audience)) {
-    return [`「${title}」の日程について、現在${answered}名の方からご回答をいただいています。`, "まだの方は、お手数ですが、ご入力をお願いいたします。", url].join("\n");
+    return [`「${title}」の日程について、現在${answered}名の方からご回答をいただいています。`, "まだの方はお手数ですが、ご入力をお願いいたします。", url].join("\n");
   }
   return [`「${title}」の日程、いま${answered}人が回答済み`, "まだの人は30秒で入れてください", url].join("\n");
 }

@@ -204,7 +204,7 @@ export function ShopSearch() {
       <div className="mt-4" aria-busy={pending}>
         {!station && (
           <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">
-            上の「どこで飲む?」で駅を選ぶと、近くのお店を表示
+            上の「どこで飲む?」で駅を選ぶと近くのお店を表示
           </p>
         )}
         {/* 探しているあいだは、お店のカードの形だけを先に出す */}

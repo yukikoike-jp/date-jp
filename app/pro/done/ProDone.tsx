@@ -32,7 +32,7 @@ export function ProDone({ license, back }: { license: string | null; back: strin
         <Check className="size-6 text-accent" aria-hidden />
         購入ありがとうございます
       </p>
-      <p className="mt-2 text-sm text-muted">この端末で、Tsudoro Plus(Play と幹事サポート)がずっと使えます。元の画面にもどります。</p>
+      <p className="mt-2 text-sm text-muted">この端末で Tsudoro Plus(Play と幹事サポート)がずっと使えます。元の画面にもどります。</p>
     </>
   );
 }

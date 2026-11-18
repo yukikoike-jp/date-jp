@@ -44,7 +44,7 @@ export function MoveClient() {
       <div>
         <p className="text-lg font-black">{done === null ? "引き継いでいます…" : "引き継ぎました"}</p>
         <p className="mt-2 text-sm text-muted">
-          {done === null ? "少しお待ちください" : "新しいアドレス tsudoro.com で、作った会や回答をそのまま使えます"}
+          {done === null ? "少しお待ちください" : "新しいアドレス tsudoro.com で作った会や回答をそのまま使えます"}
         </p>
       </div>
     </main>

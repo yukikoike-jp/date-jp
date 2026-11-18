@@ -134,7 +134,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
           tone="plain"
           icon={<Users className="size-5" />}
           title="みんなに送る"
-          note="グループやチャットに送るだけで、みんなが回答"
+          note="グループやチャットに送るだけでみんなが回答"
         />
         <SendButtons
           mainLabel="共有してみんなに送る"
@@ -215,7 +215,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
             決定を取り消す
           </button>
           <BottomSheet open={confirmUndo} onClose={() => setConfirmUndo(false)} title="決定を取り消しますか?">
-            <p className="text-sm leading-relaxed text-muted">日にちとお店の決定を取り消して、選び直せる状態に戻します。みんなの回答は消えません。</p>
+            <p className="text-sm leading-relaxed text-muted">日にちとお店の決定を取り消して選び直せる状態に戻します。みんなの回答は消えません。</p>
             <div className="mt-5 grid gap-2">
               <button
                 type="button"
@@ -238,13 +238,13 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
         ranking.some((r) => r.ok > 0) && (
           <section className="mt-4 mx-4 rounded-3xl border panel px-4 py-6">
             <h2 className="text-lg font-black">幹事が決める</h2>
-            <p className="mt-1 text-sm text-muted">{answered}人が答えました。いちばん良さそうな日とお店を、先に選んであります。</p>
+            <p className="mt-1 text-sm text-muted">{answered}人が答えました。いちばん良さそうな日とお店を先に選んであります。</p>
             <MustPicker partyId={partyId} token={token} names={names} must={must} />
             <StepHead tone="blue" icon={<CalendarDays className="size-4" aria-hidden />}>
               日にち
             </StepHead>
             {bestDates.length > 1 && (
-              <p className="mb-2 text-xs text-muted">★ のついた日は、行ける人(○)もたぶん(△)も同じ数で、いちばん良い日です。どれを選んでもOK。</p>
+              <p className="mb-2 text-xs text-muted">★ のついた日は行ける人(○)もたぶん(△)も同じ数で、いちばん良い日です。どれを選んでもOK。</p>
             )}
             <div className="tier-blue grid grid-cols-2 gap-1.5">
               {ranking
@@ -304,7 +304,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
               )}
               {shops.length > 0 && (
                 <a href="#shops" className="block py-1 text-center text-xs font-bold text-muted underline underline-offset-2">
-                  下の一覧から、ほかのお店も選べます({shops.length}軒)
+                  下の一覧からほかのお店も選べます({shops.length}軒)
                 </a>
               )}
             </div>

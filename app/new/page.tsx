@@ -6,7 +6,7 @@ import { StepBar } from "@/components/StepBar";
 
 export const metadata: Metadata = {
   title: "飲み会の日程調整をはじめる",
-  description: "候補日を選んでURLをLINEに貼るだけ。登録なしで、みんなの行ける日と予算がまとまります。",
+  description: "候補日を選んでURLをLINEに貼るだけ。登録なしでみんなの行ける日と予算がまとまります。",
   alternates: { canonical: "/new" },
 };
 
@@ -19,7 +19,7 @@ export default function NewPage() {
       <div className="mx-auto max-w-xl px-4 pt-6">
         <h1 className="px-0.5 text-[22px] font-black tracking-tight">候補の日を選ぶ</h1>
         <p className="mt-1 mb-5 px-0.5 text-[11px] font-semibold text-white/40">
-          できたURLをLINEのグループに貼るだけで、みんなが回答
+          できたURLをLINEのグループに貼るだけでみんなが回答
         </p>
         <CreateForm />
       </div>

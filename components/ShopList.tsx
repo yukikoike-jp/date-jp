@@ -190,7 +190,7 @@ export function ShopList({
               target="_blank"
               rel="nofollow noopener"
             >
-              {s.sample ? "見本のため、お店のページなし" : "お店のページで予約する"}
+              {s.sample ? "見本のためお店のページなし" : "お店のページで予約する"}
               {!s.sample && <ExternalLink className="size-4" aria-hidden />}
             </a>
             {/* 場所や口コミは Google マップで見てもらう(見本のお店は実在しないので出さない) */}

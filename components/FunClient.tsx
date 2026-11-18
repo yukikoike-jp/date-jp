@@ -111,31 +111,8 @@ export function FunClient() {
           <span className={company ? "" : "font-logo"}>{company ? "幹事サポート" : "Play"}</span>
           {!access.loading && <PackBadge locked={locked} />}
         </h1>
-        <p className="mt-1 text-sm text-muted">{company ? "幹事のお仕事を、しっかりサポートいたします" : "幹事がいる会をもっと楽しく"}</p>
+        <p className="mt-1 text-sm text-muted">{company ? "幹事のお仕事をしっかりサポートいたします" : "幹事がいる会をもっと楽しく"}</p>
       </div>
-
-      {/* 買う前は、本物の画面にもやをかけて見せる。何が起きているか、どうすれば使えるかを最初に伝える */}
-      {!access.loading && locked && (
-        <section className="mx-4 mt-4 rounded-3xl border border-accent/50 bg-surface px-5 py-5" aria-label="Tsudoro Plus の案内">
-          <p className="flex items-center gap-2 text-base font-black">
-            <Lock className="size-5 text-accent" aria-hidden />
-            Tsudoro Plus で使えます
-          </p>
-          <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-            {company ? `もやの向こうが、実際の画面です。Tsudoro Plus(${yen(access.price)}・買い切り)で、すべての機能をご利用いただけます。` : `もやの向こうが、本物の画面です。Tsudoro Plus(${yen(access.price)}・買い切り)で、ぜんぶ遊べます。`}
-          </p>
-          {!showBuy && (
-            <button
-              type="button"
-              onClick={() => setShowBuy(true)}
-              className="mt-3 inline-flex min-h-11 items-center rounded-2xl bg-accent px-4 text-sm font-black text-accent-text active:scale-95"
-            >
-              Tsudoro Plus をくわしく
-            </button>
-          )}
-        </section>
-      )}
-      {locked && showBuy && <ProPaywall feature="Tsudoro Plus" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />}
 
       {/* 道具の切り替え */}
       {/* 3つずつ並べる。余りが2つのとき(5つのとき)は、下の段の2つを広げて、きれいにそろえる */}
@@ -199,7 +176,10 @@ export function FunClient() {
       )}
 
       <div className="mt-4">
-        {locked ? (
+        {locked && showBuy ? (
+          // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
+          <ProPaywall feature="Tsudoro Plus" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+        ) : locked ? (
           // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
           <div className="relative">
             <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
@@ -221,11 +201,7 @@ export function FunClient() {
             <div className="absolute inset-0 flex items-center justify-center px-8">
               <button
                 type="button"
-                onClick={() => {
-                  // 案内は画面の上に開くので、そこまで戻る
-                  setShowBuy(true);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
+                onClick={() => setShowBuy(true)}
                 className="flex min-h-14 items-center gap-3 rounded-2xl bg-bg/90 px-5 py-3 text-left ring-1 ring-accent/60 shadow-[0_0_32px_-12px_var(--accent)] active:scale-95"
               >
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
@@ -397,7 +373,7 @@ function King({ names, locked }: { names: string[]; locked: boolean }) {
       {draw && (
         <div className="mt-4 rounded-2xl border border-border px-4 py-3">
           <p className="text-xs font-bold text-muted">王様の命令のヒント</p>
-          <p className="mt-1 min-h-6 text-sm font-bold">{order ?? "「命令をひとつ出す」を押すと、例が出ます"}</p>
+          <p className="mt-1 min-h-6 text-sm font-bold">{order ?? "「命令をひとつ出す」を押すと例が出ます"}</p>
           <button
             type="button"
             onClick={() => setOrder(KING_ORDERS[pickIndex(KING_ORDERS.length)])}
@@ -868,7 +844,7 @@ function Speech({ locked }: { locked: boolean }) {
 
   return (
     <Box title="ひとこと" tone={TOOL_TONE.speech} locked={locked}>
-      <p className="text-sm text-white/70">乾杯と締めのごあいさつの例です。そのままお読みいただいても、少しアレンジしてお使いいただいても結構です。</p>
+      <p className="text-sm text-white/70">乾杯と締めのごあいさつの例です。そのままお読みいただいても少しアレンジしてお使いいただいても結構です。</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="会の種類">
         {OCCASIONS.map((o, i) => {
           const closed = locked && i > 0;
@@ -945,7 +921,7 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
 
   return (
     <Box title="席替え" tone={TOOL_TONE.seat} locked={locked}>
-      <p className="mb-3 text-sm text-white/70">席の並べ方をお選びください。お名前をシャッフルして、席順をご提案します。</p>
+      <p className="mb-3 text-sm text-white/70">席の並べ方をお選びください。お名前をシャッフルして席順をご提案します。</p>
       <div className="flex flex-wrap gap-2" role="group" aria-label="席の並べ方">
         {SEAT_LAYOUTS.map((l) => (
           <button key={l.key} type="button" aria-pressed={layout === l.key} onClick={() => setLayout(l.key)} className={`${PILL} ${layout === l.key ? PILL_ON : PILL_OFF}`}>
@@ -1099,7 +1075,7 @@ function Thanks({ locked }: { locked: boolean }) {
 
   return (
     <Box title="お礼・ご連絡" tone={TOOL_TONE.thanks} locked={locked}>
-      <p className="text-sm text-white/70">会の翌日にお送りする、お礼やご連絡の文の例です。キャンセル料のお願いも、やわらかい言い方でお伝えできます。コピーして、そのままお使いいただけます。</p>
+      <p className="text-sm text-white/70">会の翌日にお送りするお礼やご連絡の文の例です。キャンセル料のお願いもやわらかい言い方でお伝えできます。コピーしてそのままお使いいただけます。</p>
       <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="送る相手">
         {THANKS_KINDS.map((k) => (
           <button
@@ -1178,7 +1154,7 @@ function Memo({ locked }: { locked: boolean }) {
 
   return (
     <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked}>
-      <p className="text-sm text-white/70">当日までにやることと、自由なメモをまとめられます{locked ? "(デモ版は保存されません)" : "(この端末に残ります)"}。</p>
+      <p className="text-sm text-white/70">当日までにやることと自由なメモをまとめられます{locked ? "(デモ版は保存されません)" : "(この端末に残ります)"}。</p>
       <p className="mt-2 text-xs font-bold text-muted tabular-nums">
         {done} / {CHECKLIST.length} 終わった
       </p>

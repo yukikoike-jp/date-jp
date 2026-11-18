@@ -77,7 +77,7 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
         )}
         {/* お店まで決まったら、二次会のお店も出す */}
         {party.decision && (
-          <Fold title="二次会のお店" note="一次会のお店の近くで、遅くまで開いているお店">
+          <Fold title="二次会のお店" note="一次会のお店の近くで遅くまで開いているお店">
             <SecondPartyShops partyId={party.id} />
           </Fold>
         )}

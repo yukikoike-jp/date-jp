@@ -37,8 +37,8 @@ export function SecondPartyShops({ partyId }: { partyId: string }) {
         initial={3}
         lead={
           result
-            ? `${result.near}の近くで、23時以降も開いているお店です(${result.size}人)`
-            : "一次会のお店の近くで、遅くまで開いているお店"
+            ? `${result.near}の近くで23時以降も開いているお店です(${result.size}人)`
+            : "一次会のお店の近くで遅くまで開いているお店"
         }
         empty={result ? "合うお店なし" : "検索中…"}
       >

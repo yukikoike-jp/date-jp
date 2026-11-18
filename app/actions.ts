@@ -63,7 +63,7 @@ export async function saveAnswer(
     }
   }
   const saved = await store.saveAnswer(partyId, { ...parsed.value, id: answerId, tokenHash: hashToken(token) });
-  if (!saved) return { ok: false, error: "同じ名前の人がもういます。名字を足すなど、少し変えてください" };
+  if (!saved) return { ok: false, error: "同じ名前の人がもういます。名字を足すなど少し変えてください" };
   return { ok: true, answerId, token };
 }
 
@@ -195,7 +195,7 @@ export async function setCollectionPayment(
   const person = c.people.find((p) => p.id === personId);
   if (!person || person.organizer) return { ok: false, error: "この人の支払いは変えられません" };
   const isHost = verifyToken(adminToken, c.adminHash);
-  if (!canSetPayment(isHost)) return { ok: false, error: "受け取りの記録は、幹事だけができます" };
+  if (!canSetPayment(isHost)) return { ok: false, error: "受け取りの記録は幹事だけができます" };
   await store.setPayment(collectionId, personId, paid === true ? { by: "host" } : null);
   return { ok: true };
 }
@@ -214,7 +214,7 @@ export async function saveCollectionSettings(
   const store = getStore();
   const c = await store.getCollection(collectionId);
   if (!c) return { ok: false, error: "集金のページが見つかりません" };
-  if (!verifyToken(adminToken, c.adminHash)) return { ok: false, error: "設定を変えられるのは、幹事だけです" };
+  if (!verifyToken(adminToken, c.adminHash)) return { ok: false, error: "設定を変えられるのは幹事だけです" };
 
   const raw = typeof input?.payLink === "string" ? input.payLink.trim() : "";
   const payLink = raw === "" ? null : cleanPayLink(raw);
@@ -222,7 +222,7 @@ export async function saveCollectionSettings(
 
   let autoRemindAt: number | null = c.autoRemindAt ?? null;
   if (input?.autoRemind === true) {
-    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは、有料プレミアムの機能です" };
+    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは Tsudoro Plus の機能です" };
     if (!pushReady()) return { ok: false, error: "通知の準備がまだできていません" };
     autoRemindAt = autoRemindAt ?? Date.now();
   } else if (input?.autoRemind === false) {
@@ -245,9 +245,9 @@ export async function subscribePush(
   if (!sub) return { ok: false, error: "通知の登録に失敗しました" };
   const store = getStore();
   const c = await store.getCollection(collectionId);
-  if (!c || c.autoRemindAt === undefined) return { ok: false, error: "この集金は、自動でお知らせを使っていません" };
+  if (!c || c.autoRemindAt === undefined) return { ok: false, error: "この集金は自動でお知らせを使っていません" };
   const person = c.people.find((p) => p.id === personId);
-  if (!person || person.organizer || isConfirmed(c.payments[person.id])) return { ok: false, error: "この人には、お知らせは要りません" };
+  if (!person || person.organizer || isConfirmed(c.payments[person.id])) return { ok: false, error: "この人にはお知らせは要りません" };
   const subs = await store.listPushSubs(collectionId);
   if (subs.length >= 200) return { ok: false, error: "登録できる数をこえました" };
   await store.addPushSub({ collectionId, personId, ...sub });

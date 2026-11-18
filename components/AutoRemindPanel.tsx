@@ -95,7 +95,7 @@ export function AutoRemindPanel({
 
       <div className="mt-5 border-t border-border pt-5">
         <h2 className="flex items-center justify-between gap-2 text-lg font-black">
-          催促は、アプリにまかせる
+          催促はアプリにまかせる
           {access.loading ? null : locked ? (
             // 有料の印は、鍵のボタンだけ。押すと、くわしい案内が開く
             <button
@@ -114,7 +114,7 @@ export function AutoRemindPanel({
           )}
         </h2>
         <p className="mt-1 text-sm leading-relaxed text-white/75">
-          払っていない人に、あなたではなく Tsudoro が通知します。翌日・3日後・7日後に、言い方を変えて届きます。
+          払っていない人にはあなたではなく Tsudoro が通知します。翌日・3日後・7日後に言い方を変えて届きます。
         </p>
         <div className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 ring-1 ring-white/10" aria-label="届く通知の見本">
           <p className="flex items-center gap-1.5 text-sm font-black">
@@ -140,7 +140,7 @@ export function AutoRemindPanel({
               <Bell className="size-4" aria-hidden />
               オン ・ 通知を受け取る人 {subscribed}人 / まだの人 {unpaid}人
             </p>
-            {subscribed < unpaid && <p className="mt-1 text-xs text-muted">集金のページを送るとき、「通知をオンにしてね」と一言そえると、受け取る人が増えます。</p>}
+            {subscribed < unpaid && <p className="mt-1 text-xs text-muted">集金のページを送るときに「通知をオンにしてね」と一言そえると、受け取る人が増えます。</p>}
             <button
               type="button"
               disabled={pending}
@@ -155,7 +155,7 @@ export function AutoRemindPanel({
           <button
             type="button"
             disabled={pending}
-            onClick={() => save({ payLink: linkText, autoRemind: true }, () => setNote("オンにしました。右上の「URLを送る」で、みんなに送りましょう"))}
+            onClick={() => save({ payLink: linkText, autoRemind: true }, () => setNote("オンにしました。右上の「URLを送る」でみんなに送りましょう"))}
             className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-5 text-base font-black text-accent-text active:scale-[0.97] disabled:opacity-50"
           >
             <Bell className="size-4" aria-hidden />

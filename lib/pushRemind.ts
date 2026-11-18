@@ -21,9 +21,9 @@ export function isDue(autoRemindAt: number, now: number, sentCount: number, last
 /** 通知の文。回数が増えるほど、はっきり言う。幹事の名前は出さない(アプリからのお知らせ) */
 export function notificationText(sentCount: number, title: string, amount: number): { title: string; body: string } {
   const what = title.trim() ? `「${title.trim()}」のお会計` : "お会計";
-  if (sentCount <= 0) return { title: what, body: `${yen(amount)}、まだのようです。払い方は、タップして見られます` };
-  if (sentCount === 1) return { title: what, body: `もう一度お知らせです。${yen(amount)}が、まだ確認できていません` };
-  return { title: what, body: `最後のお知らせです。${yen(amount)}が、まだ確認できていません。今週中にお願いします` };
+  if (sentCount <= 0) return { title: what, body: `${yen(amount)}がまだのようです。払い方はタップして見られます` };
+  if (sentCount === 1) return { title: what, body: `もう一度お知らせです。${yen(amount)}がまだ確認できていません` };
+  return { title: what, body: `最後のお知らせです。${yen(amount)}がまだ確認できていません。今週中にお願いします` };
 }
 
 /** ブラウザから届いた通知の宛先を確かめる。https の宛先と、決まった形の鍵だけを通す */
