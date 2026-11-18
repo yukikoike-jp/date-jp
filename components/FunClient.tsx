@@ -1037,36 +1037,47 @@ function Schedule({ locked }: { locked: boolean }) {
 
   return (
     <Box title="進行表" tone={TOOL_TONE.schedule} locked={locked}>
-      <p className="text-sm text-white/70">開始時刻と会の長さをお選びください。当日の進行表をお作りします。</p>
-      <p className="mt-3 text-xs font-bold text-muted">開始時刻</p>
-      <div className="mt-1.5 flex flex-wrap gap-2" role="group" aria-label="開始時刻">
-        {SCHEDULE_STARTS.map((m) => (
-          <button key={m} type="button" aria-pressed={start === m} onClick={() => setStart(m)} className={`${PILL} ${start === m ? PILL_ON : PILL_OFF}`}>
-            {start === m && "✓ "}
-            {clock(m)}
-          </button>
-        ))}
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-white/70">開始と長さを選ぶと進行表ができます。</p>
+        <button type="button" onClick={copy} className="shrink-0 text-xs font-black text-accent underline underline-offset-2">
+          {copied ? "コピーしました" : "コピー"}
+        </button>
       </div>
-      <p className="mt-3 text-xs font-bold text-muted">会の長さ</p>
-      <div className="mt-1.5 flex flex-wrap gap-2" role="group" aria-label="会の長さ">
-        {SCHEDULE_LENGTHS.map((m) => (
-          <button key={m} type="button" aria-pressed={minutes === m} onClick={() => setMinutes(m)} className={`${PILL} ${minutes === m ? PILL_ON : PILL_OFF}`}>
-            {minutes === m && "✓ "}
-            {m / 60}時間
-          </button>
-        ))}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <label className="flex min-h-11 items-center justify-between rounded-xl bg-surface-2 px-3 ring-1 ring-white/10">
+          <span className="text-xs font-bold text-muted">開始</span>
+          <select value={start} onChange={(e) => setStart(Number(e.target.value))} aria-label="開始時刻" className="bg-transparent text-right text-base font-black tabular-nums outline-none">
+            {SCHEDULE_STARTS.map((m) => (
+              <option key={m} value={m}>
+                {clock(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex min-h-11 items-center justify-between rounded-xl bg-surface-2 px-3 ring-1 ring-white/10">
+          <span className="text-xs font-bold text-muted">長さ</span>
+          <select value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} aria-label="会の長さ" className="bg-transparent text-right text-base font-black tabular-nums outline-none">
+            {SCHEDULE_LENGTHS.map((m) => (
+              <option key={m} value={m}>
+                {m / 60}時間
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
-      <ul className="mt-4 space-y-1.5">
-        {steps.map((s) => (
-          <li key={s.at + s.label} className="flex min-h-12 items-center gap-3 rounded-xl bg-surface-2 px-3 ring-1 ring-white/10">
-            <span className="w-14 shrink-0 text-sm font-black tabular-nums text-accent">{clock(s.at)}</span>
-            <span className="text-sm font-bold">{s.label}</span>
+      {/* 時刻を左に、縦の線でつないで並べる */}
+      <ol className="mt-4">
+        {steps.map((st, i) => (
+          <li key={st.at + st.label} className="flex items-stretch gap-3">
+            <span className="w-11 shrink-0 pt-0.5 text-right text-sm font-black tabular-nums text-accent">{clock(st.at)}</span>
+            <span className="flex w-3 shrink-0 flex-col items-center" aria-hidden>
+              <span className="mt-1.5 size-2.5 shrink-0 rounded-full bg-accent" />
+              {i < steps.length - 1 && <span className="w-px flex-1 bg-white/15" />}
+            </span>
+            <span className="pb-3 text-sm font-bold">{st.label}</span>
           </li>
         ))}
-      </ul>
-      <button type="button" onClick={copy} className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-accent px-3 text-sm font-black text-accent-text active:scale-95">
-        {copied ? "コピーしました" : "コピーする"}
-      </button>
+      </ol>
     </Box>
   );
 }
@@ -1170,11 +1181,15 @@ function Memo({ locked }: { locked: boolean }) {
 
   return (
     <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked}>
-      <p className="text-sm text-white/70">当日までにやることと自由なメモをまとめられます{locked ? "(デモ版は保存されません)" : "(この端末に残ります)"}。</p>
-      <p className="mt-2 text-xs font-bold text-muted tabular-nums">
-        {done} / {CHECKLIST.length} 終わった
-      </p>
-      <ul className="mt-2 space-y-1.5">
+      <div className="flex items-center gap-3">
+        <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10" aria-hidden>
+          <span className="block h-full rounded-full bg-accent transition-[width]" style={{ width: `${(done / CHECKLIST.length) * 100}%` }} />
+        </span>
+        <span className="shrink-0 text-xs font-bold text-muted tabular-nums">
+          {done}/{CHECKLIST.length} 終わった
+        </span>
+      </div>
+      <ul className="mt-3 divide-y divide-white/8 overflow-hidden rounded-xl bg-surface-2 ring-1 ring-white/10">
         {CHECKLIST.map((t, i) => (
           <li key={t}>
             <button
@@ -1182,26 +1197,25 @@ function Memo({ locked }: { locked: boolean }) {
               role="checkbox"
               aria-checked={checked[i]}
               onClick={() => save(checked.map((c, k) => (k === i ? !c : c)), memo)}
-              className="flex min-h-12 w-full items-center gap-3 rounded-xl bg-surface-2 px-3 text-left ring-1 ring-white/10 transition active:scale-[0.98]"
+              className="flex min-h-10 w-full items-center gap-2.5 px-3 text-left"
             >
-              <span className={`grid size-6 shrink-0 place-items-center rounded-md border-2 ${checked[i] ? "border-accent bg-accent text-accent-text" : "border-white/30"}`}>
-                {checked[i] && <span aria-hidden className="text-sm leading-none font-black">✓</span>}
+              <span className={`grid size-5 shrink-0 place-items-center rounded border-2 ${checked[i] ? "border-accent bg-accent text-accent-text" : "border-white/30"}`}>
+                {checked[i] && <span aria-hidden className="text-xs leading-none font-black">✓</span>}
               </span>
-              <span className={`text-sm font-bold ${checked[i] ? "text-muted line-through" : ""}`}>{t}</span>
+              <span className={`text-[13px] font-bold ${checked[i] ? "text-muted line-through" : ""}`}>{t}</span>
             </button>
           </li>
         ))}
       </ul>
-      <label className="mt-4 block">
-        <span className="text-sm font-bold text-white/70">メモ</span>
-        <textarea
-          value={memo}
-          onChange={(e) => save(checked, e.target.value.slice(0, 1000))}
-          rows={4}
-          placeholder="お店の連絡先 乾杯をお願いする人 気をつけることなど"
-          className="mt-1.5 w-full resize-none rounded-2xl bg-white/8 px-4 py-3 text-base text-white ring-1 ring-white/12 outline-none placeholder:text-white/25 focus:ring-accent/50"
-        />
-      </label>
+      <textarea
+        value={memo}
+        onChange={(e) => save(checked, e.target.value.slice(0, 1000))}
+        rows={2}
+        aria-label="メモ"
+        placeholder="メモ お店の連絡先 乾杯をお願いする人など"
+        className="mt-3 w-full resize-none rounded-xl bg-white/8 px-3 py-2.5 text-sm text-white ring-1 ring-white/12 outline-none placeholder:text-white/25 focus:ring-accent/50"
+      />
+      <p className="mt-1 text-[11px] text-muted">{locked ? "見本は保存されません" : "この端末に残ります"}</p>
     </Box>
   );
 }
