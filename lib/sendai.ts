@@ -19,8 +19,11 @@ export function areaLabel(key: AreaKey): string {
   return AREAS.find((a) => a.key === key)?.label ?? key;
 }
 
-/** お店のジャンル。hotpepper はホットペッパーのジャンルコード */
-export const GENRES = [
+/**
+ * お店のジャンル。hotpepper はホットペッパーのジャンルコード。
+ * words = ホットペッパーにジャンルがない料理(たこ焼き・インド料理)。この言葉でお店を探し、店名や説明にこの言葉があるお店をこの料理とみなす
+ */
+export const GENRES: readonly { key: GenreKey; label: string; hotpepper: readonly string[]; words?: readonly string[] }[] = [
   { key: "izakaya", label: "居酒屋", hotpepper: ["G001"] },
   { key: "washoku", label: "和食", hotpepper: ["G004"] },
   { key: "yoshoku", label: "洋食", hotpepper: ["G005", "G006"] },
@@ -28,10 +31,13 @@ export const GENRES = [
   { key: "yakiniku", label: "焼肉・韓国", hotpepper: ["G008", "G017"] },
   { key: "bar", label: "ダイニングバー", hotpepper: ["G002"] },
   { key: "sosaku", label: "創作料理", hotpepper: ["G003"] },
-  { key: "ethnic", label: "アジア・各国", hotpepper: ["G009", "G010"] },
+  // key は前のまま(「アジア・各国」だったころの回答も、そのまま読める)。各国料理(G010)は外した
+  { key: "ethnic", label: "アジア料理", hotpepper: ["G009"] },
+  { key: "indian", label: "インド料理", hotpepper: ["G009"], words: ["インド", "ネパール"] },
   { key: "okonomiyaki", label: "お好み焼き", hotpepper: ["G016"] },
+  { key: "takoyaki", label: "たこ焼き", hotpepper: [], words: ["たこ焼", "たこやき", "タコ焼"] },
 ] as const;
-export type GenreKey = (typeof GENRES)[number]["key"];
+export type GenreKey = "izakaya" | "washoku" | "yoshoku" | "chuka" | "yakiniku" | "bar" | "sosaku" | "ethnic" | "indian" | "okonomiyaki" | "takoyaki";
 
 export function isGenreKey(v: unknown): v is GenreKey {
   return GENRES.some((g) => g.key === v);

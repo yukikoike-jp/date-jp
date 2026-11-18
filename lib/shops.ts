@@ -167,7 +167,8 @@ type HotpepperShop = {
   name: string;
   access?: string;
   mobile_access?: string;
-  genre?: { code?: string; name?: string };
+  genre?: { code?: string; name?: string; catch?: string };
+  catch?: string;
   budget?: { code?: string; name?: string; average?: string };
   capacity?: number | string;
   private_room?: string;
@@ -196,6 +197,43 @@ export function budgetFromText(text: string | undefined): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+/** 料理を見分けるための文(店名と説明)。「インドネシア」は「インド」と取り違えないよう外す */
+function genreText(s: Pick<HotpepperShop, "name" | "genre" | "catch">): string {
+  return `${s.name} ${s.genre?.catch ?? ""} ${s.catch ?? ""}`.normalize("NFKC").replace(/インドネシア/g, "");
+}
+
+/** お店の料理の種類。たこ焼き・インド料理は、店名や説明の言葉で見分ける(ホットペッパーにジャンルがないため) */
+export function genreKeyOf(s: Pick<HotpepperShop, "name" | "genre" | "catch">): GenreKey | null {
+  const text = genreText(s);
+  const byWord = GENRES.find((g) => g.words?.some((w) => text.includes(w.normalize("NFKC"))) && (g.hotpepper.length === 0 || g.hotpepper.includes(s.genre?.code ?? "")));
+  if (byWord) return byWord.key as GenreKey;
+  return (GENRES.find((g) => !g.words && g.hotpepper.includes(s.genre?.code ?? ""))?.key as GenreKey | undefined) ?? null;
+}
+
+/** お店が、選んだ料理に合うか。ジャンルで探す料理はジャンルコード、言葉で探す料理は店名や説明の言葉で見る */
+export function matchesGenre(s: Pick<HotpepperShop, "name" | "genre" | "catch">, key: GenreKey): boolean {
+  const g = GENRES.find((x) => x.key === key);
+  if (!g) return false;
+  const codeOk = g.hotpepper.length === 0 || g.hotpepper.includes(s.genre?.code ?? "");
+  if (!g.words) return codeOk;
+  const text = genreText(s);
+  return codeOk && g.words.some((w) => text.includes(w.normalize("NFKC")));
+}
+
+/**
+ * ホットペッパーに渡す条件の組。ジャンルで探せるものは1回にまとめ、言葉で探す料理(たこ焼き・インド料理)は1つずつ別に探す
+ * (ホットペッパーの keyword は、ほかのジャンルと「かつ」になるため)
+ */
+export function genreParams(keys: GenreKey[]): Record<string, string>[] {
+  if (keys.length === 0) return [{}];
+  const list = keys.map((k) => GENRES.find((g) => g.key === k)!);
+  const coded = [...new Set(list.filter((g) => !g.words).flatMap((g) => g.hotpepper))];
+  return [
+    ...(coded.length > 0 ? [{ genre: coded.join(",") }] : []),
+    ...list.filter((g) => g.words).map((g) => ({ keyword: g.words![0], ...(g.hotpepper.length > 0 ? { genre: g.hotpepper.join(",") } : {}) })),
+  ];
+}
+
 function fromHotpepper(s: HotpepperShop, area: AreaKey): Shop {
   const max = budgetFromRange(s.budget?.name) || budgetFromText(s.budget?.average);
   const features = [
@@ -207,7 +245,7 @@ function fromHotpepper(s: HotpepperShop, area: AreaKey): Shop {
     id: s.id,
     name: s.name.normalize("NFKC"),
     genre: s.genre?.name ?? "",
-    genreKey: GENRES.find((g) => (g.hotpepper as readonly string[]).includes(s.genre?.code ?? ""))?.key ?? null,
+    genreKey: genreKeyOf(s),
     area,
     // お店の説明には半角カナ(ﾋﾞﾙ など)が混ざるので、全角にそろえる
     access: (s.mobile_access || s.access || "").normalize("NFKC").trim(),
@@ -244,31 +282,38 @@ export async function searchShops(q: ShopQuery, limit = 3): Promise<{ shops: Sho
       lat: String(area.lat),
       lng: String(area.lng),
       party_capacity: String(q.size),
-      ...(genresOf(q).length > 0
-        ? { genre: genresOf(q).flatMap((k) => GENRES.find((g) => g.key === k)!.hotpepper).join(",") }
-        : {}),
       ...(q.privateRoom ? { private_room: "1" } : {}),
       ...(q.freeDrink ? { free_drink: "1" } : {}),
       count: "50",
       order: "4", // おすすめ順
     };
     // タバコの条件は API で選べないので、ここで絞る(吸える人がいる会は、吸えるお店を先に並べ替える)
+    const wanted = genresOf(q);
     const fits = (list: HotpepperShop[]) =>
       list
+        // 言葉で探した料理は、言葉が入っていても別の料理のお店が混ざるので、選んだ料理に合うお店だけ残す
+        .filter((s) => wanted.length === 0 || wanted.some((k) => matchesGenre(s, k)))
         .map((s) => fromHotpepper(s, q.area))
         .filter((s) => (q.budget === null || s.budget <= q.budget) && (q.smoking !== "only" || smokeFriendly(s)));
+    // 料理ごとの条件で探して、1つにまとめる(同じお店は1回だけ)
+    const variants = genreParams(wanted);
+    const callHotpepperAll = async (k: string, p: Record<string, string>) => {
+      const lists = await Promise.all(variants.map((v) => callHotpepper(k, { ...p, ...v })));
+      const seen = new Set<string>();
+      return lists.flat().filter((s) => (seen.has(s.id) ? false : (seen.add(s.id), true)));
+    };
     // まずはそのエリアの中(500m)だけで探し、足りなければ1kmまで広げる。
     // 国分町と仙台駅前は1kmほどしか離れていないので、最初から広く探すと隣のエリアのお店が混ざる
-    let shops = fits(await callHotpepper(key, { ...params, range: "2" }));
+    let shops = fits(await callHotpepperAll(key, { ...params, range: "2" }));
     let otherArea = false;
     if (shops.length < limit) {
       const seen = new Set(shops.map((s) => s.id));
-      const extra = fits(await callHotpepper(key, { ...params, range: "3" })).filter((s) => !seen.has(s.id));
+      const extra = fits(await callHotpepperAll(key, { ...params, range: "3" })).filter((s) => !seen.has(s.id));
       otherArea = shops.length === 0 && extra.length > 0;
       shops = [...shops, ...extra];
     }
     if (shops.length === 0 && q.wide) {
-      shops = fits(await callHotpepper(key, { ...params, range: "5" }));
+      shops = fits(await callHotpepperAll(key, { ...params, range: "5" }));
       otherArea = shops.length > 0;
     }
     shops = shops.map((s, i) => ({ s, i })).sort((a, b) => smokeScore(b.s, q) - smokeScore(a.s, q) || a.i - b.i).map((x) => x.s);

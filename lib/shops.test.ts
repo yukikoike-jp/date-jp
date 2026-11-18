@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { browserShopUrl, budgetFromRange, budgetFromText, mergeShops, pickSamples, searchShopsAlways, smokeFriendly, smokingFromText, type Shop } from "./shops";
+import { browserShopUrl, budgetFromRange, budgetFromText, genreKeyOf, genreParams, matchesGenre, mergeShops, pickSamples, searchShopsAlways, smokeFriendly, smokingFromText, type Shop } from "./shops";
 
 describe("budgetFromRange", () => {
   it("予算の区分名から上限を読む", () => {
@@ -104,4 +104,33 @@ describe("pickSamples の飲み放題の条件", () => {
     expect(only.length).toBeLessThanOrEqual(all.length);
     expect(only.every((s) => s.features.includes("飲み放題"))).toBe(true);
   });
+});
+
+describe("たこ焼き・インド料理(言葉で探す料理)", () => {
+  it("たこ焼きは店名や説明の言葉で見分ける", () => {
+    expect(genreKeyOf({ name: "築地銀だこ 一番町店", genre: { code: "G015", catch: "たこ焼き食べ放題" } })).toBe("takoyaki");
+    expect(matchesGenre({ name: "たこやき専門 まる", genre: { code: "G001" } }, "takoyaki")).toBe(true);
+    expect(matchesGenre({ name: "居酒屋 たこ八", genre: { code: "G001", catch: "海鮮" } }, "takoyaki")).toBe(false);
+  });
+  it("インド料理はアジア料理のうち、インド・ネパールの言葉があるお店", () => {
+    expect(genreKeyOf({ name: "ナマステ", genre: { code: "G009", catch: "本格インドカレー" } })).toBe("indian");
+    expect(genreKeyOf({ name: "タイ屋台", genre: { code: "G009", catch: "ガパオ" } })).toBe("ethnic");
+    // アジア料理を選んだ人には、インド料理のお店も出す
+    expect(matchesGenre({ name: "ナマステ", genre: { code: "G009", catch: "本格インドカレー" } }, "ethnic")).toBe(true);
+    // 各国料理(G010)は、アジア料理に入れない
+    expect(matchesGenre({ name: "スペインバル", genre: { code: "G010" } }, "ethnic")).toBe(false);
+  });
+  it("ジャンルで探せる料理は1回にまとめ、言葉で探す料理は別に探す", () => {
+    expect(genreParams([])).toEqual([{}]);
+    expect(genreParams(["izakaya", "ethnic"])).toEqual([{ genre: "G001,G009" }]);
+    expect(genreParams(["izakaya", "takoyaki", "indian"])).toEqual([
+      { genre: "G001" },
+      { keyword: "たこ焼" },
+      { keyword: "インド", genre: "G009" },
+    ]);
+  });
+});
+
+it("インドネシア料理は、インド料理に入れない", () => {
+  expect(genreKeyOf({ name: "アジアン料理 Makan", genre: { code: "G009", catch: "エスニック" }, catch: "タイ・インドネシア料理" })).toBe("ethnic");
 });
