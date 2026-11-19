@@ -3,6 +3,7 @@
 import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Hourglass, Lock, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PartiesMenu } from "./PartiesMenu";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
 import { AUDIENCES, AUDIENCE_ORDER, isAudience, loadAudience, normalizeAudience, saveAudience, type Audience } from "@/lib/audience";
 import { forgetParty, loadMyParties, rememberParty, type MyParty } from "@/lib/myParties";
@@ -283,15 +284,18 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
       {/* いちばん上: 名前と、学生・プライベート・会社。隅に小さく置き、押すと選び直す画面を開く */}
       <div className="flex items-center justify-between pt-2">
         <Wordmark size={26} />
+        <div className="-mr-1 flex items-center gap-1">
+        <PartiesMenu />
         <button
           type="button"
           onClick={() => setPhase("choose")}
           aria-label={`プライベート・仕事を選び直す(いまは${AUDIENCES[audience].label})`}
-          className="-mr-1 flex h-11 items-center gap-1 rounded-full px-4 text-[13px] font-bold text-white/80 ring-1 ring-white/20 transition hover:text-white hover:ring-white/40 active:scale-95"
+          className="flex h-11 items-center gap-1 rounded-full px-4 text-[13px] font-bold text-white/80 ring-1 ring-white/20 transition hover:text-white hover:ring-white/40 active:scale-95"
         >
           {AUDIENCES[audience].label}
           <ChevronDown className="size-3.5" aria-hidden />
         </button>
+        </div>
       </div>
 
       {/* 会をつくる。ここだけ金の光をまとわせる */}
