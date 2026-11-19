@@ -144,7 +144,7 @@ export function FunClient() {
               role="tab"
               aria-selected={side === k}
               onClick={() => chooseSide(k)}
-              className={`font-logo min-h-11 rounded-xl text-xl font-black tracking-tight transition-colors ${side === k ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
+              className={`font-logo min-h-11 rounded-xl text-xl font-black tracking-tight transition-all active:scale-[0.98] ${side === k ? "bg-accent text-accent-text shadow" : "text-muted hover:text-text"}`}
             >
               {k === "play" ? "Play" : "Support"}
             </button>
@@ -237,7 +237,11 @@ export function FunClient() {
               {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
-              {tool === "collect" && <CollectList demo />}
+              {tool === "collect" && (
+                <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
+                  <CollectList demo />
+                </Box>
+              )}
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
@@ -270,7 +274,11 @@ export function FunClient() {
             {tool === "thanks" && <Thanks locked={locked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
-            {tool === "collect" && <CollectList />}
+            {tool === "collect" && (
+              <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
+                <CollectList />
+              </Box>
+            )}
           </>
         )}
       </div>
