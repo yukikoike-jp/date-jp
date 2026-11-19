@@ -224,7 +224,7 @@ export function FunClient() {
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : locked ? (
           // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
-          <div className="relative">
+          <div className="relative min-h-[26rem]">
             <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
               {tool === "truth" && <TruthDare names={names} locked={locked} />}
               {tool === "wolf" && <Wolf names={names} locked={locked} />}
@@ -241,7 +241,7 @@ export function FunClient() {
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
-            <div className="absolute inset-0 flex items-center justify-center px-8">
+            <div className="absolute inset-x-0 top-40 flex justify-center px-8">
               <button
                 type="button"
                 onClick={() => setShowBuy(true)}
