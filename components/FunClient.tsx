@@ -637,7 +637,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   return (
     <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
       <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます。</p>
-      <div className="relative mx-auto mt-4 w-full max-w-[300px]">
+      <div className="relative mx-auto mt-3 w-full max-w-[230px]">
         <svg viewBox="-160 -168 320 330" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
           <defs>
             {/* 盤に少しだけ立体感(真ん中が明るい) */}
