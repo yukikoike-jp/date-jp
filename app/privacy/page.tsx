@@ -105,9 +105,9 @@ export default async function PrivacyPage() {
       <div className="mx-auto max-w-xl px-4 pt-6 pb-16">
         <h1 className="text-[22px] font-black tracking-tight">プライバシーポリシー</h1>
         <p className="mt-2 text-xs text-muted">最終更新: {UPDATED}</p>
-        <div className="mt-5 space-y-3">
+        <div className="mt-5 divide-y divide-border rounded-3xl border panel">
           {sections.map((s) => (
-            <section key={s.title} className="rounded-3xl border panel px-5 py-4">
+            <section key={s.title} className="px-5 py-4">
               <h2 className="text-sm font-black">{s.title}</h2>
               <div className="mt-2 space-y-2 text-sm leading-relaxed text-white/80">
                 {s.body.map((b, i) =>
