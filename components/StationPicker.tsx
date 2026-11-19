@@ -10,14 +10,8 @@ import { INPUT, PILL, PILL_OFF, PILL_ON } from "./ui";
 // 行きやすい駅を1つ選ぶ。駅名を打つと、少し待ってから候補が出る(入力補完)。出てきた駅から選ぶ(全国)。
 // 選ばなければ「どこでもいい」(場所はほかの人の駅で決まる)
 
-// 打たずに1回で選べる駅。最近この端末で選んだ駅を先に、足りなければ仙台の飲み屋街の駅で埋める
+// 打たずに1回で選べる駅。この端末で最近選んだ駅だけを出す(全国で使うので、決まった駅は置かない)
 const RECENT_KEY = "nomi:recent-stations";
-const POPULAR: Station[] = [
-  { name: "仙台", pref: "宮城県", lat: 38.260132, lng: 140.882438 },
-  { name: "広瀬通", pref: "宮城県", lat: 38.26395, lng: 140.875208 },
-  { name: "青葉通一番町", pref: "宮城県", lat: 38.258945, lng: 140.87365 },
-  { name: "勾当台公園", pref: "宮城県", lat: 38.26796, lng: 140.87134 },
-];
 const same = (a: Station, b: Station) => a.name === b.name && a.pref === b.pref;
 
 function loadRecent(): Station[] {
@@ -57,7 +51,7 @@ export function StationPicker({
     if (!quick) return;
     const recent = loadRecent();
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setQuickList([...recent, ...POPULAR.filter((p) => !recent.some((r) => same(r, p)))].slice(0, 4));
+    setQuickList(recent);
   }, [quick, value]);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Station[] | null>(null);
