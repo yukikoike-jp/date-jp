@@ -3,7 +3,7 @@
 import type { Scene } from "@/lib/otherSites";
 import { BottomSheet } from "./BottomSheet";
 import { toast } from "./Toast";
-import { CalendarClock, CalendarDays, Calculator, Check, ChevronRight, KeyRound, PartyPopper, Store, Users } from "lucide-react";
+import { CalendarClock, Calculator, Check, ChevronRight, KeyRound, PartyPopper, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { decide } from "@/app/actions";
@@ -51,11 +51,11 @@ type Props = {
   scene: Scene;
 };
 
-/** 「幹事が決める」の中の小見出し。選ぶものごとに色(tier-*)を変え、アイコンを添える */
-function StepHead({ tone, icon, children }: { tone: "blue" | "orange"; icon: React.ReactNode; children: React.ReactNode }) {
+/** 「幹事が決める」の中の小見出し。番号の丸で、上から順に決めることを見せる(色は金だけ) */
+function StepHead({ step, children }: { step: number; children: React.ReactNode }) {
   return (
-    <p className={`tier-${tone} mt-5 mb-2 flex items-center gap-2 text-sm font-black text-[var(--tc)]`}>
-      <span className="grid size-7 place-items-center rounded-lg bg-[var(--ts)] text-[var(--tb)]">{icon}</span>
+    <p className="mt-6 mb-2 flex items-center gap-2 text-sm font-black text-white/90">
+      <span className="grid size-6 place-items-center rounded-full bg-accent/15 text-xs font-black text-accent ring-1 ring-accent/40">{step}</span>
       {children}
     </p>
   );
@@ -244,13 +244,11 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
             <h2 className="text-lg font-black">幹事が決める</h2>
             <p className="mt-1 text-sm text-muted">{answered}人が答えました。いちばん良さそうな日とお店を先に選んであります。</p>
             <MustPicker partyId={partyId} token={token} names={names} must={must} />
-            <StepHead tone="blue" icon={<CalendarDays className="size-4" aria-hidden />}>
-              日にち
-            </StepHead>
+            <StepHead step={2}>日にち</StepHead>
             {bestDates.length > 1 && (
               <p className="mb-2 text-xs text-muted">★の日は○と△の数が同じで、どれもいちばん良い日です。どれを選んでもOK。</p>
             )}
-            <div className="tier-blue grid grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
               {ranking
                 .filter((r) => r.ok > 0)
                 .map((r) => (
@@ -260,7 +258,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
                     aria-pressed={date === r.date}
                     onClick={() => setDate(r.date)}
                     className={`flex min-h-14 flex-col items-center justify-center rounded-xl border px-2 py-1.5 text-sm font-bold transition-all active:scale-95 ${
-                      date === r.date ? "border-[var(--tb)] bg-[var(--tb)] text-black" : "border-[var(--tb)]/30 bg-[var(--ts)] text-[var(--tc)]"
+                      date === r.date ? "border-accent bg-accent text-accent-text shadow-[0_0_18px_-6px_var(--accent)]" : "border-white/10 bg-surface-2 text-text hover:border-white/25"
                     }`}
                   >
                     {/* 日付を大きく、人数を下に小さく。1行に詰めて途中で折り返さないようにする */}
@@ -285,17 +283,15 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
                   </button>
                 ))}
             </div>
-            <StepHead tone="orange" icon={<Store className="size-4" aria-hidden />}>
-              お店
-            </StepHead>
+            <StepHead step={3}>お店</StepHead>
             {/* お店は下の「合いそうなお店」から選ぶ(予約のリンクと同じ一覧で、選ぶのも予約も1か所で済む) */}
-            <div className="tier-orange space-y-1.5">
+            <div className="space-y-1.5">
               <button
                 type="button"
                 aria-pressed={shopId === null}
                 onClick={() => setShopId(null)}
                 className={`flex min-h-14 w-full items-center gap-3 rounded-xl border-2 border-dashed px-4 text-left transition-colors ${
-                  shopId === null ? "border-[var(--tb)] bg-[var(--ts)] text-[var(--tc)]" : "border-white/20 text-white/80 hover:border-white/40"
+                  shopId === null ? "border-accent bg-accent/10 text-accent" : "border-white/15 text-white/80 hover:border-white/35"
                 }`}
               >
                 <CalendarClock className="size-5 shrink-0" aria-hidden />
@@ -307,8 +303,8 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
                 </span>
               </button>
               {shopId !== null && (
-                <p className="flex items-center gap-2 rounded-xl border border-[var(--tb)] bg-[var(--ts)] px-4 py-3 text-sm font-black text-[var(--tc)]">
-                  <Check className="size-4 shrink-0" strokeWidth={3} aria-hidden />
+                <p className="flex items-center gap-2 rounded-xl border border-accent bg-accent/10 px-4 py-3 text-sm font-black text-text">
+                  <Check className="size-4 shrink-0 text-accent" strokeWidth={3} aria-hidden />
                   <span className="min-w-0 flex-1 truncate">{shops.find((x) => x.id === shopId)?.name ?? "選んだお店"}</span>
                 </p>
               )}

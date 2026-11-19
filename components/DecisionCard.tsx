@@ -12,8 +12,9 @@ import { PrNote } from "./PrNote";
 /** 見本のお店(s1, s2…)は実在しないので、予約や地図のリンクを出さない */
 const isSampleShop = (id: string) => /^s\d+$/.test(id);
 
-/** title = 会の名前、url = 会のページ(カレンダーの予定に入れる)、photo = 決まったお店の写真(ホットペッパー) */
-export function DecisionCard({ decision, partyId, title, url, photo = null }: { decision: Decision; partyId: string; title: string; url: string; photo?: string | null }) {
+/** title = 会の名前、url = 会のページ(カレンダーの予定に入れる)、photo = 決まったお店の写真(ホットペッパー)。
+ * host = 幹事の画面。決まったあとの幹事の次の仕事は予約なので、予約のボタンをいちばん目立たせる。people = 予約する人数 */
+export function DecisionCard({ decision, partyId, title, url, photo = null, host = false, people }: { decision: Decision; partyId: string; title: string; url: string; photo?: string | null; host?: boolean; people?: number }) {
   const calendar = { title, date: decision.date, start: decision.start, location: decision.shopName, url };
   const shop = decision.shopId && decision.shopName ? { id: decision.shopId, name: decision.shopName } : null;
   return (
@@ -40,7 +41,32 @@ export function DecisionCard({ decision, partyId, title, url, photo = null }: { 
             <Store className="size-5 shrink-0" aria-hidden />
             {shop.name}
           </p>
-          {!isSampleShop(shop.id) && (
+          {!isSampleShop(shop.id) && host && (
+            <div className="mt-4">
+              <ShopPageLink
+                href={`/go/${partyId}/${shop.id}`}
+                target="_blank"
+                rel="nofollow noopener"
+                className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text shadow-[0_8px_24px_-12px_var(--accent)] transition active:scale-[0.98]"
+              >
+                お店のページで予約する
+                <ExternalLink className="size-4" aria-hidden />
+              </ShopPageLink>
+              <p className="mt-2 text-center text-xs text-muted">
+                {dateLabel(decision.date)} {clock(decision.start)}から{people ? `・${people}人` : ""}で予約してください。
+              </p>
+              <a
+                href={mapsUrl(shop.name)}
+                target="_blank"
+                rel="noopener"
+                className="mt-3 flex min-h-11 items-center justify-center gap-1 rounded-xl bg-bg/50 px-2 text-sm font-bold"
+              >
+                <MapPin className="size-4" aria-hidden />
+                地図で場所を見る
+              </a>
+            </div>
+          )}
+          {!isSampleShop(shop.id) && !host && (
             <div className="mt-4 grid grid-cols-2 gap-2">
               <ShopPageLink
                 href={`/go/${partyId}/${shop.id}`}

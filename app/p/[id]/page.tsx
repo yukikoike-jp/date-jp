@@ -48,9 +48,7 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
         </div>
         {party.decision && <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />}
-        <div className={party.decision ? "mt-4" : ""}>
-          <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-        </div>
+        {!party.decision && <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />}
         {/* 決まったあとは、みんなの答えはたたんでおく。お店まで決まったら、ほかの候補のお店は出さない */}
         {party.decision ? (
           <Fold title={`みんなの答え(${summary.answered}人)`} note="日にち・時間・予算・場所">
@@ -73,6 +71,12 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
             scene={{ audience: party.audience, budget: summary.budget }}
             initial={6}
           />
+        )}
+        {/* 決まったあとは、自分の答えはいちばん下(直したいときだけ使う) */}
+        {party.decision && (
+          <div className="mt-4">
+            <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
+          </div>
         )}
       </div>
     </PageMotion>

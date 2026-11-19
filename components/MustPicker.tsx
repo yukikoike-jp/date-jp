@@ -25,12 +25,11 @@ export function MustPicker({ partyId, token, names, must }: { partyId: string; t
   }
 
   return (
-    <div className="tier-purple mt-4">
-      <p className="flex items-center gap-2 text-sm font-black text-[var(--tc)]">
-        <span className="grid size-7 place-items-center rounded-lg bg-[var(--ts)] text-[var(--tb)]">
-          <Crown className="size-4" aria-hidden />
-        </span>
+    <div className="mt-5">
+      <p className="flex items-center gap-2 text-sm font-black text-white/90">
+        <span className="grid size-6 place-items-center rounded-full bg-accent/15 text-xs font-black text-accent ring-1 ring-accent/40">1</span>
         必ず来てほしい人
+        <Crown className="size-3.5 text-accent" aria-hidden />
       </p>
       <p className="mt-0.5 text-xs text-muted">部長や主役が行ける日を優先。</p>
       <div className={`mt-2 flex flex-wrap gap-2 ${pending ? "opacity-60" : ""}`} role="group" aria-label="必ず来てほしい人">
@@ -43,7 +42,7 @@ export function MustPicker({ partyId, token, names, must }: { partyId: string; t
               disabled={pending}
               aria-pressed={on}
               onClick={() => toggle(n)}
-              className={`${PILL} ${on ? "border-[var(--tb)] bg-[var(--tb)] text-black" : "border-[var(--tb)]/30 bg-[var(--ts)] text-[var(--tc)]"}`}
+              className={`${PILL} ${on ? "border-accent bg-accent text-accent-text" : "border-white/10 bg-surface-2 text-text hover:border-white/25"}`}
             >
               {on && <Check className="size-3.5" aria-hidden />}
               {n}
