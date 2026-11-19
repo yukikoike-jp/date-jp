@@ -46,7 +46,7 @@ function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { 
     >
       {/* 有料の印は、鍵のマークだけ */}
       {lockOnly && (
-        <span className="absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-full bg-accent text-accent-text" role="img" aria-label="Tsudoro Plus(有料)">
+        <span className="absolute top-2.5 right-2.5 grid size-7 place-items-center rounded-full bg-accent text-accent-text" role="img" aria-label="Tsudoro+(有料)">
           <Lock className="size-3.5" aria-hidden />
         </span>
       )}
@@ -377,7 +377,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           <ToolTile
             href="/fun"
             icon={<Sparkles className="size-6" aria-hidden />}
-            title="Tsudoro Plus"
+            title="Tsudoro+"
             sub={home.play}
             lockOnly
             wide

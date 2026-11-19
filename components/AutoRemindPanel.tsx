@@ -102,13 +102,13 @@ export function AutoRemindPanel({
               type="button"
               onClick={() => setShowBuy((v) => !v)}
               aria-expanded={showBuy}
-              aria-label="Tsudoro Plus の案内"
+              aria-label="Tsudoro+ の案内"
               className="grid size-10 shrink-0 place-items-center rounded-full border border-accent/50 text-accent active:scale-95"
             >
               <Lock className="size-4" aria-hidden />
             </button>
           ) : (
-            <span className="grid size-10 shrink-0 place-items-center rounded-full text-accent" role="img" aria-label="Tsudoro Plus を購入済み">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full text-accent" role="img" aria-label="Tsudoro+ を購入済み">
               <LockOpen className="size-4" aria-hidden />
             </span>
           )}
@@ -131,7 +131,7 @@ export function AutoRemindPanel({
         )}
 
         {locked ? (
-          showBuy && <ProPaywall feature="Tsudoro Plus" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+          showBuy && <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : access.loading ? null : !pushReady ? (
           <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">通知の準備がまだできていません。しばらく待ってからお試しください。</p>
         ) : autoOn ? (

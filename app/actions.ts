@@ -222,7 +222,7 @@ export async function saveCollectionSettings(
 
   let autoRemindAt: number | null = c.autoRemindAt ?? null;
   if (input?.autoRemind === true) {
-    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは Tsudoro Plus の機能です" };
+    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは Tsudoro+ の機能です" };
     if (!pushReady()) return { ok: false, error: "通知の準備がまだできていません" };
     autoRemindAt = autoRemindAt ?? Date.now();
   } else if (input?.autoRemind === false) {
