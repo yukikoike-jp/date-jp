@@ -48,7 +48,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
     <PageMotion>
       {/* 日にちが決まるまでは「日程調整」、決まったら「お店探し」 */}
       <SiteHeader>
-        <StepBar current={party.decision ? 1 : 0} />
+        <StepBar current={party.decision?.shopId ? 2 : party.decision ? 1 : 0} />
       </SiteHeader>
       <div className={`mx-auto max-w-xl ${party.decision ? "pb-16" : "pb-40"}`}>
         <div className="px-4 pt-6 pb-4">

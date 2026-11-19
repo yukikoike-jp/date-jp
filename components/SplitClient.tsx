@@ -17,6 +17,7 @@ type Person = { id: number; name: string; weight: string; custom: string };
 
 /** 幹事の画面から「この会の会計」で来たとき、行く人の名前とお酒を飲まないかを受け取る(URL には載せない) */
 export const SPLIT_NAMES_KEY = "nomi:split-names";
+export const SPLIT_TITLE_KEY = "nomi:split-title";
 
 /** 続きから使えるよう、最後の会計をこの端末に残す(サーバーには送らない) */
 const SAVE_KEY = "nomi:split";
@@ -112,12 +113,15 @@ export function SplitClient() {
     const a = loadAudience() ?? "private";
     // 前の形(名前だけの文字列)でも受け取れるようにする
     let names: (string | { name: string; soft?: boolean })[] = [];
+    let handedTitle = "";
     try {
       names = JSON.parse(sessionStorage.getItem(SPLIT_NAMES_KEY) ?? "[]");
+      handedTitle = sessionStorage.getItem(SPLIT_TITLE_KEY) ?? "";
       // 受け取ったら消す。開発中は準備が2回走るので、すぐには消さず、2回とも同じ名前を読めるようにする
       setTimeout(() => {
         try {
           sessionStorage.removeItem(SPLIT_NAMES_KEY);
+          sessionStorage.removeItem(SPLIT_TITLE_KEY);
         } catch {}
       }, 0);
     } catch {}
@@ -136,6 +140,7 @@ export function SplitClient() {
       setUnit(saved.unit ?? 100);
       setOrganizer(saved.organizer ?? 0);
     } else {
+      if (handedTitle) setTitle(handedTitle.slice(0, 30));
       setPeople(names.length > 0 ? names.slice(0, 30).map((n) =>
               typeof n === "string"
                 ? person("normal", n.slice(0, 20))
@@ -234,7 +239,7 @@ export function SplitClient() {
             className="min-h-9 w-full min-w-0 bg-transparent text-sm font-bold outline-none placeholder:font-normal placeholder:text-muted"
             value={title}
             onChange={(e) => setTitle(e.target.value.slice(0, 30))}
-            placeholder="何の会計?(例: ゼミの打ち上げ 10/30)"
+            placeholder="何の会計? 例: ゼミの打ち上げ 10/30"
             aria-label="何の会計かのメモ"
           />
         </label>
@@ -406,7 +411,7 @@ export function SplitClient() {
           </button>
         </li>
       </ul>
-      <p className="mx-4 mt-1 px-1 text-[11px] text-muted">顔のマークを押した人が幹事(端数を受け持ちます)</p>
+      <p className="mx-4 mt-1 px-1 text-[11px] text-muted">顔のマークを押した人が幹事。端数を受け持ちます。</p>
 
       {/* 合計と送る。金額は上の一覧に出ているので、ここは合計と送るボタンだけ */}
       {result ? (
