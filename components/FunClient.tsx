@@ -28,12 +28,12 @@ const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
 
 /** 仕事の会: 幹事のサポート(会話のきっかけ・あいさつ・メモ・お礼・席替え・進行表)。ゲームは入れない。文言はすべて敬語 */
 const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
-  { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
-  { key: "memo", label: "幹事メモ", icon: ClipboardList },
+  { key: "collect", label: "集金チェック", icon: Wallet },
   { key: "thanks", label: "お礼・ご連絡", icon: Send },
+  { key: "memo", label: "幹事メモ", icon: ClipboardList },
+  { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
   { key: "seat", label: "席替え", icon: Armchair },
   { key: "schedule", label: "進行表", icon: CalendarClock },
-  { key: "collect", label: "集金チェック", icon: Wallet },
 ];
 
 /** 道具ごとの色(飽きないように、黄色と黒だけにしない)。色の定義は app/globals.css の .tone-* */
@@ -48,7 +48,7 @@ const TOOL_TONE: Record<Tool, Tone> = {
   topic: "cyan",
   memo: "purple",
   thanks: "blue",
-  seat: "green",
+  seat: "orange",
   schedule: "red",
   collect: "green",
 };
@@ -85,12 +85,12 @@ export function FunClient() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSide(isWork || toCollect ? "support" : "play");
     if (toCollect) setTool("collect");
-    else if (isWork) setTool("topic");
+    else if (isWork) setTool("collect");
   }, []);
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
     setSide(next);
-    setTool(next === "support" ? "topic" : "wolf");
+    setTool(next === "support" ? "collect" : "wolf");
     setShowBuy(false);
   }
   // 左右にスワイプ(入力欄・選ぶ欄の上から始めたときは、切り替えない)
