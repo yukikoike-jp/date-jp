@@ -3,7 +3,7 @@
 import { Beer, Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, TrainFront, UtensilsCrossed, Wallet } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { findShops } from "@/app/actions";
-import { AUDIENCES, loadAudience, type Audience } from "@/lib/audience";
+import { loadAudience, type Audience } from "@/lib/audience";
 import { GENRES, SECOND_GENRES, yen, type GenreKey, type SecondGenreKey } from "@/lib/sendai";
 import type { Shop } from "@/lib/shops";
 import type { Station } from "@/lib/stations";
@@ -60,6 +60,8 @@ function Option({
   );
 }
 
+const SHOP_BUDGETS = [2000, 3000, 4000, 5000, 6000, 8000];
+
 export function ShopSearch() {
   const [audience, setAudience] = useState<Audience | null>(null);
   // 駅は最初は選ばない(選ぶまではお店を出さない)
@@ -99,7 +101,6 @@ export function ShopSearch() {
   const toggleGenre = (k: GenreKey) =>
     setGenres((cur) => (cur.includes(k) ? cur.filter((g) => g !== k) : [...cur, k]));
 
-  const opts = AUDIENCES[audience ?? "private"];
   const summary = [
     station ? `${station.name}駅` : "場所はまだ",
     second ? "二次会向け" : null,
@@ -151,12 +152,12 @@ export function ShopSearch() {
           <p className={LABEL} aria-hidden>
             <Wallet className="size-4" />
             1人いくらまで?
+            <span className="ml-auto text-xs font-normal">もう一度押すと外れます</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
-            <Option compact on={budget === null} onClick={() => setBudget(null)} title="決めない" />
-            {/* 「決めない」と合わせて6つ(3つずつ2段)。多いときは安い方から外す */}
-            {opts.budgets.slice(-5).map((b) => (
-              <Option compact key={b} on={budget === b} onClick={() => setBudget(b)} title={`〜${yen(b)}`} />
+            {/* 2・3・4・5・6・8千円の6つ(3つずつ2段)。選んだものをもう一度押すと「決めない」に戻る */}
+            {SHOP_BUDGETS.map((b) => (
+              <Option compact key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
             ))}
           </div>
         </fieldset>
