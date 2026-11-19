@@ -13,11 +13,15 @@ function Glass({ side }: { side: "left" | "right" }) {
   return (
     <svg viewBox="0 0 60 90" className="h-32 w-[5.4rem]" aria-hidden style={side === "right" ? { transform: "scaleX(-1)" } : undefined}>
       <defs>
+        <linearGradient id={`intro-beer-${side}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe08a" />
+          <stop offset="1" stopColor="#f2a21f" />
+        </linearGradient>
         <clipPath id={`intro-glass-${side}`}>
           <path d="M10 18h40l-4 60a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6z" />
         </clipPath>
       </defs>
-      <rect className="intro-pour" x="6" y="30" width="48" height="60" fill="var(--accent)" clipPath={`url(#intro-glass-${side})`} />
+      <rect className="intro-pour" x="6" y="30" width="48" height="60" fill={`url(#intro-beer-${side})`} clipPath={`url(#intro-glass-${side})`} />
       <path
         d="M10 18h40l-4 60a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6z"
         fill="none"

@@ -36,10 +36,9 @@ export function CheersArt({ sparks = true }: { sparks?: boolean }) {
 /** アイコンと同じ絵(地とグラスとカチンの線まで、そのまま) */
 export function LogoMark({ size = 28 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 200 200" aria-hidden className="shrink-0">
-      <rect width="200" height="200" rx="50" fill={ICON_BG} stroke="color-mix(in srgb, var(--accent) 35%, transparent)" strokeWidth="4" />
-      <CheersArt />
-    </svg>
+    // ホーム画面のアイコンと同じ画像(public/icon-192.png)
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/icon-192.png" width={size} height={size} alt="" aria-hidden className="shrink-0 rounded-[22%]" />
   );
 }
 

@@ -159,7 +159,7 @@ h3 {
 }
 .intro-stage { animation: intro-shake 0.3s linear 0.62s; }
 .intro-glow { opacity: 0; background: radial-gradient(closest-side, rgba(245, 184, 61, 0.28), transparent); animation: intro-glow 0.8s ease-out 0.62s forwards; }
-.intro-ring { opacity: 0; scale: 0.85; animation: intro-ring 0.8s ease-out 0.7s forwards; }
+.intro-ring { opacity: 0; animation: intro-ring 0.8s ease-out 0.7s forwards; }
 .intro-glass-left { right: 50%; opacity: 0; animation: intro-glass-left 1.5s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
 .intro-glass-right { left: 50%; opacity: 0; animation: intro-glass-right 1.5s cubic-bezier(0.5, 0, 0.2, 1) forwards; }
 .intro-pour { transform: translateY(60px); animation: intro-pour 0.5s ease-out 0.1s forwards; }
@@ -186,7 +186,7 @@ h3 {
 }
 @keyframes intro-spark-pop { from { opacity: 0; scale: 0.4; } to { opacity: 1; scale: 1; } }
 @keyframes intro-glow { to { opacity: 1; } }
-@keyframes intro-ring { to { opacity: 1; scale: 1; } }
+@keyframes intro-ring { to { opacity: 1; } }
 @keyframes intro-pour { to { transform: translateY(0); } }
 @keyframes intro-flash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 @keyframes intro-shake {

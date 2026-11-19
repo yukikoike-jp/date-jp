@@ -11,6 +11,7 @@ import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
 import { SendButtons, useCanShare } from "./SendButtons";
 import { ROUND_UNITS, WEIGHTS, splitBill, subsidyTotal, tenthsFromInput, type Weight } from "@/lib/split";
+import { useFunAccess } from "./ProGate";
 import { BUTTON_SUB } from "./ui";
 
 // 会計。最初は全員同じ額の割り勘で、「傾斜で割る」に切り替えると区分や倍率を選べる(学生やプライベートでは傾斜はあまり使わないため)。
@@ -68,6 +69,7 @@ function Avatar({ name, tone, size = "md" }: { name: string; tone: Weight["tone"
 
 /** from = 会の画面から来たときの、その会の id。作った集金をその会とつなぐ */
 export function SplitClient({ from = null }: { from?: string | null }) {
+  const access = useFunAccess();
   // どの会の会計か。会の画面から来たか、決まった会から名前を読み込んだときに入る
   const [fromParty, setFromParty] = useState<string | null>(from);
   const [audience, setAudience] = useState<Audience>("private");
@@ -492,6 +494,17 @@ export function SplitClient({ from = null }: { from?: string | null }) {
                 {collecting ? "作っています…" : "作り直す"}
               </button>
             </div>
+          ) : !access.loading && !access.unlocked ? (
+            // 集金のページは Tsudoro+ の機能。買う前は、そのまま Tsudoro+ の案内(Support の集金チェック)へ送る
+            <Link href="/fun?tab=collect" className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-accent/12 px-4 py-3 text-left ring-2 ring-accent transition-colors hover:bg-accent/20">
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
+                <Wallet className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-base font-black">集金のページを開く</span>
+                <span className="block text-xs text-muted">Tsudoro+ で使えます</span>
+              </span>
+            </Link>
           ) : (
             <button
               type="button"
