@@ -5,7 +5,6 @@ import { connection } from "next/server";
 import { AnswerPanel } from "@/components/AnswerPanel";
 import { DecisionCard } from "@/components/DecisionCard";
 import { Fold } from "@/components/Fold";
-import { SecondPartyShops } from "@/components/SecondPartyShops";
 import { ShopList } from "@/components/ShopList";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SummaryView } from "@/components/SummaryView";
@@ -74,12 +73,6 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
             scene={{ audience: party.audience, budget: summary.budget }}
             initial={6}
           />
-        )}
-        {/* お店まで決まったら、二次会のお店も出す */}
-        {party.decision && (
-          <Fold title="二次会のお店" note="一次会のお店の近くで遅くまで開いているお店">
-            <SecondPartyShops partyId={party.id} />
-          </Fold>
         )}
       </div>
     </PageMotion>

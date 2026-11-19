@@ -123,6 +123,8 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
       else {
         toast(choice ? "決まりました。みんなに知らせましょう" : "決定を取り消しました");
         router.refresh();
+        // 決まったら、「決まりました!」のカードがある一番上へ戻す
+        if (choice) window.scrollTo({ top: 0, behavior: "smooth" });
       }
     });
   }

@@ -136,10 +136,16 @@ export async function findShops(input: {
   freeDrink?: boolean;
   /** タバコが吸えるお店だけにする(社会人の画面だけで出す) */
   smoking?: boolean;
+  /** 二次会向け(23時以降も開いているお店)。種類は居酒屋・バー・カラオケ */
+  second?: { genre: string | null } | null;
   audience: string;
 }): Promise<{ shops: Shop[]; otherArea: boolean; relaxed: string | null }> {
   if (!isStation(input.station)) return { shops: [], otherArea: false, relaxed: null };
   const point = { lat: input.station.lat, lng: input.station.lng };
+  if (input.second) {
+    const shops = await searchSecondShops({ ...point, size: 2, genre: isSecondGenreKey(input.second.genre) ? input.second.genre : null, exclude: null, area: AREAS[0].key });
+    return { shops, otherArea: false, relaxed: null };
+  }
   const genres = [...new Set(Array.isArray(input.genres) ? input.genres : [])].filter(isGenreKey);
   const audience = isAudience(input.audience) ? normalizeAudience(input.audience) : "private";
   const budgets = AUDIENCES[audience].budgets;

@@ -4,7 +4,7 @@ import { Beer, Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, Utensils
 import { useEffect, useState, useTransition } from "react";
 import { findShops } from "@/app/actions";
 import { AUDIENCES, loadAudience, type Audience } from "@/lib/audience";
-import { GENRES, yen, type GenreKey } from "@/lib/sendai";
+import { GENRES, SECOND_GENRES, yen, type GenreKey, type SecondGenreKey } from "@/lib/sendai";
 import type { Shop } from "@/lib/shops";
 import type { Station } from "@/lib/stations";
 import { SkeletonShops } from "./Skeleton";
@@ -70,6 +70,9 @@ export function ShopSearch() {
   const [freeDrink, setFreeDrink] = useState(false);
   // 社会人の会は、上司がタバコを吸えるかどうかが大事なので、吸えるお店だけに絞れるようにする
   const [smoking, setSmoking] = useState(false);
+  // 二次会向け(遅くまで開いているお店)。一次会か二次会かを、最初に選ぶ
+  const [second, setSecond] = useState(false);
+  const [secondGenre, setSecondGenre] = useState<SecondGenreKey | null>(null);
   const [result, setResult] = useState<{ shops: Shop[]; otherArea: boolean; relaxed: string | null } | null>(null);
   const [pending, start] = useTransition();
 
@@ -89,9 +92,9 @@ export function ShopSearch() {
       return;
     }
     start(async () => {
-      setResult(await findShops({ station, genres, budget, privateRoom, freeDrink, smoking: audience !== null && smoking, audience }));
+      setResult(await findShops({ station, genres, budget, privateRoom, freeDrink, smoking: audience !== null && smoking, second: second ? { genre: secondGenre } : null, audience }));
     });
-  }, [station, genres, budget, privateRoom, freeDrink, smoking, audience]);
+  }, [station, genres, budget, privateRoom, freeDrink, smoking, second, secondGenre, audience]);
 
   const toggleGenre = (k: GenreKey) =>
     setGenres((cur) => (cur.includes(k) ? cur.filter((g) => g !== k) : [...cur, k]));
@@ -99,11 +102,12 @@ export function ShopSearch() {
   const opts = AUDIENCES[audience ?? "private"];
   const summary = [
     station ? `${station.name}駅` : "場所はまだ",
-    budget === null ? "予算は決めない" : `${yen(budget)}まで`,
-    genres.length > 0 ? genres.map((k) => GENRES.find((g) => g.key === k)!.label).join("・") : null,
-    privateRoom ? "個室あり" : null,
-    freeDrink ? "飲み放題あり" : null,
-    audience !== null && smoking ? "喫煙できる" : null,
+    second ? "二次会向け" : null,
+    second ? (secondGenre ? SECOND_GENRES.find((g) => g.key === secondGenre)!.label : null) : budget === null ? "予算は決めない" : `${yen(budget)}まで`,
+    !second && genres.length > 0 ? genres.map((k) => GENRES.find((g) => g.key === k)!.label).join("・") : null,
+    !second && privateRoom ? "個室あり" : null,
+    !second && freeDrink ? "飲み放題あり" : null,
+    !second && audience !== null && smoking ? "喫煙できる" : null,
   ]
     .filter(Boolean)
     .join(" / ");
@@ -118,8 +122,30 @@ export function ShopSearch() {
             どこで飲む?
           </p>
           <StationPicker value={station} onChange={setStation} anyLabel={null} />
+          {/* 一次会か二次会か。二次会向けは、23時以降も開いているお店だけを出す */}
+          <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="何次会">
+            <Option compact on={!second} onClick={() => setSecond(false)} title="一次会向け" />
+            <Option compact on={second} onClick={() => setSecond(true)} title="二次会向け" />
+          </div>
+          {second && <p className="mt-2 text-xs text-muted">23時以降も開いているお店だけを表示</p>}
         </fieldset>
 
+        {second ? (
+          <fieldset className="px-4 py-5">
+            <legend className="sr-only">二次会のお店の種類</legend>
+            <p className={LABEL} aria-hidden>
+              <UtensilsCrossed className="size-4" />
+              どんなお店?
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              <Option compact on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
+              {SECOND_GENRES.map((g) => (
+                <Option compact key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
+              ))}
+            </div>
+          </fieldset>
+        ) : (
+          <>
         <fieldset className="border-b border-border px-4 py-5">
           <legend className="sr-only">1人の予算</legend>
           <p className={LABEL} aria-hidden>
@@ -183,6 +209,8 @@ export function ShopSearch() {
             />
           )}
         </div>
+          </>
+        )}
       </div>
 
       {/* いまの条件と見つかった数を、結果の上に固定して出す */}
