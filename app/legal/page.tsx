@@ -22,7 +22,7 @@ export default async function LegalPage() {
     ["所在地", cleanText(process.env.SELLER_ADDRESS) ?? DISCLOSE],
     ["電話番号", cleanText(process.env.SELLER_PHONE) ?? DISCLOSE],
     ["メールアドレス", cleanText(process.env.SELLER_EMAIL) ?? "準備中"],
-    ["販売価格", `Tsudoro+(Play・Support) 買い切り ${yen(proPrice())}(税込)`],
+    ["販売価格", `Tsudoro Plus(Play・Support) 買い切り ${yen(proPrice())}(税込)`],
     ["購入後のご利用期間", "1回のお支払いのみです。自動更新や月ごとの請求はありません。お支払い後はずっとご利用いただけます。"],
     ["商品代金以外の必要料金", "なし(インターネットの通信料はお客さまのご負担です)。"],
     ["お支払い方法", "クレジットカード(Stripe による決済)。"],

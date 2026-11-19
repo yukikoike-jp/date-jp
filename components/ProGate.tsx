@@ -28,7 +28,7 @@ export function saveLicense(license: string) {
 
 export type FunAccess = { loading: boolean; purchasable: boolean; unlocked: boolean; price: number; license: string | null };
 
-/** Tsudoro+(Play と Support)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
+/** Tsudoro Plus(Play と Support)が使えるか。読み込み中と、読めなかったときは鍵をかけたまま(デモ版) */
 export function useFunAccess(): FunAccess {
   const [state, setState] = useState<FunAccess>({ loading: true, purchasable: false, unlocked: false, price: 500, license: null });
   useEffect(() => {
@@ -41,7 +41,7 @@ export function useFunAccess(): FunAccess {
 }
 
 /** 有料の機能を使おうとしたときに出す案内。買う、または別の端末で買ったものを戻す */
-/** Tsudoro+ で使えるようになるもの(購入の案内のチェック項目) */
+/** Tsudoro Plus で使えるようになるもの(購入の案内のチェック項目) */
 const PLUS_ITEMS: { name?: string; body: string }[] = [
   { name: "Play", body: "ワードウルフ・NGワード・王様ゲームなど6つの遊び" },
   { name: "Support", body: "話題・ごあいさつ・お礼・席替え・進行表など幹事の6つの道具" },
