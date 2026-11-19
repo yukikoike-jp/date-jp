@@ -1,12 +1,13 @@
 "use client";
 
-import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, Mic, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask } from "lucide-react";
+import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { loadAudience } from "@/lib/audience";
-import { CHECKLIST, OCCASIONS, SPEECHES, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type Occasion, type ThanksKind, type TopicKind } from "@/lib/work";
+import { CHECKLIST, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type ThanksKind, type TopicKind } from "@/lib/work";
+import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
 
@@ -15,7 +16,7 @@ import { clock, yen } from "@/lib/sendai";
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "speech" | "memo" | "thanks" | "seat" | "schedule";
+type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "memo" | "thanks" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
@@ -28,11 +29,11 @@ const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
 /** 仕事の会: 幹事のサポート(会話のきっかけ・あいさつ・メモ・お礼・席替え・進行表)。ゲームは入れない。文言はすべて敬語 */
 const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
-  { key: "speech", label: "ひとこと", icon: Mic },
   { key: "memo", label: "幹事メモ", icon: ClipboardList },
   { key: "thanks", label: "お礼・ご連絡", icon: Send },
   { key: "seat", label: "席替え", icon: Armchair },
   { key: "schedule", label: "進行表", icon: CalendarClock },
+  { key: "collect", label: "集金チェック", icon: Wallet },
 ];
 
 /** 道具ごとの色(飽きないように、黄色と黒だけにしない)。色の定義は app/globals.css の .tone-* */
@@ -45,11 +46,11 @@ const TOOL_TONE: Record<Tool, Tone> = {
   wheel: "orange",
   team: "green",
   topic: "cyan",
-  speech: "gold",
   memo: "purple",
   thanks: "blue",
   seat: "green",
   schedule: "red",
+  collect: "green",
 };
 
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
@@ -79,9 +80,12 @@ export function FunClient() {
   const [tool, setTool] = useState<Tool>("wolf");
   useEffect(() => {
     const isWork = loadAudience() === "worker";
+    // 会計から来たとき(?tab=collect)は、Support の集金チェックを開く
+    const toCollect = new URLSearchParams(location.search).get("tab") === "collect";
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSide(isWork ? "support" : "play");
-    if (isWork) setTool("topic");
+    setSide(isWork || toCollect ? "support" : "play");
+    if (toCollect) setTool("collect");
+    else if (isWork) setTool("topic");
   }, []);
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
@@ -164,8 +168,8 @@ export function FunClient() {
             aria-selected={tool === key}
             onClick={() => setTool(key)}
             className={`${
-              // 余りが2つのとき(TOOLS.length が3で割って2余る)は、最後の2つが3列ぶんずつ。それ以外は2列ぶん(3つずつ)
-              TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : "col-span-2"
+              // 3つずつ並べる。余りが2つのときは最後の2つを半分ずつ、1つのときは最後の1つを横いっぱいに
+              TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : TOOLS.length % 3 === 1 && i === TOOLS.length - 1 ? "col-span-6" : "col-span-2"
             } tone-${TOOL_TONE[key]} flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
               tool === key ? "bg-accent/18 text-text shadow ring-1 ring-accent/60" : "text-muted hover:text-text"
             }`}
@@ -215,7 +219,10 @@ export function FunClient() {
       )}
 
       <div className="mt-4">
-        {locked && showBuy ? (
+        {tool === "collect" ? (
+          // 集金のチェックは無料。買う前でも使える
+          <CollectList />
+        ) : locked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : locked ? (
@@ -229,7 +236,6 @@ export function FunClient() {
               {tool === "wheel" && <Wheel names={names} locked={locked} />}
               {tool === "team" && <Teams names={names} locked={locked} />}
               {tool === "topic" && <Topic locked={locked} />}
-              {tool === "speech" && <Speech locked={locked} />}
               {tool === "memo" && <Memo locked={locked} />}
               {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
@@ -262,7 +268,6 @@ export function FunClient() {
             {tool === "wheel" && <Wheel names={names} locked={locked} />}
             {tool === "team" && <Teams names={names} locked={locked} />}
             {tool === "topic" && <Topic locked={locked} />}
-            {tool === "speech" && <Speech locked={locked} />}
             {tool === "memo" && <Memo locked={locked} />}
             {tool === "thanks" && <Thanks locked={locked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
@@ -884,70 +889,6 @@ function Topic({ locked }: { locked: boolean }) {
           {card ? "次の話題を引く" : "話題を引く"}
         </RerollButton>
       </div>
-    </Box>
-  );
-}
-
-// ───── ひとこと(会社の会)─────
-function Speech({ locked }: { locked: boolean }) {
-  const [occasion, setOccasion] = useState<Occasion>("bonenkai");
-  const [kind, setKind] = useState<"toast" | "closing">("toast");
-  const [n, setN] = useState(0);
-  const list = SPEECHES[occasion][kind];
-  const text = list[n % list.length];
-
-  return (
-    <Box title="ひとこと" tone={TOOL_TONE.speech} locked={locked}>
-      <p className="text-sm text-white/70">乾杯と締めのごあいさつの例です。そのままお読みいただいても少しアレンジしてお使いいただいても結構です。</p>
-      <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="会の種類">
-        {OCCASIONS.map((o, i) => {
-          const closed = locked && i > 0;
-          return (
-            <button
-              key={o.key}
-              type="button"
-              disabled={closed}
-              aria-pressed={occasion === o.key}
-              onClick={() => {
-                setOccasion(o.key);
-                setN(0);
-              }}
-              className={`${PILL} w-full px-2 disabled:opacity-50 ${occasion === o.key ? PILL_ON : PILL_OFF}`}
-            >
-              {closed ? <Lock className="size-3.5" aria-hidden /> : occasion === o.key && "✓ "}
-              {o.label}
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-2 flex gap-2" role="group" aria-label="あいさつの種類">
-        {(["toast", "closing"] as const).map((k) => (
-          <button
-            key={k}
-            type="button"
-            aria-pressed={kind === k}
-            onClick={() => {
-              setKind(k);
-              setN(0);
-            }}
-            className={`${PILL} flex-1 ${kind === k ? PILL_ON : PILL_OFF}`}
-          >
-            {kind === k && "✓ "}
-            {k === "toast" ? "乾杯" : "〆"}
-          </button>
-        ))}
-      </div>
-      <p className="anim-rise mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-base leading-relaxed font-bold ring-1 ring-white/10" key={`${occasion}${kind}${n}`}>
-        {text}
-      </p>
-      <button
-        type="button"
-        onClick={() => setN((v) => v + 1)}
-        className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95"
-      >
-        <Shuffle className="size-4" aria-hidden />
-        別の例を見る
-      </button>
     </Box>
   );
 }

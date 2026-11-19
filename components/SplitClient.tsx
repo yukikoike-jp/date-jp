@@ -512,8 +512,8 @@ export function SplitClient({ from = null }: { from?: string | null }) {
       )}
 
       <div className="mx-4 mt-2 flex items-center justify-center gap-4">
-        <Link href="/collect" className="inline-flex min-h-11 items-center px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
-          作った集金を見る
+        <Link href="/fun?tab=collect" className="inline-flex min-h-11 items-center px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
+          集金チェック
         </Link>
         <button type="button" onClick={startOver} className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
           <RotateCcw className="size-3.5" aria-hidden />
