@@ -189,6 +189,22 @@ export function SplitClient() {
     ? splitBill({ total: totalYen - subsidy, weights: people.map((p) => weightOf(p).tenths), unit, organizer })
     : null;
   const nameOf = (p: Person, i: number) => p.name.trim() || `${i + 1}人目`;
+  const tiers = (() => {
+    if (!result || !weighted) return [];
+    const map = new Map<string, { w: Weight; count: number; amount: number }>();
+    people.forEach((p, i) => {
+      const w = weightOf(p);
+      const k = w.key === "custom" ? `custom-${w.tenths}` : w.key;
+      const cur = map.get(k);
+      // 幹事は端数で少しずれるので、幹事でない人の金額を区分の金額にする
+      if (cur) {
+        cur.count += 1;
+        if (i !== organizer) cur.amount = result.amounts[i];
+      } else map.set(k, { w, count: 1, amount: result.amounts[i] });
+    });
+    return [...map.values()].sort((a, b) => b.w.tenths - a.w.tenths);
+  })();
+  const tierMax = Math.max(1, ...tiers.map((t) => t.amount));
 
   function update(id: number, patch: Partial<Person>) {
     setPeople((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
@@ -204,6 +220,8 @@ export function SplitClient() {
         ...(subsidy > 0 ? [`補助 ${yen(subsidy)} を引いて、${yen(totalYen - subsidy)} をみんなで`] : []),
         ...people.map((p, i) => `${weighted ? `${weightOf(p).mark} ` : "・"}${nameOf(p, i)} ${yen(result.amounts[i])}`),
         ...(result.surplus > 0 ? [`(全員同じ額にしたので ${yen(result.surplus)} のお釣りが出ます)`] : []),
+        // 受け取った人が印の意味を分かるように
+        ...(weighted && tiers.length > 1 ? ["", tiers.map((t) => `${t.w.mark}${t.w.label}`).join(" ")] : []),
       ].join("\n")
     : "";
 
@@ -302,7 +320,7 @@ export function SplitClient() {
               type="button"
               aria-pressed={weighted === v}
               onClick={() => setWeighted(v)}
-              className={`min-h-10 rounded-lg text-sm font-bold transition-colors ${weighted === v ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
+              className={`min-h-10 rounded-lg text-sm font-black transition-all active:scale-95 ${weighted === v ? "bg-accent text-accent-text shadow" : "text-muted hover:text-text"}`}
             >
               {v ? "傾斜" : "割り勘"}
             </button>
@@ -321,6 +339,19 @@ export function SplitClient() {
           ))}
         </select>
       </div>
+
+      {weighted && (
+        <ul className="mx-4 mt-2 flex flex-wrap gap-1.5" aria-label="区分の目安">
+          {weights.map((w) => (
+            <li key={w.key} className={`tier-${w.tone} inline-flex items-center gap-1 rounded-full bg-[var(--ts)] px-2.5 py-1 text-[11px] font-bold text-[var(--tc)]`}>
+              <span aria-hidden>{w.mark}</span>
+              {w.label}
+              <span className="tabular-nums opacity-80">×{(w.tenths / 10).toFixed(1)}</span>
+              {w.note && <span className="font-normal opacity-70">{w.note}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {/* 払う人。1人1行に、名前・区分・金額を並べる。顔のマークを押すと幹事(端数を受け持つ人) */}
       <ul className="mx-4 mt-2 divide-y divide-border overflow-hidden rounded-2xl border bg-surface" aria-live="polite">
@@ -361,7 +392,7 @@ export function SplitClient() {
                   >
                     {weights.map((opt) => (
                       <option key={opt.key} value={opt.key}>
-                        {opt.label} ×{(opt.tenths / 10).toFixed(1)}
+                        {opt.mark} {opt.label}
                       </option>
                     ))}
                     <option value="custom">倍率を入力</option>
@@ -420,6 +451,22 @@ export function SplitClient() {
             <span className="text-sm font-bold">合計</span>
             <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
           </p>
+          {tiers.length > 1 && (
+            <ul className="mt-3 space-y-1.5 border-t border-border pt-3" aria-label="区分ごとの金額">
+              {tiers.map((t) => (
+                <li key={`${t.w.key}-${t.w.tenths}`} className={`tier-${t.w.tone} flex items-center gap-2 text-xs`}>
+                  <span className="w-[5.5rem] shrink-0 truncate font-bold text-[var(--tc)]">
+                    {t.w.mark} {t.w.label}
+                    <span className="ml-1 font-normal text-muted">{t.count}人</span>
+                  </span>
+                  <span className="h-2 flex-1 overflow-hidden rounded-full bg-white/6">
+                    <span className="anim-grow block h-full rounded-full bg-[var(--tb)]" style={{ width: `${Math.round((t.amount / tierMax) * 100)}%` }} />
+                  </span>
+                  <span className="w-[4.2rem] shrink-0 text-right font-black tabular-nums">{yen(t.amount)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
           {result.surplus > 0 && (
             <p className="text-xs text-muted">
               全員 {yen(result.amounts[0])} で同じ額。{yen(result.surplus)} のお釣りが出ます(幹事が預かる)
