@@ -73,14 +73,37 @@ export function FunClient() {
   const access = useFunAccess();
   const locked = !access.unlocked;
   // 会社の会は、会社向けの道具。学生とプライベートは同じ遊び。会の種類は、この端末に残っている選んだ値から読む
-  const [company, setCompany] = useState(false);
+  // Play か Support か。最初は会の種類(仕事なら Support)。買えばどちらも使えるので、上のボタンか左右のスワイプで切り替える
+  const [side, setSide] = useState<"play" | "support">("play");
+  const company = side === "support";
   const [tool, setTool] = useState<Tool>("wolf");
   useEffect(() => {
     const isWork = loadAudience() === "worker";
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCompany(isWork);
+    setSide(isWork ? "support" : "play");
     if (isWork) setTool("topic");
   }, []);
+  function chooseSide(next: "play" | "support") {
+    if (next === side) return;
+    setSide(next);
+    setTool(next === "support" ? "topic" : "wolf");
+    setShowBuy(false);
+  }
+  // 左右にスワイプ(入力欄・選ぶ欄の上から始めたときは、切り替えない)
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+  function swipeStart(e: React.TouchEvent) {
+    const t = e.touches[0];
+    swipe.current = (e.target as HTMLElement).closest("input,textarea,select") ? null : { x: t.clientX, y: t.clientY };
+  }
+  function swipeEnd(e: React.TouchEvent) {
+    const s0 = swipe.current;
+    swipe.current = null;
+    if (!s0) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s0.x;
+    const dy = t.clientY - s0.y;
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) chooseSide(dx < 0 ? "support" : "play");
+  }
   const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
@@ -105,14 +128,29 @@ export function FunClient() {
   }
 
   return (
-    <div className="mx-auto max-w-xl pt-6 pb-16">
+    <div className="mx-auto min-h-[70vh] max-w-xl pt-6 pb-16" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
       <div className="px-4">
-        <h1 className="flex items-center gap-2 text-[26px] font-black tracking-tight">
-          <span className="font-logo">{company ? "Support" : "Play"}</span>
+        <h1 className="sr-only">Play と Support</h1>
+        {/* Play と Support。どちらも Tsudoro Plus で使える。左右にスワイプしても切り替わる */}
+        <div role="tablist" aria-label="Play と Support" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
+          {(["play", "support"] as const).map((k) => (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              aria-selected={side === k}
+              onClick={() => chooseSide(k)}
+              className={`font-logo min-h-11 rounded-xl text-xl font-black tracking-tight transition-colors ${side === k ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
+            >
+              {k === "play" ? "Play" : "Support"}
+            </button>
+          ))}
+        </div>
+        <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+          {company ? "幹事の仕事を徹底的にサポート" : "幹事がいる会をもっと楽しく"}
           {/* 買う前は、もやの上のボタンだけにする(黄色いものを2つ出さない)。買ったあとは開いた鍵の印 */}
           {!access.loading && !locked && <PackBadge locked={locked} />}
-        </h1>
-        <p className="mt-1 text-sm text-muted">{company ? "幹事の仕事を徹底的にサポート" : "幹事がいる会をもっと楽しく"}</p>
+        </p>
       </div>
 
       {/* 道具の切り替え */}

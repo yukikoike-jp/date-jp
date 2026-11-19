@@ -104,12 +104,16 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
       <button type="button" onClick={buy} disabled={pending || !purchasable} className={`${BUTTON_PRIMARY} mt-5 w-full disabled:opacity-60`}>
         {!purchasable ? `${yen(price)} ・ 購入の受付はもうすぐ始まります` : pending && !restoring ? "お支払いのページを開いています…" : `${yen(price)}で買う`}
       </button>
-      <p className="mt-2 text-center text-xs text-muted">
-        お支払いは Stripe のページで ・ カードの番号は Tsudoro に届きません。買ったあとの請求はありません。{" "}
-        <a href="/legal" className="underline underline-offset-2">
-          特定商取引法に基づく表記
-        </a>
-      </p>
+      <div className="mt-2 space-y-0.5 text-center text-xs text-muted">
+        <p>お支払いは Stripe の画面で行います。</p>
+        <p>カードの番号は Tsudoro には届きません。</p>
+        <p>買ったあとの請求はありません。</p>
+        <p>
+          <a href="/legal" className="underline underline-offset-2">
+            特定商取引法に基づく表記
+          </a>
+        </p>
+      </div>
       {restoring ? (
         <div className="mt-4 flex gap-2">
           <label className="min-w-0 flex-1">
