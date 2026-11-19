@@ -493,9 +493,19 @@ export function SplitClient({ from = null }: { from?: string | null }) {
               </button>
             </div>
           ) : (
-            <button type="button" onClick={makeCollection} disabled={collecting} className={`${BUTTON_SUB} w-full gap-2 text-sm`}>
-              <Wallet className="size-4" aria-hidden />
-              {collecting ? "作っています…" : "集金のページを作る(まだの人にだけ催促できる)"}
+            <button
+              type="button"
+              onClick={makeCollection}
+              disabled={collecting}
+              className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-accent/12 px-4 py-3 text-left ring-2 ring-accent transition-colors hover:bg-accent/20 disabled:opacity-60"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
+                <Wallet className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0">
+                <span className="block text-base font-black">{collecting ? "作っています…" : "集金のページを作る"}</span>
+                <span className="block text-xs text-muted">まだの人にだけ催促できます</span>
+              </span>
             </button>
           )}
         </section>
