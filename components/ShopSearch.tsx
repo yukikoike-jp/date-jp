@@ -1,6 +1,6 @@
 "use client";
 
-import { Beer, Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, UtensilsCrossed, Wallet } from "lucide-react";
+import { Beer, Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, TrainFront, UtensilsCrossed, Wallet } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { findShops } from "@/app/actions";
 import { AUDIENCES, loadAudience, type Audience } from "@/lib/audience";
@@ -53,7 +53,7 @@ function Option({
         </span>
       )}
       <span className="min-w-0 leading-tight">
-        <span className="block text-sm font-bold whitespace-nowrap">{title}</span>
+        <span className="block text-sm font-bold tracking-tight whitespace-nowrap">{title}</span>
         {note && <span className={`block text-[11px] ${on ? "opacity-75" : "text-muted"}`}>{note}</span>}
       </span>
     </button>
@@ -121,7 +121,7 @@ export function ShopSearch() {
             <MapPin className="size-4" />
             どこで飲む?
           </p>
-          <StationPicker value={station} onChange={setStation} anyLabel={null} />
+          <StationPicker value={station} onChange={setStation} anyLabel={null} quick />
           {/* 一次会か二次会か。二次会向けは、23時以降も開いているお店だけを出す */}
           <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="何次会">
             <Option compact on={!second} onClick={() => setSecond(false)} title="一次会向け" />
@@ -200,10 +200,11 @@ export function ShopSearch() {
             <Option
               on={smoking}
               onClick={() => setSmoking(!smoking)}
+              note="分煙のお店も含みます。"
               title={
                 <span className="inline-flex items-center gap-1.5">
                   <Cigarette className="size-4" aria-hidden />
-                  タバコが吸えるお店だけにする(分煙も含む)
+                  タバコが吸えるお店だけにする
                 </span>
               }
             />
@@ -231,20 +232,27 @@ export function ShopSearch() {
 
       <div className="mt-4" aria-busy={pending}>
         {!station && (
-          <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">
-            上の「どこで飲む?」で駅を選ぶと近くのお店を表示
-          </p>
+          <div id="shops" className="mx-4 flex flex-col items-center rounded-3xl border border-dashed border-white/12 px-5 py-8 text-center">
+            <span className="grid size-12 place-items-center rounded-2xl bg-accent/12 text-accent ring-1 ring-accent/30">
+              <TrainFront className="size-6" aria-hidden />
+            </span>
+            <p className="mt-3 text-sm font-bold text-white/85">まずは駅を選んでください</p>
+            <p className="mt-1 text-xs text-muted">近くの飲み会向けのお店がここに出ます。</p>
+            <a href="#filters" className="mt-4 inline-flex min-h-10 items-center rounded-full border border-border px-4 text-xs font-bold">
+              駅を選ぶ
+            </a>
+          </div>
         )}
         {/* 探しているあいだは、お店のカードの形だけを先に出す */}
         {station && pending && <SkeletonShops />}
         {station && result && !pending &&
           (result.shops.length > 0 ? (
             <>
-              <ShopList partyId="search" shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} scene={{ audience, budget }} />
+              <ShopList partyId="search" heading="見つかったお店" lead={result.otherArea ? undefined : `${station.name}駅の近くで、選んだ条件に合うお店`} shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} scene={{ audience, budget }} />
             </>
           ) : (
             <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">
-              合うお店なし
+              合うお店が見つかりませんでした。予算や料理の条件をゆるめると出てきます。
             </p>
           ))}
       </div>

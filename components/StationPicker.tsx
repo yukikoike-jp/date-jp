@@ -3,23 +3,62 @@
 import { Check, Search, TrainFront } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { searchStations } from "@/app/actions";
-import type { Station } from "@/lib/stations";
+import { isStation, type Station } from "@/lib/stations";
 import { SkeletonBlock } from "./Skeleton";
 import { INPUT, PILL, PILL_OFF, PILL_ON } from "./ui";
 
 // 行きやすい駅を1つ選ぶ。駅名を打つと、少し待ってから候補が出る(入力補完)。出てきた駅から選ぶ(全国)。
 // 選ばなければ「どこでもいい」(場所はほかの人の駅で決まる)
 
-/** anyLabel = 「選ばない」の選択肢の名前。null なら出さない(お店を探すでは駅が要る) */
+// 打たずに1回で選べる駅。最近この端末で選んだ駅を先に、足りなければ仙台の飲み屋街の駅で埋める
+const RECENT_KEY = "nomi:recent-stations";
+const POPULAR: Station[] = [
+  { name: "仙台", pref: "宮城県", lat: 38.260132, lng: 140.882438 },
+  { name: "広瀬通", pref: "宮城県", lat: 38.26395, lng: 140.875208 },
+  { name: "青葉通一番町", pref: "宮城県", lat: 38.258945, lng: 140.87365 },
+  { name: "勾当台公園", pref: "宮城県", lat: 38.26796, lng: 140.87134 },
+];
+const same = (a: Station, b: Station) => a.name === b.name && a.pref === b.pref;
+
+function loadRecent(): Station[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter(isStation).slice(0, 4) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(s: Station) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([s, ...loadRecent().filter((x) => !same(x, s))].slice(0, 4)));
+  } catch {}
+}
+
+/** anyLabel = 「選ばない」の選択肢の名前。null なら出さない(お店を探すでは駅が要る)。quick = 打たずに選べる駅を並べる */
 export function StationPicker({
   value,
-  onChange,
+  onChange: change,
   anyLabel = "どこでもいい",
+  quick = false,
 }: {
   value: Station | null;
   onChange: (s: Station | null) => void;
   anyLabel?: string | null;
+  quick?: boolean;
 }) {
+  // 選んだ駅は、次に開いたときのために覚えておく
+  const onChange = (s: Station | null) => {
+    if (s) saveRecent(s);
+    change(s);
+  };
+  const [quickList, setQuickList] = useState<Station[]>([]);
+  useEffect(() => {
+    if (!quick) return;
+    const recent = loadRecent();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuickList([...recent, ...POPULAR.filter((p) => !recent.some((r) => same(r, p)))].slice(0, 4));
+  }, [quick, value]);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Station[] | null>(null);
   const [pending, start] = useTransition();
@@ -54,12 +93,23 @@ export function StationPicker({
           </button>
         )}
         {value && (
-          <span className={`${PILL} px-3 ${PILL_ON}`}>
+          <span className={`${PILL} anim-pop px-3 ${PILL_ON}`}>
             <Check className="size-3.5 shrink-0" aria-hidden />
             {value.name}駅
-            <span className="text-xs font-bold opacity-70">({value.pref})</span>
+            <span className="text-xs font-bold opacity-70">{value.pref}</span>
           </span>
         )}
+        {quick &&
+          !query.trim() &&
+          quickList
+            .filter((s) => !value || !same(s, value))
+            .slice(0, value ? 3 : 4)
+            .map((s) => (
+              <button key={`${s.name}-${s.pref}`} type="button" onClick={() => onChange(s)} className={`${PILL} px-3 ${PILL_OFF}`}>
+                <TrainFront className="size-3.5 shrink-0 opacity-60" aria-hidden />
+                {s.name}
+              </button>
+            ))}
       </div>
       <div className="flex gap-2">
         <label className="min-w-0 flex-1">
@@ -76,7 +126,7 @@ export function StationPicker({
                 find();
               }
             }}
-            placeholder="駅名(例: 仙台、渋谷)"
+            placeholder="駅名 例: 仙台、渋谷"
             autoComplete="off"
             role="combobox"
             aria-autocomplete="list"
