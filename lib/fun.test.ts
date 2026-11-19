@@ -26,6 +26,25 @@ describe("shuffle", () => {
   });
 });
 
+describe("seatPlan の指定", () => {
+  const names = ["あ", "い", "う", "え", "お"];
+  it("上座の人は席1、出口に近い席の人は最後の席(円卓は向かい側)に座る", () => {
+    for (let i = 0; i < 20; i++) {
+      const flat = seatPlan(names, "table", Math.random, { top: "い", exit: "お" }).rows.flat();
+      expect(flat[0]).toBe("い");
+      expect(flat[flat.length - 1]).toBe("お");
+      expect([...flat].sort()).toEqual([...names].sort());
+      const round = seatPlan(names, "round", Math.random, { exit: "う" }).rows[0];
+      expect(round[2]).toBe("う");
+    }
+  });
+  it("同じ人を両方に指定したら、上座を優先する。名前にない人は無視する", () => {
+    const flat = seatPlan(names, "counter", Math.random, { top: "あ", exit: "あ" }).rows.flat();
+    expect(flat[0]).toBe("あ");
+    expect(seatPlan(names, "counter", Math.random, { top: "x", exit: "y" }).rows.flat().sort()).toEqual([...names].sort());
+  });
+});
+
 describe("seatPlan", () => {
   it("向かい合わせは2列に分ける(奥は手前と同じか1席少ない)", () => {
     const r = seatPlan(DEMO_NAMES.slice(0, 5), "table", seq(0.4)).rows;

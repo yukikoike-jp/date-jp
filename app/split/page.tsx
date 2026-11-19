@@ -6,7 +6,7 @@ import { PageMotion } from "@/components/PageMotion";
 
 export const metadata: Metadata = {
   title: "飲み会の割り勘・傾斜計算",
-  description: "合計を入れるだけで1人いくらかがすぐ分かります。全員同じ額の割り勘も、先輩・後輩で差をつける傾斜も。集金のページも作れます。",
+  description: "合計を入れるだけで1人いくらかがすぐ分かります。全員同じ額の割り勘も、先輩・後輩で差をつける傾斜も。",
   alternates: { canonical: "/split" },
 };
 
@@ -27,7 +27,7 @@ export default async function SplitPage(props: PageProps<"/split">) {
           <h1 className="text-[22px] font-black tracking-tight">会計</h1>
           <p className="mt-1 text-sm text-muted">合計を入れるだけで一人ずつの金額を表示。</p>
         </div>
-        <SplitClient from={typeof from === "string" ? from : null} />
+        <SplitClient />
       </div>
     </PageMotion>
   );

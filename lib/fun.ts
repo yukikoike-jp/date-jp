@@ -39,8 +39,33 @@ export const SEAT_LAYOUTS: { key: SeatLayout; label: string; note: string }[] = 
  * 席替え。席の順に名前を入れた一覧を返す。
  * table = 手前の列と奥の列(奥は手前と同じか1席少ない)、round と counter = 1周・1列の順
  */
-export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Rand = Math.random): { rows: string[][] } {
-  const order = shuffle(names, rand);
+export type SeatPins = { top?: string | null; exit?: string | null };
+
+/** 出口にいちばん近い席の番号(0から)。円卓は上座の向かい側、ほかは最後の席 */
+export function seatExitIndex(layout: SeatLayout, count: number): number {
+  return layout === "round" ? Math.floor(count / 2) : count - 1;
+}
+
+/**
+ * 席の順に名前を並べる。席1が上座(奥)、出口に近い席が下座。
+ * pins.top = 上座に座る人、pins.exit = 出口に近い席に座る人(幹事など)。ほかの人はシャッフル
+ */
+function arrange(names: readonly string[], layout: SeatLayout, rand: Rand, pins: SeatPins): string[] {
+  const n = names.length;
+  const top = pins.top && names.includes(pins.top) ? pins.top : null;
+  const exit = pins.exit && pins.exit !== top && names.includes(pins.exit) ? pins.exit : null;
+  const rest = shuffle(
+    names.filter((x) => x !== top && x !== exit),
+    rand,
+  );
+  const order: (string | null)[] = Array(n).fill(null);
+  if (top && n > 0) order[0] = top;
+  if (exit && n > 1) order[seatExitIndex(layout, n)] = exit;
+  return order.map((x) => x ?? rest.shift() ?? "");
+}
+
+export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] } {
+  const order = arrange(names, layout, rand, pins);
   if (layout === "table") {
     const half = Math.ceil(order.length / 2);
     return { rows: [order.slice(0, half), order.slice(half)] };

@@ -1,17 +1,13 @@
 "use client";
 
-import { Crown, ExternalLink, NotebookPen, Plus, RotateCcw, Users, Wallet, X } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Crown, NotebookPen, Plus, RotateCcw, Users, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
+import { partyAttendees, partyStatuses } from "@/app/actions";
 import { isFormal, loadAudience, type Audience } from "@/lib/audience";
-import { rememberCollection } from "@/lib/myCollections";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
 import { SendButtons, useCanShare } from "./SendButtons";
 import { ROUND_UNITS, WEIGHTS, splitBill, subsidyTotal, tenthsFromInput, type Weight } from "@/lib/split";
-import { BUTTON_SUB } from "./ui";
 
 // 会計。最初は全員同じ額の割り勘で、「傾斜で割る」に切り替えると区分や倍率を選べる(学生やプライベートでは傾斜はあまり使わないため)。
 // 傾斜では hasuru と同じく、区分ごとに色・記号・頭文字の丸で人を見分ける(色だけに頼らない)
@@ -22,9 +18,8 @@ type Person = { id: number; name: string; weight: string; custom: string };
 /** 幹事の画面から「この会の会計」で来たとき、行く人の名前とお酒を飲まないかを受け取る(URL には載せない) */
 export const SPLIT_NAMES_KEY = "nomi:split-names";
 
-/** 集金が終わるまで続きから使えるよう、最後の会計をこの端末に残す(サーバーには送らない) */
+/** 続きから使えるよう、最後の会計をこの端末に残す(サーバーには送らない) */
 const SAVE_KEY = "nomi:split";
-/** collection は作った集金のページ(幹事の鍵つき)。作ったあとに金額を変えたら作り直す */
 type Saved = {
   title: string;
   total: string;
@@ -33,7 +28,6 @@ type Saved = {
   organizer: number;
   /** 傾斜で割るか。前の保存にないときは割り勘にする */
   weighted?: boolean;
-  collection?: { id: string; token: string } | null;
   /** 会社や部署からの補助。前の保存にはない */
   subsidyKind?: "per" | "lump";
   subsidyYen?: string;
@@ -66,10 +60,8 @@ function Avatar({ name, tone, size = "md" }: { name: string; tone: Weight["tone"
   );
 }
 
-/** from = 会の画面から来たときの、その会の id。作った集金をその会とつなぐ */
-export function SplitClient({ from = null }: { from?: string | null }) {
-  // どの会の会計か。会の画面から来たか、決まった会から名前を読み込んだときに入る
-  const [fromParty, setFromParty] = useState<string | null>(from);
+
+export function SplitClient() {
   const [audience, setAudience] = useState<Audience>("private");
   const [title, setTitle] = useState("");
   const [total, setTotal] = useState("");
@@ -77,14 +69,10 @@ export function SplitClient({ from = null }: { from?: string | null }) {
   const [unit, setUnit] = useState<number>(100);
   const [organizer, setOrganizer] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [collection, setCollection] = useState<Saved["collection"]>(null);
   const [weighted, setWeighted] = useState(false);
   // 会社や部署・部費からの補助(1人あたり、または全体でいくら)。空なら補助なし
   const [subsidyKind, setSubsidyKind] = useState<"per" | "lump">("per");
   const [subsidyYen, setSubsidyYen] = useState("");
-  const [collectError, setCollectError] = useState<string | null>(null);
-  const [collecting, startCollecting] = useTransition();
-  const router = useRouter();
   const canShare = useCanShare();
   // この端末で作った、決まった会。押すと行く人の名前をそのまま読み込む
   const [decidedParties, setDecidedParties] = useState<{ party: MyParty; date: string }[]>([]);
@@ -117,8 +105,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
       setTitle(`${r.title} ${dateLabel(r.date).split("(")[0]}`.slice(0, 30));
       setPeople(r.attendees.slice(0, 30).map((a) => person(a.soft ? "soft" : "normal", a.name.slice(0, 20))));
       setOrganizer(0);
-      setCollection(null);
-      setFromParty(p.id);
     });
   }
 
@@ -144,7 +130,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
       setTitle(saved.title ?? "");
       setTotal(saved.total ?? "");
       setPeople(saved.people.map((p) => ({ id: p.id, name: p.name, weight: p.weight, custom: p.custom ?? "" })));
-      setCollection(saved.collection ?? null);
       setWeighted(saved.weighted ?? false);
       setSubsidyKind(saved.subsidyKind ?? "per");
       setSubsidyYen(saved.subsidyYen ?? "");
@@ -165,9 +150,9 @@ export function SplitClient({ from = null }: { from?: string | null }) {
   useEffect(() => {
     if (!loaded) return;
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({ title, total, people, unit, organizer, weighted, collection, subsidyKind, subsidyYen } satisfies Saved));
+      localStorage.setItem(SAVE_KEY, JSON.stringify({ title, total, people, unit, organizer, weighted, subsidyKind, subsidyYen } satisfies Saved));
     } catch {}
-  }, [loaded, title, total, people, unit, organizer, weighted, collection, subsidyKind, subsidyYen]);
+  }, [loaded, title, total, people, unit, organizer, weighted, subsidyKind, subsidyYen]);
 
   function startOver() {
     if (!window.confirm("いまの会計を消して、新しい会計を始めますか?")) return;
@@ -178,7 +163,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
     setOrganizer(0);
     setWeighted(true);
     setSubsidyYen("");
-    setCollection(null);
   }
 
   const weights = WEIGHTS[audience];
@@ -217,33 +201,6 @@ export function SplitClient({ from = null }: { from?: string | null }) {
         ...(result.surplus > 0 ? [`(全員同じ額にしたので ${yen(result.surplus)} のお釣りが出ます)`] : []),
       ].join("\n")
     : "";
-
-  /** 集金のページを作る。金額はサーバーで計算し直し、幹事の画面へ移る */
-  function makeCollection() {
-    setCollectError(null);
-    startCollecting(async () => {
-      const r = await startCollection({
-        title,
-        audience,
-        total: totalYen,
-        subsidy: isFormal(audience) && subsidyYen ? { kind: subsidyKind, yen: Number(subsidyYen) } : null,
-        unit,
-        organizer,
-        people: people.map((p, i) => {
-          const w = weightOf(p);
-          return { name: nameOf(p, i), tenths: w.tenths, label: w.label, mark: w.mark, tone: w.tone };
-        }),
-      });
-      if (!r.ok) {
-        setCollectError(r.error);
-        return;
-      }
-      setCollection({ id: r.id, token: r.adminToken });
-      // 「これまでの会」で、その会にいくらかかったかを出せるようにする
-      rememberCollection({ id: r.id, token: r.adminToken, title, total: totalYen, createdAt: Date.now(), ...(fromParty ? { partyId: fromParty } : {}) });
-      router.push(`/c/${r.id}?token=${r.adminToken}`);
-    });
-  }
 
   return (
     <>
@@ -474,47 +431,7 @@ export function SplitClient({ from = null }: { from?: string | null }) {
         <p className="mx-4 mt-3 px-1 text-sm text-muted">合計を入れると一人ずつの金額が出ます。</p>
       )}
 
-      {/* 集金。金額が出たあとだけ、1つのボタンで出す。作った集金の一覧は小さなリンクで */}
-      {result && (
-        <section id="collect" className="mx-4 mt-3 scroll-mt-20">
-          {collectError && (
-            <p role="alert" className="mb-2 text-sm font-bold text-danger">
-              {collectError}
-            </p>
-          )}
-          {collection ? (
-            <div className="grid grid-cols-2 gap-2">
-              <Link href={`/c/${collection.id}?token=${collection.token}`} className={`${BUTTON_SUB} gap-1.5 text-sm`}>
-                <ExternalLink className="size-4" aria-hidden />
-                集金のページ
-              </Link>
-              <button type="button" onClick={makeCollection} disabled={collecting} className={`${BUTTON_SUB} text-sm`}>
-                {collecting ? "作っています…" : "作り直す"}
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={makeCollection}
-              disabled={collecting}
-              className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-accent/12 px-4 py-3 text-left ring-2 ring-accent transition-colors hover:bg-accent/20 disabled:opacity-60"
-            >
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
-                <Wallet className="size-5" aria-hidden />
-              </span>
-              <span className="min-w-0">
-                <span className="block text-base font-black">{collecting ? "作っています…" : "集金のページを作る"}</span>
-                <span className="block text-xs text-muted">まだの人にだけ催促できます</span>
-              </span>
-            </button>
-          )}
-        </section>
-      )}
-
       <div className="mx-4 mt-2 flex items-center justify-center gap-4">
-        <Link href="/fun?tab=collect" className="inline-flex min-h-11 items-center px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
-          集金チェック
-        </Link>
         <button type="button" onClick={startOver} className="inline-flex min-h-11 items-center gap-1.5 px-2 text-xs font-bold text-muted underline underline-offset-2 hover:text-text">
           <RotateCcw className="size-3.5" aria-hidden />
           新しい会計を始める

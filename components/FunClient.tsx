@@ -2,7 +2,7 @@
 
 import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
+import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { loadAudience } from "@/lib/audience";
@@ -219,10 +219,7 @@ export function FunClient() {
       )}
 
       <div className="mt-4">
-        {tool === "collect" ? (
-          // 集金のチェックは無料。買う前でも使える
-          <CollectList />
-        ) : locked && showBuy ? (
+        {locked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : locked ? (
@@ -240,6 +237,7 @@ export function FunClient() {
               {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
+              {tool === "collect" && <CollectList />}
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
@@ -272,6 +270,7 @@ export function FunClient() {
             {tool === "thanks" && <Thanks locked={locked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
+            {tool === "collect" && <CollectList />}
           </>
         )}
       </div>
@@ -898,9 +897,12 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
   const [layout, setLayout] = useState<SeatLayout>("table");
   const [plan, setPlan] = useState<{ rows: string[][] } | null>(null);
   const [round, setRound] = useState(0);
+  // 上座に座る人・出口に近い席に座る人(幹事など)。空はおまかせ
+  const [top, setTop] = useState("");
+  const [exit, setExit] = useState("");
   const ok = names.length >= 2;
   // 名前や並べ方を変えたら、いったん結果を消す
-  const key = `${layout}|${names.join("\u0000")}`;
+  const key = `${layout}|${top}|${exit}|${names.join("\u0000")}`;
   const last = useRef(key);
   useEffect(() => {
     if (last.current !== key) {
@@ -910,7 +912,7 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
   }, [key]);
 
   function run() {
-    setPlan(seatPlan(names, layout));
+    setPlan(seatPlan(names, layout, Math.random, { top: top || null, exit: exit || null }));
     setRound((r) => r + 1);
   }
 
@@ -923,6 +925,27 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
             {layout === l.key && "✓ "}
             {l.label}
           </button>
+        ))}
+      </div>
+      {/* 上座・下座の指定。席1が上座(奥)、出口に近い席が下座 */}
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {(
+          [
+            ["上座に座る人", top, setTop],
+            ["出口に近い席(幹事など)", exit, setExit],
+          ] as const
+        ).map(([label, value, set]) => (
+          <label key={label} className="block rounded-xl bg-surface-2 px-3 py-2 ring-1 ring-white/10">
+            <span className="block text-[11px] font-bold text-muted">{label}</span>
+            <select value={names.includes(value) ? value : ""} onChange={(e) => set(e.target.value)} aria-label={label} className="mt-0.5 w-full bg-transparent text-sm font-black outline-none">
+              <option value="">おまかせ</option>
+              {names.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
         ))}
       </div>
       {plan && (
@@ -938,7 +961,7 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
                   )}
                   <ul className="flex flex-wrap justify-center gap-2">
                     {row.map((n, i) => (
-                      <SeatChip key={n} n={n} no={ri === 0 ? i + 1 : plan.rows[0].length + i + 1} />
+                      <SeatChip key={n} n={n} no={ri === 0 ? i + 1 : plan.rows[0].length + i + 1} total={names.length} layout={layout} />
                     ))}
                   </ul>
                 </div>
@@ -958,16 +981,28 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-function SeatChip({ n, no }: { n: string; no: number }) {
+/** 席の目印。席1は上座、出口にいちばん近い席は下座 */
+function seatTag(no: number, total: number, layout: SeatLayout): string | null {
+  if (no === 1) return "上座";
+  if (no - 1 === seatExitIndex(layout, total)) return "出口ちかく";
+  return null;
+}
+
+function SeatChip({ n, no, total, layout }: { n: string; no: number; total: number; layout: SeatLayout }) {
+  const tag = seatTag(no, total, layout);
   return (
-    <li className="flex min-h-12 min-w-[5.5rem] items-center gap-2 rounded-xl bg-surface-2 px-3 ring-1 ring-white/10">
-      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-black text-accent-text">{no}</span>
-      <span className="truncate text-sm font-bold">{n}</span>
+    <li className="flex min-h-12 min-w-[5.5rem] flex-col items-center justify-center rounded-xl bg-surface-2 px-3 py-1 ring-1 ring-white/10">
+      {tag && <span className="text-[10px] font-black text-accent">{tag}</span>}
+      <span className="flex items-center gap-2">
+        <span className="grid size-6 shrink-0 place-items-center rounded-full bg-accent text-[11px] font-black text-accent-text">{no}</span>
+        <span className="truncate text-sm font-bold">{n}</span>
+      </span>
     </li>
   );
 }
 
 function RoundTable({ names }: { names: string[] }) {
+  const exitAt = seatExitIndex("round", names.length);
   const n = names.length;
   const size = 300;
   const r = 118;
@@ -987,6 +1022,7 @@ function RoundTable({ names }: { names: string[] }) {
                 <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[10px] font-black text-accent-text">{i + 1}</span>
                 <span className="truncate">{name}</span>
               </span>
+              {(i === 0 || i === exitAt) && <span className="mt-0.5 block text-center text-[10px] font-black text-accent">{i === 0 ? "上座" : "出口ちかく"}</span>}
             </div>
           );
         })}

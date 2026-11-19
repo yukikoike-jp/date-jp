@@ -9,12 +9,12 @@ import { yen } from "@/lib/sendai";
 import { BUTTON_PRIMARY } from "./ui";
 
 // 「集金のチェック」。この端末で作った集金を並べ、誰が何人払ったかを棒で見せる。
-// 集金は会計の金額から作るので、新しく始めるときは会計の画面へ送る
+// 新しく始めるときは、合計と名前を入れる画面(/collect/new)へ送る
 
 type Progress = { payers: number; paid: number; unpaidYen: number };
 
 const STEPS = [
-  { title: "会計で金額を出す", note: "傾斜でも割り勘でも、出た金額がそのまま集金の額に" },
+  { title: "合計と名前を入れて、集金のページを作る", note: "全員同じ額で割って、一人ずつの金額が出る" },
   { title: "集金のページをみんなに送る", note: "共有のボタンで LINE やチャットへ" },
   { title: "受け取ったら幹事が「受け取った」を押す", note: "まだの人にだけ催促" },
 ];
@@ -36,9 +36,9 @@ export function CollectList() {
   return (
     <>
       <div className="px-4">
-        <Link href="/split#collect" className={`${BUTTON_PRIMARY} w-full gap-2`}>
+        <Link href="/collect/new" className={`${BUTTON_PRIMARY} w-full gap-2`}>
           <Wallet className="size-5" aria-hidden />
-          会計から集金を始める
+          集金を始める
         </Link>
       </div>
 

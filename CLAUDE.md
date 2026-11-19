@@ -79,3 +79,4 @@ URL を LINE に貼ると、みんなが30秒で行ける日と予算を答え�
 - `app/actions.ts` Server Actions。幹事の操作は、幹事の鍵をサーバー側で照合する
 - `components/` 画面の部品
 - `docs/launch-checklist.md` お金をもらう前の手順
+- **集金(2026-11-19 から Tsudoro+ の機能)**: 会計(/split)には集金の機能を置かない。集金のページを作るのは Support の「集金チェック」(/fun?tab=collect)から /collect/new へ。買う前は「もや」。サーバーも startCollection で hasFun を確かめる。参加する人が開く /c/[id] と、作った集金の幹事画面は、これまでどおり URL で開ける。/collect は Support へ飛ばす。
