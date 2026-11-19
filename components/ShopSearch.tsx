@@ -137,7 +137,7 @@ export function ShopSearch() {
               <UtensilsCrossed className="size-4" />
               どんなお店?
             </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <Option compact on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
               {SECOND_GENRES.map((g) => (
                 <Option compact key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
@@ -154,7 +154,8 @@ export function ShopSearch() {
           </p>
           <div className="grid grid-cols-3 gap-2">
             <Option compact on={budget === null} onClick={() => setBudget(null)} title="決めない" />
-            {opts.budgets.map((b) => (
+            {/* 「決めない」と合わせて6つ(3つずつ2段)。多いときは安い方から外す */}
+            {opts.budgets.slice(-5).map((b) => (
               <Option compact key={b} on={budget === b} onClick={() => setBudget(b)} title={`〜${yen(b)}`} />
             ))}
           </div>
