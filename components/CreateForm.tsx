@@ -140,7 +140,7 @@ export function CreateForm() {
         <button type="button" onClick={submit} disabled={pending || missing !== null} className={`${BUTTON_PRIMARY} w-full gap-2`}>
           {pending ? "作成中…" : missing ? "名前と候補の日を入れてください" : (
             <>
-              URLを作る
+              URLをつくる
               <ArrowRight className="size-4" aria-hidden />
             </>
           )}

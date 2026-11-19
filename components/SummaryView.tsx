@@ -91,7 +91,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
       icon: CalendarDays,
       label: "日にち",
       // ○の数が同じ日が複数あれば、全部出す(5人で ○3 の日が2つなら、2つとも)
-      value: summary.bestDates.length > 1 ? summary.bestDates.map(dateLabel).join(" ・ ") : dateLabel(summary.date),
+      value: summary.bestDates.length > 1 ? summary.bestDates.map(dateLabel).join("\n") : dateLabel(summary.date),
       sub:
         summary.bestDates.length > 1
           ? `どの日も ○${summary.ranking[0].ok}人${summary.ranking[0].maybe > 0 ? ` △${summary.ranking[0].maybe}人` : ""}で同じ。時間とお店は ${dateLabel(summary.date)} の答えから`
@@ -142,7 +142,7 @@ export function SummaryView({ summary }: { summary: Summary }) {
             <Icon className="mt-1 size-5 shrink-0" aria-hidden />
             <dt className="w-14 shrink-0 pt-0.5 text-sm font-bold text-muted">{label}</dt>
             <dd className="min-w-0">
-              <span className="block text-lg font-black">{value}</span>
+              <span className="block text-lg font-black whitespace-pre-line">{value}</span>
               <span className="block text-xs text-muted">{sub}</span>
             </dd>
           </div>
@@ -153,7 +153,10 @@ export function SummaryView({ summary }: { summary: Summary }) {
       <details className="group mt-3 rounded-2xl bg-surface-2 px-4 py-3">
         <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 text-sm font-bold [&::-webkit-details-marker]:hidden">
           <Users className="size-4" aria-hidden />
-          <span className="flex-1">くわしく見る(場所・二次会・苦手なもの・ひとこと)</span>
+          <span className="flex-1">
+            くわしく見る
+            <span className="block text-xs font-normal text-muted">場所・二次会・苦手なもの・ひとこと</span>
+          </span>
           <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
         </summary>
         <dl className="mt-2 divide-y divide-border rounded-2xl border border-border">

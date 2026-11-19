@@ -153,16 +153,19 @@ export function AnswerPanel({
   if (mine && !editing) {
     return (
       <section className="anim-rise mx-4 rounded-3xl border panel px-4 py-5">
-        <p className="flex items-center gap-2 font-black">
-          <span className="grid size-6 place-items-center rounded-full bg-accent text-accent-text">
-            <Check className="size-4" aria-hidden />
+        <div className="flex items-center gap-3">
+          <span className={`grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text ${saved ? "anim-pop" : ""}`}>
+            <Check className="size-5" aria-hidden />
           </span>
-          {saved
-            ? passed
-              ? `${mine.name}さん、今回は行けないと受け取りました。また誘いますね`
-              : `${mine.name}さんの答えを受け取りました。ありがとう!`
-            : `${mine.name}さんの答えは保存済み`}
-        </p>
+          <p className="min-w-0">
+            <span className="block font-black">
+              {saved ? (passed ? "今回は行けないと受け取りました" : "答えを受け取りました") : "答えは保存済み"}
+            </span>
+            <span className="block text-sm text-muted">
+              {saved ? (passed ? `${mine.name}さん、また誘いますね` : `${mine.name}さん、ありがとう!`) : `${mine.name}さんの答え`}
+            </span>
+          </p>
+        </div>
         <button type="button" onClick={edit} disabled={pending} className={`${BUTTON_SUB} mt-3 w-full gap-2`}>
           <Pencil className="size-4" aria-hidden />
           {pending ? "読み込み中…" : "回答を直す"}
@@ -237,8 +240,8 @@ export function AnswerPanel({
               className="mt-3 min-h-11 w-full rounded-xl text-sm text-muted underline-offset-4 transition-colors enabled:hover:text-text enabled:hover:underline disabled:opacity-60"
             >
               {form.name.trim() === ""
-                ? "今回行けないときは名前を入れてここを押してください"
-                : "今回は行けないときはこちら(理由は聞きません)"}
+                ? "今回は行けない人は名前を入れてここを押してください"
+                : "今回は行けない・理由は聞きません"}
             </button>
           )}
         </label>
@@ -346,8 +349,9 @@ export function AnswerPanel({
           onClick={() => setMore((v) => !v)}
           className="flex min-h-12 w-full items-center justify-between border-t border-border px-5 text-sm font-black text-white/80 transition-colors hover:bg-white/5"
         >
-          <span>
-            もっと答える <span className="font-normal text-muted">(予算・お酒・苦手なもの・食べたいもの・ひとこと。なくてもOK)</span>
+          <span className="text-left">
+            もっと答える
+            <span className="block text-xs font-normal text-muted">予算・お酒・苦手なものなど。なくてもOK。</span>
           </span>
           <ChevronDown className={`size-4 shrink-0 text-white/40 transition-transform ${more ? "rotate-180" : ""}`} aria-hidden />
         </button>
