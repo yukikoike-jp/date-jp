@@ -1,7 +1,8 @@
 "use client";
 
 import { openShopInPlace } from "@/lib/openShop";
-import { ExternalLink, Heart, MapPin } from "lucide-react";
+import { ChevronDown, ExternalLink, Heart, MapPin } from "lucide-react";
+import { useState } from "react";
 import { toggleFavorite, useFavorites } from "@/lib/favorites";
 import { mapsUrl } from "@/lib/maps";
 import { PrNote } from "./PrNote";
@@ -10,15 +11,21 @@ import { PrNote } from "./PrNote";
 
 export function FavoriteShops() {
   const favorites = useFavorites();
+  // 最初は小さな1行にたたんでおく。押すとひろがる
+  const [open, setOpen] = useState(false);
   if (favorites.length === 0) return null;
   return (
-    <section className="mx-4 mb-4 rounded-3xl border panel px-4 py-5">
-      <h2 className="flex items-center gap-2 font-black">
-        <Heart className="size-5 fill-current text-[#ff6b74]" aria-hidden />
-        お気に入りのお店
-        <span className="text-sm font-bold text-muted">{favorites.length}</span>
-      </h2>
-      <ul className="mt-3 divide-y divide-border">
+    <section className="mx-4 mb-4 rounded-2xl border panel px-4 py-1">
+      <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="flex min-h-11 w-full items-center gap-2 text-left">
+        <Heart className="size-4 shrink-0 fill-current text-[#ff6b74]" aria-hidden />
+        <span className="flex-1 text-sm font-black">
+          お気に入りのお店 <span className="font-bold text-muted">{favorites.length}</span>
+        </span>
+        <ChevronDown className={`size-4 shrink-0 text-white/40 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+      </button>
+      {open && (
+      <>
+      <ul className="mt-1 divide-y divide-border">
         {favorites.map((f) => (
           <li key={f.id} className="flex items-center gap-2 py-2.5">
             <div className="min-w-0 flex-1">
@@ -57,7 +64,9 @@ export function FavoriteShops() {
           </li>
         ))}
       </ul>
-      <PrNote className="mt-2" />
+      <PrNote className="mt-2 pb-3" />
+      </>
+      )}
     </section>
   );
 }

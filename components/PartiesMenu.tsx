@@ -5,19 +5,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { partyStatuses, type PartyStatus } from "@/app/actions";
-import { loadMyParties, type MyParty } from "@/lib/myParties";
+import { forgetParty, loadMyParties, rememberParty, type MyParty } from "@/lib/myParties";
 import { clock, dateLabel } from "@/lib/sendai";
+import { SwipeRow } from "./SwipeRow";
+import { toast } from "./Toast";
 
 // 上のバーの右上のボタン。この端末で作った会を、調整中・これから・完了に分けて、どの画面からでも開ける。
 // 開いたときに、会の状態をサーバーに聞く(参加者の URL でも見られる内容だけ)。会の一覧は、この端末のブラウザの中にある
 
 type Row = { party: MyParty; st: PartyStatus | undefined };
 
-function Item({ r, onClose }: { r: Row; onClose: () => void }) {
+function Item({ r, onClose, onRemove }: { r: Row; onClose: () => void; onRemove: (r: Row) => void }) {
   const d = r.st?.decision ?? null;
   const sub = !r.st ? "" : d ? `決定 ${dateLabel(d.date)} ${clock(d.start)}${d.shopName ? ` ・ ${d.shopName}` : ""}` : `調整中 ・ ${r.st.answered}人が回答`;
   return (
     <li>
+      {/* 左にスワイプすると、この端末の一覧から外せる */}
+      <SwipeRow onAction={() => onRemove(r)}>
       <Link
         href={`/p/${r.party.id}/admin?token=${r.party.token}`}
         onClick={onClose}
@@ -31,11 +35,12 @@ function Item({ r, onClose }: { r: Row; onClose: () => void }) {
           {sub && <span className="mt-0.5 block truncate text-xs text-muted">{sub}</span>}
         </span>
       </Link>
+      </SwipeRow>
     </li>
   );
 }
 
-function Group({ title, rows, onClose }: { title: string; rows: Row[]; onClose: () => void }) {
+function Group({ title, rows, onClose, onRemove }: { title: string; rows: Row[]; onClose: () => void; onRemove: (r: Row) => void }) {
   if (rows.length === 0) return null;
   return (
     <section className="mt-3 first:mt-0">
@@ -44,7 +49,7 @@ function Group({ title, rows, onClose }: { title: string; rows: Row[]; onClose: 
       </h3>
       <ul>
         {rows.map((r) => (
-          <Item key={r.party.id} r={r} onClose={onClose} />
+          <Item key={r.party.id} r={r} onClose={onClose} onRemove={onRemove} />
         ))}
       </ul>
     </section>
@@ -91,6 +96,18 @@ export function PartiesMenu() {
     .sort((a, b) => a.st!.decision!.date.localeCompare(b.st!.decision!.date));
   const done = (rows ?? []).filter((r) => r.st?.decision && r.st.decision.date < today).sort((a, b) => b.st!.decision!.date.localeCompare(a.st!.decision!.date));
   const close = () => setOpen(false);
+  // 幹事の URL はこの端末にしか残っていないので、外してもすぐ元に戻せるようにする
+  function remove(r: Row) {
+    const gone = forgetParty(r.party.id);
+    setRows((list) => (list ? list.filter((x) => x.party.id !== r.party.id) : list));
+    toast(`「${r.party.title}」を一覧から外しました`, {
+      label: "元に戻す",
+      onClick: () => {
+        if (gone) rememberParty(gone);
+        setRows((list) => (list ? [...list, r] : [r]));
+      },
+    });
+  }
 
   return (
     <>
@@ -124,9 +141,9 @@ export function PartiesMenu() {
               </div>
             ) : (
               <>
-                <Group title="調整中" rows={adjusting} onClose={close} />
-                <Group title="これから" rows={upcoming} onClose={close} />
-                <Group title="完了" rows={done.slice(0, 5)} onClose={close} />
+                <Group title="調整中" rows={adjusting} onClose={close} onRemove={remove} />
+                <Group title="これから" rows={upcoming} onClose={close} onRemove={remove} />
+                <Group title="完了" rows={done.slice(0, 5)} onClose={close} onRemove={remove} />
                 {done.length > 0 && (
                   <Link href="/history" onClick={close} className="mt-2 flex min-h-11 items-center justify-center rounded-xl text-xs font-bold text-muted underline underline-offset-2 hover:text-white">
                     これまでの会(お店・人数・金額)を見る

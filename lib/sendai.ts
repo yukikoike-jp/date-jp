@@ -184,3 +184,39 @@ export type SecondGenreKey = (typeof SECOND_GENRES)[number]["key"];
 export function isSecondGenreKey(v: unknown): v is SecondGenreKey {
   return SECOND_GENRES.some((g) => g.key === v);
 }
+
+/** 答えるときの「いつまで残れる?」。4つから選ぶだけにして、答える人の手間を小さくする */
+export type StayStep = "first" | "second" | "train" | "last";
+export const STAY_STEPS: { key: StayStep; label: string; note: string }[] = [
+  { key: "first", label: "一次会まで", note: "2時間ほど" },
+  { key: "second", label: "二次会まで", note: "23時ごろ" },
+  { key: "train", label: "終電まで", note: "0時ごろ" },
+  { key: "last", label: "最後まで", note: "最後までいられる" },
+];
+
+/** 一次会の終わりの時刻(分)。開始が決まっていなければ 21:00 */
+function firstPartyEnd(start: number | null): number {
+  return start !== null ? start + FIRST_PARTY_MINUTES : 1260;
+}
+
+/** 選んだ4つのうちの1つを、残れる時刻(分)にする。一次会まで = 一次会の終わり、二次会まで = 23時ごろ、終電まで = 0時、最後まで = 最後まで */
+export function stayFromStep(step: StayStep, start: number | null): number {
+  const first = firstPartyEnd(start);
+  const second = Math.max(1380, first + 60);
+  if (step === "first") return first;
+  if (step === "second") return second;
+  if (step === "train") return Math.max(1440, second + 30);
+  return 1800;
+}
+
+/** 残れる時刻が、4つのうちどれにあたるか。まだ選んでいなければ null */
+export function stayStep(stay: number, start: number | null): StayStep | null {
+  if (!stay) return null;
+  const first = firstPartyEnd(start);
+  const second = stayFromStep("second", start);
+  const train = stayFromStep("train", start);
+  if (stay <= first) return "first";
+  if (stay <= second) return "second";
+  if (stay <= train + 60) return "train";
+  return "last";
+}

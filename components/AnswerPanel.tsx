@@ -1,13 +1,13 @@
 "use client";
 
 import { toast } from "./Toast";
-import { ArrowRight, CalendarDays, Check, Cigarette, Clock, Heart, MapPin, MessageSquareText, Moon, Pencil, UserRound, UtensilsCrossed, Wallet, Wine } from "lucide-react";
+import { ArrowRight, CalendarDays, Check, ChevronDown, Cigarette, Clock, Heart, MapPin, MessageSquareText, Moon, Pencil, UserRound, UtensilsCrossed, Wallet, Wine } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { getMyAnswer, saveAnswer } from "@/app/actions";
 import { AUDIENCES, isAdult, type Audience } from "@/lib/audience";
 import { AVOIDS } from "@/lib/diet";
-import { ANSWER_BUDGETS, GENRES, STAY_CHOICES, UNLIMITED_BUDGET, clock, dateLabel, stayLabel, yen } from "@/lib/sendai";
+import { ANSWER_BUDGETS, GENRES, STAY_STEPS, UNLIMITED_BUDGET, clock, dateLabel, stayFromStep, stayStep, yen } from "@/lib/sendai";
 import { AddPicker } from "./AddPicker";
 import { StationPicker } from "./StationPicker";
 import { Picker } from "./Picker";
@@ -90,6 +90,8 @@ export function AnswerPanel({
   const [passed, setPassed] = useState(false);
   /** 幹事の画面で、入力欄を開いたか */
   const [open, setOpen] = useState(hostOpen);
+  // 「もっと答える」(なくてもOKの項目)。直すときに入っているものがあれば、はじめから開いておく
+  const [more, setMore] = useState(false);
   const [pending, start] = useTransition();
 
   useEffect(() => {
@@ -104,6 +106,7 @@ export function AnswerPanel({
     start(async () => {
       const prev = await getMyAnswer(partyId, mine.answerId, mine.token);
       if (prev) setForm({ ...prev, dates: { ...Object.fromEntries(dates.map((d) => [d, "no"])), ...prev.dates } });
+      if (prev && (prev.budget !== 0 || (prev.likes?.length ?? 0) > 0 || (prev.avoids?.length ?? 0) > 0 || prev.memo || prev.avoidNote || prev.drinks === false || prev.smokes === true)) setMore(true);
       setEditing(true);
     });
   }
@@ -305,15 +308,51 @@ export function AnswerPanel({
             いつまで残れる?
             <Required />
           </p>
-          {/* 押すと選ぶ画面が開く。いちばん上が「いつでもOK」(最後までいられる)、そのあと30分ごとの時刻 */}
-          <Picker
-            label="残れる時刻"
-            value={form.stay}
-            options={[{ value: 1800, label: "いつでもOK" }, ...STAY_CHOICES.filter((m) => m !== 1800).map((m) => ({ value: m, label: stayLabel(m) }))]}
-            onChange={(m) => set({ stay: m })}
-          />
+          {/* 4つから選ぶだけ。一次会まで・二次会まで・終電まで・最後まで */}
+          <div className="grid grid-cols-2 gap-1.5" role="group" aria-label="いつまで残れるか">
+            {STAY_STEPS.map((c) => {
+              const on = stayStep(form.stay, partyStart) === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => set({ stay: stayFromStep(c.key, partyStart) })}
+                  className={`flex min-h-14 flex-col items-center justify-center rounded-2xl border px-1 text-sm font-black transition-colors ${on ? "border-accent bg-accent text-accent-text" : "border-white/15 bg-surface-2 text-text hover:border-white/30"}`}
+                >
+                  {c.label}
+                  <span className={`text-[10px] font-bold ${on ? "" : "text-muted"}`}>{c.note}</span>
+                </button>
+              );
+            })}
+          </div>
         </fieldset>
 
+        <fieldset className="px-5 py-5">
+          <legend className="sr-only">行きやすい場所</legend>
+          <p className={LABEL} aria-hidden>
+            <MapPin className="size-4" />
+            行きやすい駅
+          </p>
+          {/* 駅は全国から選べる。みんなの駅から、集まりやすい駅の近くでお店を探す */}
+          <StationPicker value={form.station ?? null} onChange={(station) => set({ station, areas: [] })} />
+          <p className="mt-3 text-xs text-muted">みんなの駅から集まりやすい駅を自動で決定。</p>
+        </fieldset>
+
+        {/* ここから先は、答えなくてもOK。ふだんはたたんでおいて、答える人の手間を小さくする */}
+        <button
+          type="button"
+          aria-expanded={more}
+          onClick={() => setMore((v) => !v)}
+          className="flex min-h-12 w-full items-center justify-between border-t border-border px-5 text-sm font-black text-white/80 transition-colors hover:bg-white/5"
+        >
+          <span>
+            もっと答える <span className="font-normal text-muted">(予算・お酒・苦手なもの・食べたいもの・ひとこと。なくてもOK)</span>
+          </span>
+          <ChevronDown className={`size-4 shrink-0 text-white/40 transition-transform ${more ? "rotate-180" : ""}`} aria-hidden />
+        </button>
+        {more && (
+          <div>
         <fieldset className="border-b border-border px-5 py-5">
           <legend className="sr-only">どのくらいのお店がいい?</legend>
           <p className={LABEL} aria-hidden>
@@ -331,19 +370,6 @@ export function AnswerPanel({
           />
           <p className="mt-3 text-xs text-muted">誰が選んだかは幹事にも非公開 ・ お店はみんなの真ん中の額で探します。</p>
         </fieldset>
-
-        <fieldset className="px-5 py-5">
-          <legend className="sr-only">行きやすい場所</legend>
-          <p className={LABEL} aria-hidden>
-            <MapPin className="size-4" />
-            行きやすい駅
-          </p>
-          {/* 駅は全国から選べる。みんなの駅から、集まりやすい駅の近くでお店を探す */}
-          <StationPicker value={form.station ?? null} onChange={(station) => set({ station, areas: [] })} />
-          <p className="mt-3 text-xs text-muted">みんなの駅から集まりやすい駅を自動で決定。</p>
-        </fieldset>
-
-        {/* お酒と、苦手なもの・アレルギー。幹事に言い出しにくいことを、答えと一緒に聞く */}
         <fieldset className="border-t border-border px-5 py-5">
           <legend className="sr-only">お酒と食べもの</legend>
           <p className={LABEL} aria-hidden>
@@ -404,8 +430,6 @@ export function AnswerPanel({
           />
           <p className="mt-2 text-xs text-muted">誰が選んだかは幹事にも非公開。</p>
         </fieldset>
-
-        {/* 食べたいもの。多いものから、お店を自動でおすすめする */}
         <fieldset className="border-t border-border px-5 py-5">
           <legend className="sr-only">食べたいもの</legend>
           <p className={LABEL} aria-hidden>
@@ -416,7 +440,6 @@ export function AnswerPanel({
           <AddPicker label="食べたいもの" groups={[{ options: GENRES }]} selected={form.likes ?? []} onToggle={toggleLike} tone="green" />
           <p className="mt-2 text-xs text-muted">多かったものからお店を自動で選定。</p>
         </fieldset>
-
         <label className="block border-t border-border px-5 py-5">
           <span className={LABEL}>
             <MessageSquareText className="size-4" aria-hidden />
@@ -430,6 +453,8 @@ export function AnswerPanel({
             maxLength={MAX_MEMO}
           />
         </label>
+          </div>
+        )}
       </div>
 
       <div className="px-4">

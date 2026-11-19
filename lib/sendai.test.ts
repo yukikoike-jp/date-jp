@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ANSWER_BUDGETS, STAY_CHOICES, UNLIMITED_BUDGET, inputFromMinutes, isAnswerBudget, isArrival, isStay, minutesFromInput, stayLabel } from "./sendai";
+import { ANSWER_BUDGETS, stayFromStep, stayStep, STAY_CHOICES, UNLIMITED_BUDGET, inputFromMinutes, isAnswerBudget, isArrival, isStay, minutesFromInput, stayLabel } from "./sendai";
 
 describe("自由に書いた時刻", () => {
   it("来られる時刻は 15:00〜24:00 の5分きざみ", () => {
@@ -33,5 +33,25 @@ describe("答えの細かい選択肢", () => {
     expect(stayLabel(1440)).toBe("終電まで");
     expect(stayLabel(STAY_CHOICES.at(-1)!)).toBe("最後まで");
     expect(STAY_CHOICES.every(isStay)).toBe(true);
+  });
+});
+
+describe("残れる時刻の4つの選び方", () => {
+  it("一次会まで・二次会まで・終電まで・最後まで が、それぞれの時刻になる", () => {
+    expect(stayFromStep("first", 1140)).toBe(1260);
+    expect(stayFromStep("first", null)).toBe(1260);
+    expect(stayFromStep("second", 1140)).toBe(1380);
+    expect(stayFromStep("train", 1140)).toBe(1440);
+    expect(stayFromStep("last", 1140)).toBe(1800);
+  });
+  it("前に答えた時刻も、近い選び方に戻せる", () => {
+    expect(stayStep(0, 1140)).toBeNull();
+    expect(stayStep(1260, 1140)).toBe("first");
+    expect(stayStep(1380, 1140)).toBe("second");
+    expect(stayStep(1440, 1140)).toBe("train");
+    expect(stayStep(1500, 1140)).toBe("train");
+    expect(stayStep(1800, 1140)).toBe("last");
+    // 一次会の終わりに残れる人は、二次会の人に数えられない(summary の判定と同じ)
+    expect(stayFromStep("first", 1140)).not.toBeGreaterThan(1140 + 120);
   });
 });

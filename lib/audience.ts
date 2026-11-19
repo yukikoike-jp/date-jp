@@ -55,7 +55,7 @@ export const AUDIENCES: Record<
     budgets: [2000, 3000, 4000, 5000, 6000, 8000],
     arrivals: [1080, 1110, 1140, 1170, 1200, 1260],
     areas: ["ichibancho", "kokubuncho", "station", "nagamachi", "izumi", "katahira"],
-    prefer: ["学割", "飲み放題"],
+    prefer: ["飲み放題", "個室"],
   },
   worker: {
     label: "仕事",
