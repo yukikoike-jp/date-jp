@@ -37,7 +37,6 @@ const defs = `<defs>
 const A = `<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}" xmlns="http://www.w3.org/2000/svg">${defs}
   <rect width="${S}" height="${S}" fill="url(#bg)"/>
   <rect width="${S}" height="${S}" fill="url(#glow)"/>
-  <circle cx="540" cy="540" r="440" fill="none" stroke="#f5b83d" stroke-opacity="0.35" stroke-width="3"/>
   ${cheers(540, 560, 4.7, "url(#beer)", "#f8f1e4", 3)}
 </svg>`;
 
@@ -77,7 +76,7 @@ const C = `<svg width="${S}" height="${S}" viewBox="0 0 ${S} ${S}" xmlns="http:/
   fs.mkdirSync(OUT, { recursive: true });
   const circle = Buffer.from(`<svg width="${S}" height="${S}"><circle cx="540" cy="540" r="540" fill="#fff"/></svg>`);
   const tiles = [];
-  for (const [name, svg] of [["A", A], ["B", B], ["C", C]]) {
+  for (const [name, svg] of [["A", A]]) {
     const file = path.join(OUT, `account-${name}.png`);
     await sharp(Buffer.from(svg), { density: 144 }).resize(S, S).png({ compressionLevel: 9 }).toFile(file);
     tiles.push(await sharp(await sharp(file).composite([{ input: circle, blend: "dest-in" }]).png().toBuffer()).resize(360, 360).png().toBuffer());

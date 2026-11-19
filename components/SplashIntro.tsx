@@ -44,7 +44,6 @@ export function SplashIntro({ onSkip }: { onSkip: () => void }) {
       <span aria-hidden className="intro-flash pointer-events-none absolute inset-0" />
       {/* アイコンと同じ、うしろの金の光と細い円。乾杯の瞬間に広がる */}
       <span aria-hidden className="intro-glow pointer-events-none absolute top-1/2 left-1/2 size-[min(92vw,30rem)] -translate-x-1/2 -translate-y-[58%] rounded-full" />
-      <span aria-hidden className="intro-ring pointer-events-none absolute top-1/2 left-1/2 size-[min(82vw,26rem)] -translate-x-1/2 -translate-y-[58%] rounded-full border border-accent/30" />
 
       <span className="intro-stage absolute inset-0 flex flex-col items-center justify-center">
         {/* 乾杯するグラス。止まった姿はアイコン(components/Logo.tsx)と同じ */}
