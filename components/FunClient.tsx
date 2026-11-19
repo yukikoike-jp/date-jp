@@ -55,14 +55,14 @@ const TOOL_TONE: Record<Tool, Tone> = {
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
 const NEEDS_NAMES: Tool[] = ["wolf", "ng", "truth", "king", "wheel", "team", "seat"];
 
-/** Tsudoro Plus(有料・買い切り)の印。鍵のマークだけ(買う前かどうかは、上の案内に書く) */
+/** Tsudoro+(有料・買い切り)の印。鍵のマークだけ(買う前かどうかは、上の案内に書く) */
 function PackBadge({ locked }: { locked: boolean }) {
   const Icon = locked ? Lock : LockOpen;
   return (
     <span
       className="inline-grid size-7 shrink-0 place-items-center rounded-full border border-accent/50 text-accent"
       role="img"
-      aria-label={locked ? "Tsudoro Plus(未購入)" : "Tsudoro Plus(購入済み)"}
+      aria-label={locked ? "Tsudoro+(未購入)" : "Tsudoro+(購入済み)"}
     >
       <Icon className="size-3.5" aria-hidden />
     </span>
@@ -131,7 +131,7 @@ export function FunClient() {
     <div className="mx-auto min-h-[70vh] max-w-xl pt-6 pb-16" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
       <div className="px-4">
         <h1 className="sr-only">Play と Support</h1>
-        {/* Play と Support。どちらも Tsudoro Plus で使える。左右にスワイプしても切り替わる */}
+        {/* Play と Support。どちらも Tsudoro+ で使える。左右にスワイプしても切り替わる */}
         <div role="tablist" aria-label="Play と Support" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
           {(["play", "support"] as const).map((k) => (
             <button
@@ -187,7 +187,7 @@ export function FunClient() {
           {locked && (
             <span className="inline-flex items-center gap-1 text-[11px] font-black text-accent">
               <Lock className="size-3" aria-hidden />
-              見本の名前(Tsudoro Plus で入力できます)
+              見本の名前(Tsudoro+ で入力できます)
             </span>
           )}
         </label>
@@ -217,7 +217,7 @@ export function FunClient() {
       <div className="mt-4">
         {locked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
-          <ProPaywall feature="Tsudoro Plus" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+          <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : locked ? (
           // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
           <div className="relative">
@@ -247,7 +247,7 @@ export function FunClient() {
                   <Lock className="size-5" aria-hidden />
                 </span>
                 <span>
-                  <span className="block text-base font-black">Tsudoro Plus で使える</span>
+                  <span className="block text-base font-black">Tsudoro+ で使える</span>
                   <span className="block text-xs text-muted">{yen(access.price)} ・ 買い切り</span>
                 </span>
               </button>
