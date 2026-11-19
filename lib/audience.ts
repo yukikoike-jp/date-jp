@@ -60,7 +60,7 @@ export const AUDIENCES: Record<
   worker: {
     label: "仕事",
     note: "職場・部署・取引先",
-    budgets: [3000, 4000, 5000, 6000, 8000],
+    budgets: [2000, 3000, 4000, 5000, 6000, 8000],
     arrivals: [1080, 1110, 1140, 1170, 1200, 1260],
     areas: ["ichibancho", "kokubuncho", "station", "nagamachi", "izumi", "katahira"],
     prefer: ["個室", "飲み放題"],
