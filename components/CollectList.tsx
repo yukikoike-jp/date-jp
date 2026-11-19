@@ -73,13 +73,13 @@ export function CollectList({ demo = false }: { demo?: boolean }) {
                       </span>
                       {p ? (
                         <>
-                          <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+                          <span className="tier-green mt-2 block h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
                             <span
-                              className="anim-grow block h-full rounded-full bg-accent"
+                              className="anim-grow block h-full rounded-full bg-[var(--tb)]"
                               style={{ width: `${p.payers ? (p.paid / p.payers) * 100 : 0}%` }}
                             />
                           </span>
-                          <span className={`mt-1 block text-xs font-bold ${done ? "text-accent" : "text-text"}`}>
+                          <span className={`mt-1 block text-xs font-bold ${done ? "tier-green text-[var(--tc)]" : "text-text"}`}>
                             {done ? "✓ 全員支払い済み" : `${p.payers}人中${p.paid}人が支払い済み・あと${yen(p.unpaidYen)}`}
                           </span>
                         </>
