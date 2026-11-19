@@ -44,7 +44,7 @@ export function useFunAccess(): FunAccess {
 /** Tsudoro+ で使えるようになるもの(購入の案内のチェック項目) */
 const PLUS_ITEMS: { name?: string; body: string }[] = [
   { name: "Play", body: "ワードウルフ・NGワード・王様ゲームなど6つの遊び" },
-  { name: "Support", body: "話題・ごあいさつ・お礼・席替え・進行表など幹事の6つの道具" },
+  { name: "Support", body: "話題・お礼・席替え・進行表・集金チェックなど幹事の6つの道具" },
   { body: "これからふえる機能も追加料金なし" },
 ];
 

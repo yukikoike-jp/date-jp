@@ -219,10 +219,7 @@ export function FunClient() {
       )}
 
       <div className="mt-4">
-        {tool === "collect" ? (
-          // 集金のチェックは無料。買う前でも使える
-          <CollectList />
-        ) : locked && showBuy ? (
+        {locked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
         ) : locked ? (
@@ -240,6 +237,7 @@ export function FunClient() {
               {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
+              {tool === "collect" && <CollectList />}
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
@@ -272,6 +270,7 @@ export function FunClient() {
             {tool === "thanks" && <Thanks locked={locked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
+            {tool === "collect" && <CollectList />}
           </>
         )}
       </div>
