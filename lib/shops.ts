@@ -400,7 +400,9 @@ export async function findShop(id: string): Promise<Shop | null> {
 export function browserShopUrl(shopUrl: string): string {
   try {
     const u = new URL(shopUrl);
-    if (u.hostname === "www.hotpepper.jp") u.pathname = u.pathname.replace(/^\/(str[A-Za-z0-9]{10})\/$/, "/$1");
+    // 「/」なしの形でもアプリが開くことがあるので、お店の「電話・ネット予約」のページ(/strJ…/tel/)に着地させる。
+    // ここはアプリの対象外で、ここから「ネット予約する」を押すのは同じサイトの中の移動なので、アプリに切り替わらない
+    if (u.hostname === "www.hotpepper.jp") u.pathname = u.pathname.replace(/^\/(str[A-Za-z0-9]{10})\/?$/, "/$1/tel/");
     return u.toString();
   } catch {
     return shopUrl;

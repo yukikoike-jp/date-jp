@@ -85,8 +85,8 @@ describe("searchShopsAlways(お店が必ず出る)", () => {
 
 describe("browserShopUrl(アプリが開かない形のお店の URL)", () => {
   it("お店のページの最後の / を外す。後ろの ?… はそのまま", () => {
-    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/?vos=nhppalsa000016")).toBe("https://www.hotpepper.jp/strJ001155193?vos=nhppalsa000016");
-    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/")).toBe("https://www.hotpepper.jp/strJ001155193");
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/?vos=nhppalsa000016")).toBe("https://www.hotpepper.jp/strJ001155193/tel/?vos=nhppalsa000016");
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/")).toBe("https://www.hotpepper.jp/strJ001155193/tel/");
   });
   it("お店のページ以外や、ほかのサイトは変えない", () => {
     expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/yoyaku/")).toBe("https://www.hotpepper.jp/strJ001155193/yoyaku/");

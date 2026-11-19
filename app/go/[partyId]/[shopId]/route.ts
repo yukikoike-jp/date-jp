@@ -53,7 +53,7 @@ function bridgePage(target: string, shopName: string, back: string): string {
       <path class="beer" d="M9.5 16h25l-2.8 33.5a2.5 2.5 0 0 1-2.5 2.2H14.8a2.5 2.5 0 0 1-2.5-2.2z" fill="#f5b83d"/>
     </svg>
     <h1>${escapeHtml(shopName)} の予約ページを開いています</h1>
-    <p>そのままこのブラウザで予約できます。<br>開かないときは <a href="${href}" rel="nofollow noopener">こちら</a></p>
+    <p>開いたページの「ネット予約する」から予約してください。<br>開かないときは <a href="${href}" rel="nofollow noopener">こちら</a></p>
     <p>ホットペッパーのアプリが開いたあとは左上の「Tsudoro に戻る」で元の画面に戻れます</p>
   </div>
 </main>
