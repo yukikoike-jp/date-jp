@@ -407,10 +407,22 @@ export function browserShopUrl(shopUrl: string): string {
   }
 }
 
+/** バリューコマース経由でホットペッパーへ送るときに、お店の URL に付ける印(MyLink が付けるものと同じ) */
+const VC_HOTPEPPER_VOS = "nhppvccp99002";
+
 export function referralUrl(shopUrl: string): string {
   const template = process.env.AFFILIATE_URL_TEMPLATE?.trim();
   if (!template || !template.includes("{url}")) return shopUrl;
-  return template.replace("{url}", encodeURIComponent(shopUrl));
+  let target = shopUrl;
+  try {
+    const u = new URL(shopUrl);
+    // API が付けた印(vos)を、バリューコマース経由の印に差し替える
+    if (u.hostname === "www.hotpepper.jp") {
+      u.searchParams.set("vos", VC_HOTPEPPER_VOS);
+      target = u.toString();
+    }
+  } catch {}
+  return template.replace("{url}", encodeURIComponent(target));
 }
 
 /**
