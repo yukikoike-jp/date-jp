@@ -1,16 +1,10 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, CircleCheck, GraduationCap, Hourglass, Lock, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, ChevronDown, ChevronRight, GraduationCap, Lock, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PartiesMenu } from "./PartiesMenu";
-import { partyStatuses, type PartyStatus } from "@/app/actions";
-import { AUDIENCES, AUDIENCE_ORDER, isAudience, loadAudience, normalizeAudience, saveAudience, type Audience } from "@/lib/audience";
-import { forgetParty, loadMyParties, rememberParty, type MyParty } from "@/lib/myParties";
-import { SkeletonRows } from "./Skeleton";
-import { SwipeRow } from "./SwipeRow";
-import { toast } from "./Toast";
-import { clock, dateLabel } from "@/lib/sendai";
+import { AUDIENCES, AUDIENCE_ORDER, loadAudience, saveAudience, type Audience } from "@/lib/audience";
 import { WEIGHTS } from "@/lib/split";
 import { Wordmark } from "./Logo";
 import { InstallHint } from "./InstallHint";
@@ -18,23 +12,6 @@ import { SplashIntro } from "./SplashIntro";
 
 
 type Phase = "loading" | "splash" | "choose" | "home";
-
-/** ホームの行。もとにした KANJI の「完了済みの会を見る」と同じ、白8%の縁の横長の行 */
-function HomeRow({ href, icon, title, sub }: { href: string; icon: React.ReactNode; title: string; sub: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex w-full items-center gap-2.5 rounded-xl bg-surface px-3 py-2 ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
-    >
-      <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-white/6 text-accent">{icon}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-black tracking-tight text-white/90">{title}</span>
-        <span className="block truncate text-[11px] font-medium text-white/55">{sub}</span>
-      </span>
-      <ChevronRight className="size-4 shrink-0 text-white/30" aria-hidden />
-    </Link>
-  );
-}
 
 /** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料プレミアムの入口) */
 function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; lockOnly?: boolean; wide?: boolean }) {
@@ -57,58 +34,6 @@ function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { 
         <span className="mt-1 block text-xs font-medium text-white/60">{sub}</span>
       </span>
     </Link>
-  );
-}
-
-function SectionTitle({ children, icon }: { children: React.ReactNode; icon: React.ReactNode }) {
-  return (
-    <h2 className="mb-3 flex items-center gap-2 text-xs font-black tracking-[0.1em] text-stone-300">
-      <span className="text-stone-400">{icon}</span>
-      {children}
-    </h2>
-  );
-}
-
-
-/** 「調整中」「決まった」の1かたまり。場所をとらないよう、最初は2件だけ出し、残りは押すと開く */
-function PartyGroup({
-  title,
-  icon,
-  items,
-  onRemove,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  items: { party: MyParty; icon: React.ReactNode; sub: string }[];
-  /** 左にスワイプして、この端末の一覧から外す */
-  onRemove: (p: MyParty) => void;
-}) {
-  const [all, setAll] = useState(false);
-  return (
-    <section>
-      {/* 見出しは、たたむ行(「あなたの会」)が兼ねるので、title が空なら出さない */}
-      {title && (
-        <SectionTitle icon={icon}>
-          {title} <span className="tracking-normal text-stone-500">{items.length}</span>
-        </SectionTitle>
-      )}
-      <div className="space-y-2">
-        {(all ? items : items.slice(0, 2)).map(({ party: p, icon: rowIcon, sub }) => (
-          <SwipeRow key={p.id} onAction={() => onRemove(p)}>
-            <HomeRow href={`/p/${p.id}/admin?token=${p.token}`} icon={rowIcon} title={p.title} sub={sub} />
-          </SwipeRow>
-        ))}
-      </div>
-      {!all && items.length > 2 && (
-        <button
-          type="button"
-          onClick={() => setAll(true)}
-          className="mt-2 min-h-11 w-full text-xs font-bold text-white/40 underline underline-offset-2 hover:text-white/60"
-        >
-          ほかの{items.length - 2}件も見る
-        </button>
-      )}
-    </section>
   );
 }
 
@@ -150,27 +75,11 @@ let introPlayed = false;
 export function HomeClient({ about }: { about?: React.ReactNode }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [audience, setAudience] = useState<Audience | null>(null);
-  const [parties, setParties] = useState<MyParty[]>([]);
-  // 会ごとの、決まったかどうかと答えた人数。読み終えるまでは「あなたの会」を出さない
-  const [statuses, setStatuses] = useState<Record<string, PartyStatus> | null>(null);
-  // あなたの会は、ふだんはたたんでおく(見たいときだけ開く)
-  const [showParties, setShowParties] = useState(false);
-  // 日本時間の今日(終わった会かどうかに使う)。描画のたびに時計を読まないよう、開いたときに決める
-  const [today, setToday] = useState("");
-
   useEffect(() => {
     // localStorage はブラウザでしか読めないので、描画のあとで読む
     const saved = loadAudience();
     /* eslint-disable react-hooks/set-state-in-effect */
     setAudience(saved);
-    setToday(new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10));
-    const mine = loadMyParties();
-    setParties(mine);
-    if (mine.length > 0) {
-      partyStatuses(mine.map((p) => p.id))
-        .then(setStatuses)
-        .catch(() => setStatuses({}));
-    }
     // 起動の演出は、アプリを開いたときだけ出す(戻ってきたときはすぐにホーム)
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const next: Phase = saved ? "home" : "choose";
@@ -254,18 +163,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
 
   const tiers = WEIGHTS[audience];
   // 学生・プライベート・会社で、会の一覧を分ける(いま選んでいるものの会だけを出す)
-  const known = statuses ? parties.filter((p) => statuses[p.id] && isAudience(statuses[p.id].audience) && normalizeAudience(statuses[p.id].audience as Audience) === audience) : [];
   const home = HOME_BY_AUDIENCE[audience];
-  // 調整中の会を先に、次にこれからの会を日が近い順に。終わった会は「これまでの会」に回す
-  const active = [
-    ...known.filter((p) => !statuses![p.id].decision),
-    ...known
-      .filter((p) => statuses![p.id].decision && statuses![p.id].decision!.date >= today)
-      .sort((x, y) => statuses![x.id].decision!.date.localeCompare(statuses![y.id].decision!.date)),
-  ];
-  const past = known.filter((p) => statuses![p.id].decision && statuses![p.id].decision!.date < today).length;
-  const adjusting = active.filter((p) => !statuses![p.id].decision).length;
-  const upcoming = active.length - adjusting;
   const tierIcon = (
     // 傾斜の区分の色を、高さの違う棒で並べる(多めの人ほど高い)
     <span aria-hidden className="flex h-6 items-end gap-[3px]">
@@ -309,68 +207,6 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           </span>
         </div>
       </Link>
-
-      {/* あなたの会。ふだんは1行にたたみ、見たいときだけ開く(調整中・これからの会・完了した会) */}
-      {parties.length > 0 && (statuses === null || known.length > 0) && (
-        <section>
-          <button
-            type="button"
-            aria-expanded={showParties}
-            onClick={() => setShowParties((v) => !v)}
-            className="flex min-h-11 w-full items-center gap-2.5 rounded-xl bg-surface px-3 py-2 text-left ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-[0.99]"
-          >
-            <CalendarDays className="size-4 shrink-0 text-accent" aria-hidden />
-            <span className="flex min-w-0 flex-1 items-baseline gap-2">
-              <span className="shrink-0 text-sm font-black tracking-tight text-white/90">あなたの会</span>
-              <span className="truncate text-[11px] font-medium text-white/55">
-                {statuses === null
-                  ? "読み込んでいます…"
-                  : [
-                      adjusting > 0 && `調整中 ${adjusting}`,
-                      upcoming > 0 && `決定 ${upcoming}`,
-                      past > 0 && `完了 ${past}`,
-                    ]
-                      .filter(Boolean)
-                      .join(" ・ ") || "まだありません"}
-              </span>
-            </span>
-            <ChevronDown className={`size-4 shrink-0 text-white/40 transition-transform ${showParties ? "rotate-180" : ""}`} aria-hidden />
-          </button>
-        </section>
-      )}
-      {showParties && parties.length > 0 && statuses === null && (
-        <SkeletonRows count={Math.min(2, parties.length)} label="あなたの会を読み込んでいます" />
-      )}
-      {showParties && active.length > 0 && (
-        <PartyGroup
-          onRemove={(p) => {
-            // 幹事の URL はこの端末にしか残っていないので、すぐ元に戻せるようにする
-            const gone = forgetParty(p.id);
-            setParties((list) => list.filter((x) => x.id !== p.id));
-            toast(`「${p.title}」を一覧から外しました`, {
-              label: "元に戻す",
-              onClick: () => {
-                if (gone) rememberParty(gone);
-                setParties(loadMyParties());
-              },
-            });
-          }}
-          title=""
-          icon={<CalendarDays className="size-3.5" aria-hidden />}
-          items={active.map((p) => {
-            const st = statuses![p.id];
-            const d = st.decision;
-            return {
-              party: p,
-              icon: d ? <CircleCheck className="size-4" aria-hidden /> : <Hourglass className="size-4" aria-hidden />,
-              sub: d ? `決定 ${dateLabel(d.date)} ${clock(d.start)}${d.shopName ? ` ・ ${d.shopName}` : ""}` : `調整中 ・ ${st.answered}人が回答`,
-            };
-          })}
-        />
-      )}
-      {showParties && past > 0 && (
-        <HomeRow href="/history" icon={<CircleCheck className="size-4" aria-hidden />} title="完了した会" sub={`${past}件 ・ お店・人数・金額`} />
-      )}
 
       <section>
         {/* ツールは「お店」と「会計」の2つだけ。集金は会計の中から開く */}
