@@ -37,9 +37,9 @@ export default async function LegalPage() {
         <h1 className="text-[22px] font-black tracking-tight">特定商取引法に基づく表記</h1>
         <dl className="mt-5 divide-y divide-border rounded-3xl border panel">
           {rows.map(([k, v]) => (
-            <div key={k} className="px-5 py-4">
+            <div key={k} className="grid grid-cols-[7rem_minmax(0,1fr)] gap-x-4 px-5 py-4">
               <dt className="text-xs font-bold text-muted">{k}</dt>
-              <dd className="mt-1 text-sm whitespace-pre-wrap">{v}</dd>
+              <dd className="text-sm break-words whitespace-pre-wrap">{v}</dd>
             </div>
           ))}
         </dl>
