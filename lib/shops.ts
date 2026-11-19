@@ -57,19 +57,19 @@ export type ShopQuery = {
 const SAMPLES: Shop[] = [
   sample("s1", "見本 炉端 あおば", "izakaya", "station", "仙台駅 西口 徒歩3分", 3000, 40, ["飲み放題", "個室"], "partial"),
   sample("s2", "見本 牛たん酒場 ひろせ", "washoku", "station", "仙台駅 徒歩5分", 3800, 30, ["飲み放題"], "no"),
-  sample("s3", "見本 大衆酒場 こくぶん", "izakaya", "kokubuncho", "勾当台公園駅 徒歩4分", 2500, 60, ["飲み放題", "学割"], "ok"),
+  sample("s3", "見本 大衆酒場 こくぶん", "izakaya", "kokubuncho", "勾当台公園駅 徒歩4分", 2500, 60, ["飲み放題"], "ok"),
   sample("s4", "見本 ダイニング 定禅寺", "yoshoku", "kokubuncho", "勾当台公園駅 徒歩6分", 4500, 25, ["個室"], "no"),
   sample("s5", "見本 串焼き いちばん", "izakaya", "ichibancho", "青葉通一番町駅 徒歩2分", 2800, 35, ["飲み放題"], "ok"),
   sample("s6", "見本 チーズとワイン ひろせ通", "yoshoku", "ichibancho", "広瀬通駅 徒歩3分", 3500, 20, ["飲み放題"], "no"),
-  sample("s7", "見本 学生酒場 かたひら", "izakaya", "katahira", "五橋駅 徒歩3分", 2000, 50, ["飲み放題", "学割", "個室"], "partial"),
-  sample("s8", "見本 韓国料理 いつつばし", "yakiniku", "katahira", "五橋駅 徒歩5分", 2800, 30, ["飲み放題", "学割"], "no"),
+  sample("s7", "見本 学生酒場 かたひら", "izakaya", "katahira", "五橋駅 徒歩3分", 2000, 50, ["飲み放題", "個室"], "partial"),
+  sample("s8", "見本 韓国料理 いつつばし", "yakiniku", "katahira", "五橋駅 徒歩5分", 2800, 30, ["飲み放題"], "no"),
   sample("s9", "見本 海鮮居酒屋 ながまち", "izakaya", "nagamachi", "長町駅 徒歩2分", 3200, 45, ["飲み放題", "個室"], "partial"),
   sample("s10", "見本 鉄板酒場 いずみ", "izakaya", "izumi", "泉中央駅 徒歩3分", 3000, 40, ["飲み放題"], "ok"),
   sample("s11", "見本 割烹 一番町", "washoku", "ichibancho", "青葉通一番町駅 徒歩4分", 6500, 24, ["個室"], "no"),
   sample("s12", "見本 中華酒家 えきまえ", "chuka", "station", "仙台駅 徒歩4分", 4000, 40, ["飲み放題", "個室"], "partial"),
   sample("s13", "見本 焼肉 こくぶん", "yakiniku", "kokubuncho", "勾当台公園駅 徒歩5分", 5500, 30, ["飲み放題", "個室"], "ok"),
   sample("s14", "見本 和食ダイニング 定禅寺", "washoku", "kokubuncho", "勾当台公園駅 徒歩3分", 7500, 20, ["個室"], "no"),
-  sample("s15", "見本 餃子酒場 かたひら", "chuka", "katahira", "五橋駅 徒歩4分", 2200, 30, ["飲み放題", "学割"], "ok"),
+  sample("s15", "見本 餃子酒場 かたひら", "chuka", "katahira", "五橋駅 徒歩4分", 2200, 30, ["飲み放題"], "ok"),
 ];
 
 function sample(
@@ -107,7 +107,7 @@ function genresOf(q: ShopQuery): GenreKey[] {
   return q.genres ?? (q.genre ? [q.genre] : []);
 }
 
-/** 学生なら学割・飲み放題、社会人なら個室のお店を先に出す。同じなら予算いっぱいに近い順 */
+/** 学生・友達なら飲み放題、社会人なら個室のお店を先に出す。同じなら予算いっぱいに近い順 */
 function preferScore(s: Shop, audience: Audience | undefined): number {
   if (!audience) return 0;
   return AUDIENCES[audience].prefer.filter((f) => s.features.includes(f)).length;

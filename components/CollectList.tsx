@@ -19,11 +19,22 @@ const STEPS = [
   { title: "受け取ったら幹事が「受け取った」を押す", note: "まだの人にだけ催促" },
 ];
 
-export function CollectList() {
-  const [items, setItems] = useState<MyCollection[] | null>(null);
-  const [progress, setProgress] = useState<Record<string, Progress>>({});
+/** 買う前の「もや」の下に出す見本。どの端末・どのブラウザ(Instagram の中も)でも、同じ見た目にする */
+const DEMO_ITEMS: MyCollection[] = [
+  { id: "demo1", token: "", title: "ゼミの打ち上げ", total: 24000, createdAt: new Date("2026-11-12").getTime() },
+  { id: "demo2", token: "", title: "サークルの忘年会", total: 52000, createdAt: new Date("2026-11-05").getTime() },
+];
+const DEMO_PROGRESS: Record<string, Progress> = {
+  demo1: { payers: 6, paid: 6, unpaidYen: 0 },
+  demo2: { payers: 13, paid: 8, unpaidYen: 20000 },
+};
+
+export function CollectList({ demo = false }: { demo?: boolean }) {
+  const [items, setItems] = useState<MyCollection[] | null>(demo ? DEMO_ITEMS : null);
+  const [progress, setProgress] = useState<Record<string, Progress>>(demo ? DEMO_PROGRESS : {});
 
   useEffect(() => {
+    if (demo) return;
     const list = loadMyCollections();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setItems(list);
@@ -31,7 +42,7 @@ export function CollectList() {
     collectionProgress(list.map((c) => c.id))
       .then((rows) => setProgress(Object.fromEntries(rows.map((r) => [r.id, r]))))
       .catch(() => {});
-  }, []);
+  }, [demo]);
 
   return (
     <>
@@ -62,13 +73,13 @@ export function CollectList() {
                       </span>
                       {p ? (
                         <>
-                          <span className="tier-green mt-2 block h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+                          <span className="mt-2 block h-1.5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
                             <span
-                              className="anim-grow block h-full rounded-full bg-[var(--tb)]"
+                              className="anim-grow block h-full rounded-full bg-accent"
                               style={{ width: `${p.payers ? (p.paid / p.payers) * 100 : 0}%` }}
                             />
                           </span>
-                          <span className={`mt-1 block text-xs font-bold ${done ? "tier-green text-[var(--tc)]" : "text-text"}`}>
+                          <span className={`mt-1 block text-xs font-bold ${done ? "text-accent" : "text-text"}`}>
                             {done ? "✓ 全員支払い済み" : `${p.payers}人中${p.paid}人が支払い済み・あと${yen(p.unpaidYen)}`}
                           </span>
                         </>

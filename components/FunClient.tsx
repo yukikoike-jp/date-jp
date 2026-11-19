@@ -237,7 +237,7 @@ export function FunClient() {
               {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
-              {tool === "collect" && <CollectList />}
+              {tool === "collect" && <CollectList demo />}
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />

@@ -46,7 +46,7 @@ const HOME_BY_AUDIENCE: Record<
 > = {
   student: {
     lead: "サークル・ゼミの飲み会をURLひとつで",
-    shops: "学割・飲み放題で探す",
+    shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
     play: "幹事がいる会をもっと楽しく",
   },
