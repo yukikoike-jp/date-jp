@@ -1,19 +1,23 @@
 "use client";
 
-import { Check, Crown, RotateCcw, Users, Wallet } from "lucide-react";
+import { Check, ChevronDown, Crown, QrCode, RotateCcw, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCollectionPayment } from "@/app/actions";
-import { isConfirmed } from "@/lib/collection";
+import { FREE_LIVE_PAYERS, isConfirmed } from "@/lib/collection";
 import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
 import { AutoRemindPanel } from "./AutoRemindPanel";
+import { LiveCollect } from "./LiveCollect";
+import { ProPaywall, useFunAccess } from "./ProGate";
 import { PushOptIn } from "./PushOptIn";
 import { SendButtons, useCanShare } from "./SendButtons";
 
-// 集金のページ。払ったかどうかは幹事だけが記録する(本人が押せるとごまかせるため)。色だけでなく ✓ と文字でも分かるようにする
+// 集金のページ。払った人は自分で「払った」を押し(申告)、幹事が受け取りを確かめて記録する(2段階)。
+// 払ったと数えるのは幹事が記録したものだけ。色だけでなく ✓ と文字でも分かるようにする。
+// 大人数でも、まだの人が上に来る。お店を出る前に「その場で集める」(QR と、まだの人の一覧)で、払わずに帰る人を出さない
 
 /** 幹事の鍵。集金のページを作った端末に残し、鍵なしの URL で開いても幹事として使えるようにする */
 const hostKey = (id: string) => `nomi:collect:${id}`;
@@ -81,9 +85,23 @@ export function CollectionView({
   }, [router]);
 
   const isHost = token !== null;
+  const isHostRank = isHost;
   const payers = c.people.filter((p) => !p.organizer);
   const unpaid = payers.filter((p) => !isConfirmed(c.payments[p.id]));
   const unpaidYen = unpaid.reduce((sum, p) => sum + p.amount, 0);
+  const claimedCount = unpaid.filter((p) => c.payments[p.id]?.by === "self").length;
+  const access = useFunAccess();
+  const [live, setLive] = useState(false);
+  const [showBuy, setShowBuy] = useState(false);
+  // 少ない人数なら無料。多い会(払う人が FREE_LIVE_PAYERS 人より多い)は Tsudoro+
+  const liveLocked = payers.length > FREE_LIVE_PAYERS && !access.loading && !access.unlocked;
+  // 並べる順: 払ったと申告した人(幹事が確かめる)→ まだの人 → 幹事 → 受け取り済み(人数が多いときはたたむ)
+  const rank = (p: (typeof c.people)[number]) => {
+    const pay = c.payments[p.id];
+    if (p.organizer) return 2;
+    if (isConfirmed(pay)) return 3;
+    return pay?.by === "self" ? (isHostRank ? 0 : 1) : 1;
+  };
   const host = c.people.find((p) => p.organizer);
   const url = `${origin}/c/${c.id}`;
   const heading = c.title ? `「${c.title}」の集金` : "お会計の集金";
@@ -132,12 +150,34 @@ export function CollectionView({
               全員の支払い完了
             </span>
           ) : (
-            <span className="text-muted">まだ{unpaid.length}人・あと{yen(unpaidYen)}</span>
+            <span className="font-bold">
+              まだ{unpaid.length}人・あと{yen(unpaidYen)}
+              {isHost && claimedCount > 0 && <span className="ml-2 text-accent">払ったと申告 {claimedCount}人</span>}
+            </span>
           )}
         </p>
+        {isHost && unpaid.length > 0 && (
+          <button
+            type="button"
+            onClick={() => (liveLocked ? setShowBuy((v) => !v) : setLive(true))}
+            className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text active:scale-[0.98]"
+          >
+            <QrCode className="size-5" aria-hidden />
+            その場で集める
+          </button>
+        )}
+        {isHost && unpaid.length > 0 && !showBuy && (
+          <p className="mt-2 text-center text-xs text-muted">お店を出る前に、QRを見せて全員に「払った」を押してもらいます。</p>
+        )}
+        {isHost && showBuy && (
+          <div className="mt-3">
+            <p className="mb-2 text-xs text-muted">{FREE_LIVE_PAYERS}人までの会は無料。それより多い会は Tsudoro+ で使えます。</p>
+            <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+          </div>
+        )}
         {!isHost && unpaid.length > 0 && (
           <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm">
-            幹事が受け取ると名前に ✓
+            払ったら自分の名前の「払った」を押してね。幹事が確かめると ✓ が付きます。
           </p>
         )}
       </section>
@@ -152,81 +192,134 @@ export function CollectionView({
         />
       )}
 
-      <ul className="mx-4 mt-3 divide-y divide-border overflow-hidden rounded-3xl border panel">
-        {c.people.map((p, i) => {
+      {(() => {
+        const ordered = [...c.people].sort((a, b) => rank(a) - rank(b));
+        const open = ordered.filter((p) => rank(p) < 3);
+        const done = ordered.filter((p) => rank(p) === 3);
+        // 払う人が多い会は、受け取り済みの人をたたんで、まだの人だけを見やすくする
+        const fold = done.length > 0 && payers.length > 8;
+        const renderRow = (p: (typeof c.people)[number], i: number) => {
           const raw = c.payments[p.id];
-          // 幹事が受け取ったものだけを「払った」とする。前に本人が押しただけのものは「申告あり」として、幹事に確かめてもらう
+          // 幹事が受け取ったものだけを「払った」とする。本人が押しただけのものは「申告」として、幹事に確かめてもらう
           const pay = isConfirmed(raw) ? raw : undefined;
           const claimed = raw && !pay;
-          return (
-            <li key={p.id} className="anim-stagger flex min-h-16 items-center gap-2.5 px-4" style={{ "--i": i } as React.CSSProperties}>
-              <span
-                aria-hidden
-                className={`tier-${p.tone} grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ts)] text-sm font-black text-[var(--tc)]`}
-              >
-                {[...p.name][0] ?? "?"}
-              </span>
-              <span className="min-w-0 flex-1 py-2">
-                <span className="block truncate font-bold">{p.name}</span>
-                <span className="mt-1 flex items-center gap-1">
-                  {p.label && !p.organizer && (
-                    <span className={`tier-${p.tone} inline-flex items-center gap-0.5 whitespace-nowrap rounded-md bg-[var(--ts)] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[var(--tc)]`}>
-                      <span aria-hidden>{p.mark}</span>
-                      {p.label}
-                    </span>
-                  )}
-                  {p.organizer && (
-                    <span className="inline-flex items-center gap-0.5 rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-bold leading-none text-accent-text">
-                      <Crown className="size-3" aria-hidden />
-                      幹事
-                    </span>
-                  )}
+            return (
+              <li key={p.id} className="anim-stagger flex min-h-16 items-center gap-2.5 px-4" style={{ "--i": i } as React.CSSProperties}>
+                <span
+                  aria-hidden
+                  className={`tier-${p.tone} grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ts)] text-sm font-black text-[var(--tc)]`}
+                >
+                  {[...p.name][0] ?? "?"}
                 </span>
-              </span>
-              <span className={`shrink-0 text-lg font-black tabular-nums ${pay ? "text-muted line-through decoration-2" : ""}`}>
-                {yen(p.amount)}
-              </span>
-              <span className="flex w-[5.5rem] shrink-0 flex-col items-center gap-0.5">
-                {p.organizer ? (
-                  <span className="text-[11px] font-bold text-muted">立て替え</span>
-                ) : pay ? (
-                  <>
-                    <span className="tier-green anim-pop inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-full bg-[var(--tb)] text-xs font-bold text-black">
-                      <Check className="size-3.5" aria-hidden />
-                      受取済み
-                    </span>
-                    {isHost && (
+                <span className="min-w-0 flex-1 py-2">
+                  <span className="block truncate font-bold">{p.name}</span>
+                  <span className="mt-1 flex items-center gap-1">
+                    {p.label && !p.organizer && (
+                      <span className={`tier-${p.tone} inline-flex items-center gap-0.5 whitespace-nowrap rounded-md bg-[var(--ts)] px-1.5 py-0.5 text-[11px] font-bold leading-none text-[var(--tc)]`}>
+                        <span aria-hidden>{p.mark}</span>
+                        {p.label}
+                      </span>
+                    )}
+                    {p.organizer && (
+                      <span className="inline-flex items-center gap-0.5 rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-bold leading-none text-accent-text">
+                        <Crown className="size-3" aria-hidden />
+                        幹事
+                      </span>
+                    )}
+                  </span>
+                </span>
+                <span className={`shrink-0 text-lg font-black tabular-nums ${pay ? "text-muted line-through decoration-2" : ""}`}>
+                  {yen(p.amount)}
+                </span>
+                <span className="flex w-[5.5rem] shrink-0 flex-col items-center gap-0.5">
+                  {p.organizer ? (
+                    <span className="text-[11px] font-bold text-muted">立て替え</span>
+                  ) : pay ? (
+                    <>
+                      <span className="tier-green anim-pop inline-flex min-h-9 w-full items-center justify-center gap-1 rounded-full bg-[var(--tb)] text-xs font-bold text-black">
+                        <Check className="size-3.5" aria-hidden />
+                        受取済み
+                      </span>
+                      {isHost && (
+                        <button
+                          type="button"
+                          disabled={pending}
+                          onClick={() => setPaid(p.id, false)}
+                          className="inline-flex min-h-8 items-center gap-0.5 text-[11px] font-bold text-muted underline-offset-2 hover:underline"
+                        >
+                          <RotateCcw className="size-3" aria-hidden />
+                          取り消す
+                        </button>
+                      )}
+                    </>
+                  ) : isHost ? (
+                    <>
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => setPaid(p.id, true)}
+                        className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/15 bg-surface-2 text-xs font-bold text-text hover:border-white/30 disabled:opacity-50"
+                      >
+                        受け取った
+                      </button>
+                      {claimed && <span className="text-[10px] font-bold text-accent">払ったと申告</span>}
+                    </>
+                  ) : claimed ? (
+                    <>
+                      <span className="text-xs font-bold text-accent">確認待ち</span>
                       <button
                         type="button"
                         disabled={pending}
                         onClick={() => setPaid(p.id, false)}
-                        className="inline-flex min-h-8 items-center gap-0.5 text-[11px] font-bold text-muted underline-offset-2 hover:underline"
+                        className="inline-flex min-h-8 items-center text-[11px] font-bold text-muted underline-offset-2 hover:underline"
                       >
-                        <RotateCcw className="size-3" aria-hidden />
                         取り消す
                       </button>
-                    )}
-                  </>
-                ) : isHost ? (
-                  <>
+                    </>
+                  ) : (
                     <button
                       type="button"
                       disabled={pending}
                       onClick={() => setPaid(p.id, true)}
-                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/15 bg-surface-2 text-xs font-bold text-text hover:border-white/30 disabled:opacity-50"
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-accent text-xs font-black text-accent-text active:scale-95 disabled:opacity-50"
                     >
-                      受け取った
+                      払った
                     </button>
-                    {claimed && <span className="text-[10px] font-bold text-muted">申告あり・未確認</span>}
-                  </>
-                ) : (
-                  <span className="text-xs font-bold text-muted">{claimed ? "確認待ち" : "まだ"}</span>
-                )}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
+                  )}
+                </span>
+              </li>
+            );
+        };
+        return (
+          <>
+            <ul className="mx-4 mt-3 divide-y divide-border overflow-hidden rounded-3xl border panel">
+              {(fold ? open : ordered).map(renderRow)}
+            </ul>
+            {fold && (
+              <details className="group mx-4 mt-2 overflow-hidden rounded-3xl border panel">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between px-5 text-sm font-bold [&::-webkit-details-marker]:hidden">
+                  <span className="tier-green flex items-center gap-1.5 text-[var(--tc)]">
+                    <Check className="size-4" aria-hidden />
+                    受け取り済み {done.length}人
+                  </span>
+                  <ChevronDown className="size-4 text-muted transition-transform group-open:rotate-180" aria-hidden />
+                </summary>
+                <ul className="divide-y divide-border border-t border-border">{done.map(renderRow)}</ul>
+              </details>
+            )}
+          </>
+        );
+      })()}
+      {live && isHost && (
+        <LiveCollect
+          url={url}
+          payers={payers.length}
+          pending={pending}
+          unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount, claimed: c.payments[p.id]?.by === "self" }))}
+          onReceive={(id) => setPaid(id, true)}
+          onClose={() => setLive(false)}
+        />
+      )}
       {error && (
         <p role="alert" className="mx-4 mt-3 text-sm font-bold text-danger">
           {error}

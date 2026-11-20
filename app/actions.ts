@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience, normalizeAudience } from "@/lib/audience";
 import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
-import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
+import { canSetPayment, isConfirmed, nextPayment, parseCollection, type CollectionInput } from "@/lib/collection";
 import { parsePushSub } from "@/lib/pushRemind";
 import { cleanPayLink } from "@/lib/reminder";
 import { pushReady } from "@/lib/webpush";
@@ -171,6 +171,8 @@ export async function findShops(input: {
 
 /** 集金のページを作る(Tsudoro+ の機能。2026-11-19 から、会計ではなく Support の集金チェックから作る)。金額はサーバーで計算し直す */
 export async function startCollection(input: CollectionInput, license: string | null = null): Promise<{ ok: true; id: string; adminToken: string } | Fail> {
+  // 集金のページを作るのは無料(2026-11-20)。license は前の画面からの呼び出しとの互換のために受け取るだけ
+  void license;
   const parsed = parseCollection(input);
   if (!parsed.ok) return parsed;
 
@@ -200,8 +202,10 @@ export async function setCollectionPayment(
   const person = c.people.find((p) => p.id === personId);
   if (!person || person.organizer) return { ok: false, error: "この人の支払いは変えられません" };
   const isHost = verifyToken(adminToken, c.adminHash);
-  if (!canSetPayment(isHost)) return { ok: false, error: "受け取りの記録は幹事だけができます" };
-  await store.setPayment(collectionId, personId, paid === true ? { by: "host" } : null);
+  // 幹事は受け取りの記録。参加した人は「払った」の申告(幹事が確かめるまで数えない)
+  const next = nextPayment(canSetPayment(isHost), c.payments[personId], paid === true);
+  if (next === "forbidden") return { ok: false, error: "幹事が受け取りを記録したものは、幹事だけが変えられます" };
+  await store.setPayment(collectionId, personId, next);
   return { ok: true };
 }
 

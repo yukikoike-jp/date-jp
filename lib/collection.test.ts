@@ -41,3 +41,19 @@ describe("canSetPayment", () => {
     expect(isConfirmed(undefined)).toBe(false);
   });
 });
+
+describe("nextPayment(払ったの2段階)", () => {
+  it("幹事は受け取りを記録・取り消しできる", async () => {
+    const { nextPayment } = await import("./collection");
+    expect(nextPayment(true, undefined, true)).toEqual({ by: "host" });
+    expect(nextPayment(true, { by: "host" }, false)).toBeNull();
+  });
+  it("参加した人は申告だけ。幹事の記録は変えられない", async () => {
+    const { nextPayment } = await import("./collection");
+    expect(nextPayment(false, undefined, true)).toEqual({ by: "self" });
+    expect(nextPayment(false, { by: "self" }, false)).toBeNull();
+    expect(nextPayment(false, { by: "host" }, true)).toBe("forbidden");
+    expect(nextPayment(false, { by: "host" }, false)).toBe("forbidden");
+    expect(nextPayment(false, undefined, false)).toBe("forbidden");
+  });
+});

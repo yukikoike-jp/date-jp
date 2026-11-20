@@ -69,12 +69,26 @@ export function parseCollection(input: CollectionInput): Result<ParsedCollection
 }
 
 /**
- * 払ったかどうかを変えてよいか。幹事だけ(2026-10-29 から)。
- * 参加した人が自分で「払った」を押せると、払っていなくても押せてしまうので、幹事が受け取りを確かめたものだけを数える
+ * 払ったかどうかを変えてよいか。幹事は何でも変えられる。
  */
 export function canSetPayment(isHost: boolean): boolean {
   return isHost;
 }
+
+/**
+ * 「払った」を押したときの、次の記録(2026-11-20 から2段階)。
+ * 参加した人は自分で「払った」を押せる(by: "self" = 申告。幹事が確かめるまで、払ったとは数えない)。
+ * 幹事が受け取ったもの(by: "host")は、参加した人からは変えられない。参加した人が消せるのは、自分の申告だけ。
+ * forbidden = 変えてはいけない
+ */
+export function nextPayment(isHost: boolean, current: Payment | undefined, paid: boolean): Payment | null | "forbidden" {
+  if (isHost) return paid ? { by: "host" } : null;
+  if (paid) return isConfirmed(current) ? "forbidden" : { by: "self" };
+  return current?.by === "self" ? null : "forbidden";
+}
+
+/** その場で集める画面を、Tsudoro+ なしで使える人数(払う人の数)。これより多い会は Tsudoro+ */
+export const FREE_LIVE_PAYERS = 10;
 
 /** 払ったと数えるか。幹事が受け取りを記録したものだけ(前に本人が押した「払った」は、幹事が確かめるまで数えない) */
 export function isConfirmed(payment: Payment | undefined): boolean {
