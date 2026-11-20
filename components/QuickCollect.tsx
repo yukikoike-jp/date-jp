@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { startCollection } from "@/app/actions";
 import { loadAudience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
-import { ProPaywall, loadLicense, useFunAccess } from "./ProGate";
+import { loadLicense } from "./ProGate";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
 // 集金をすぐはじめる(ホームの「集金の催促を、アプリにまかせる」の行き先)。割り勘の計算の画面を通らず、
@@ -23,7 +23,6 @@ function parseNames(text: string): string[] {
 
 export function QuickCollect() {
   const router = useRouter();
-  const access = useFunAccess();
   const [title, setTitle] = useState("");
   const [total, setTotal] = useState("");
   const [names, setNames] = useState("");
@@ -54,15 +53,6 @@ export function QuickCollect() {
       rememberCollection({ id: r.id, token: r.adminToken, title: title.trim(), total: totalYen, createdAt: Date.now() });
       router.push(`/c/${r.id}?token=${r.adminToken}`);
     });
-  }
-
-  // 集金のページは Tsudoro+ の機能。買う前は購入の案内を出す
-  if (!access.loading && !access.unlocked) {
-    return (
-      <div className="mx-4">
-        <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} />
-      </div>
-    );
   }
 
   return (

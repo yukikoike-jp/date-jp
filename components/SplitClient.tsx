@@ -2,7 +2,11 @@
 
 import { Crown, NotebookPen, Plus, RotateCcw, Users, X } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
-import { partyAttendees, partyStatuses } from "@/app/actions";
+import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
+import { useRouter } from "next/navigation";
+import { Wallet } from "lucide-react";
+import { rememberCollection } from "@/lib/myCollections";
+import { loadLicense } from "./ProGate";
 import { isFormal, loadAudience, type Audience } from "@/lib/audience";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
@@ -189,6 +193,36 @@ export function SplitClient() {
     ? splitBill({ total: totalYen - subsidy, weights: people.map((p) => weightOf(p).tenths), unit, organizer })
     : null;
   const nameOf = (p: Person, i: number) => p.name.trim() || `${i + 1}人目`;
+
+  const router = useRouter();
+  const [collecting, startCollecting] = useTransition();
+  const [collectError, setCollectError] = useState<string | null>(null);
+  function toCollection() {
+    setCollectError(null);
+    startCollecting(async () => {
+      const r = await startCollection(
+        {
+          title,
+          audience,
+          total: totalYen,
+          subsidy: isFormal(audience) && subsidyYen ? { kind: subsidyKind, yen: Number(subsidyYen) } : null,
+          unit,
+          organizer,
+          people: people.map((p, i) => {
+            const w = weightOf(p);
+            return { name: nameOf(p, i), tenths: w.tenths, label: w.label, mark: w.mark, tone: w.tone };
+          }),
+        },
+        loadLicense(),
+      );
+      if (!r.ok) {
+        setCollectError(r.error);
+        return;
+      }
+      rememberCollection({ id: r.id, token: r.adminToken, title: title.trim(), total: totalYen, createdAt: Date.now() });
+      router.push(`/c/${r.id}?token=${r.adminToken}`);
+    });
+  }
 
   function update(id: number, patch: Partial<Person>) {
     setPeople((ps) => ps.map((p) => (p.id === id ? { ...p, ...patch } : p)));
@@ -431,6 +465,24 @@ export function SplitClient() {
             </p>
           )}
           <SendButtons mainLabel="共有して金額を送る" share={{ text: shareText }} copy={shareText} copyLabel="金額をコピー" canShare={canShare} subtleCopy />
+          {/* 送ったあとの回収は集金のページで。払っていない人には、幹事ではなく Tsudoro が知らせられる */}
+          {people.length >= 2 && (
+            <button
+              type="button"
+              onClick={toCollection}
+              disabled={collecting}
+              className="mt-3 flex w-full items-center gap-3 rounded-2xl border border-accent/60 bg-accent/10 px-4 py-3 text-left transition-colors hover:bg-accent/15 active:scale-[0.99] disabled:opacity-60"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-accent-text">
+                <Wallet className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-black">{collecting ? "集金のページを作っています…" : "この金額で集金を始める"}</span>
+                <span className="mt-0.5 block text-xs text-muted">払ったかを一覧で見られます。払っていない人には Tsudoro から知らせられます。</span>
+              </span>
+            </button>
+          )}
+          {collectError && <p role="alert" className="mt-2 text-sm font-bold text-danger">{collectError}</p>}
         </section>
       ) : (
         <p className="mx-4 mt-3 px-1 text-sm text-muted">合計を入れると一人ずつの金額が出ます。</p>

@@ -131,7 +131,18 @@ export function AutoRemindPanel({
         )}
 
         {locked ? (
-          showBuy && <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+          showBuy ? (
+            <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowBuy(true)}
+              className="mt-3 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text active:scale-[0.98]"
+            >
+              <Bell className="size-5" aria-hidden />
+              自動で知らせるをオンにする
+            </button>
+          )
         ) : access.loading ? null : !pushReady ? (
           <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm text-muted">通知の準備がまだできていません。しばらく待ってからお試しください。</p>
         ) : autoOn ? (

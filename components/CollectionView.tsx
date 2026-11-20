@@ -9,7 +9,7 @@ import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
-import { PayLinkPanel } from "./PayLinkPanel";
+import { AutoRemindPanel } from "./AutoRemindPanel";
 import { PushOptIn } from "./PushOptIn";
 import { SendButtons, useCanShare } from "./SendButtons";
 
@@ -43,11 +43,14 @@ export function CollectionView({
   collection: c,
   hostToken,
   pushKey,
+  subscribedIds,
 }: {
   collection: Omit<Collection, "adminHash">;
   hostToken: string | null;
   /** 通知を送る準備ができているときの公開鍵(なければ null) */
   pushKey: string | null;
+  /** 通知をオンにした人の番号 */
+  subscribedIds: number[];
 }) {
   const router = useRouter();
   const canShare = useCanShare();
@@ -241,8 +244,20 @@ export function CollectionView({
             <SendButtons mainLabel="共有してみんなに送る" share={{ text: askText }} copy={askText} copyLabel="送る文をコピー" canShare={canShare} />
           </section>
 
-          {/* 払い方(PayPay のリンク)をのせる(無料) */}
-          {token && <PayLinkPanel collectionId={c.id} hostToken={token} initialPayLink={c.payLink ?? null} />}
+          {/* 払い方(PayPay のリンク。無料)と、払っていない人に Tsudoro が知らせる(Tsudoro+) */}
+          {token && (
+            <AutoRemindPanel
+              collectionId={c.id}
+              hostToken={token}
+              title={c.title}
+              initialPayLink={c.payLink ?? null}
+              initialAutoRemindAt={c.autoRemindAt ?? null}
+              pushReady={pushKey !== null}
+              subscribed={unpaid.filter((p) => subscribedIds.includes(p.id)).length}
+              unpaid={unpaid.length}
+              sampleAmount={unpaid[0]?.amount ?? payers[0]?.amount ?? 0}
+            />
+          )}
           <p className="mx-4 mt-3 text-xs text-muted">
             現金で受け取ったら「受け取った」
           </p>

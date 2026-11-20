@@ -5,7 +5,6 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
-import { loadAudience } from "@/lib/audience";
 import { CHECKLIST, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type ThanksKind, type TopicKind } from "@/lib/work";
 import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
@@ -75,18 +74,10 @@ export function FunClient() {
   const locked = !access.unlocked;
   // 会社の会は、会社向けの道具。学生とプライベートは同じ遊び。会の種類は、この端末に残っている選んだ値から読む
   // Play か Support か。最初は会の種類(仕事なら Support)。買えばどちらも使えるので、上のボタンか左右のスワイプで切り替える
-  const [side, setSide] = useState<"play" | "support">("play");
+  const [side, setSide] = useState<"play" | "support">("support");
   const company = side === "support";
-  const [tool, setTool] = useState<Tool>("wolf");
-  useEffect(() => {
-    const isWork = loadAudience() === "worker";
-    // 会計から来たとき(?tab=collect)は、Support の集金チェックを開く
-    const toCollect = new URLSearchParams(location.search).get("tab") === "collect";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSide(isWork || toCollect ? "support" : "play");
-    if (toCollect) setTool("collect");
-    else if (isWork) setTool("collect");
-  }, []);
+  const [tool, setTool] = useState<Tool>("collect");
+  // 集金が Tsudoro+ の主役なので、どの会の種類でも最初は Support の集金チェックを開く(会計から ?tab=collect で来たときも同じ)
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
     setSide(next);
@@ -222,7 +213,7 @@ export function FunClient() {
         {locked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
-        ) : locked ? (
+        ) : locked && tool !== "collect" ? (
           // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
           <div className="relative min-h-[26rem]">
             <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
@@ -237,11 +228,6 @@ export function FunClient() {
               {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
-              {tool === "collect" && (
-                <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
-                  <CollectList demo />
-                </Box>
-              )}
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
