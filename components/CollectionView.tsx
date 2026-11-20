@@ -13,7 +13,7 @@ import { SendButtons, useCanShare } from "./SendButtons";
 
 // 集金のページ。払った人は自分で「払った」を押し(申告)、幹事が受け取りを確かめて記録する(2段階)。
 // 払ったと数えるのは幹事が記録したものだけ。色だけでなく ✓ と文字でも分かるようにする。
-// 大人数でも、まだの人が上に来る。払い方(PayPay・現金・振込)ごとの人数も出す。集金は全部無料(2026-11-20)
+// 大人数でも、まだの人が上に来る。払い方(PayPay・現金)ごとの人数も出す。集金は全部無料(2026-11-20)
 
 /** 幹事の鍵。集金のページを作った端末に残し、鍵なしの URL で開いても幹事として使えるようにする */
 const hostKey = (id: string) => `nomi:collect:${id}`;
@@ -270,7 +270,7 @@ export function CollectionView({
                 {choosing === p.id && (
                   <div className="anim-rise pb-3">
                     <p className="mb-1.5 text-xs font-bold text-muted">{isHost ? "どれで受け取った?" : "どれで払った?"}</p>
-                    <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="払い方">
+                    <div className="grid grid-cols-2 gap-1.5" role="group" aria-label="払い方">
                       {PAY_METHODS.map((m) => (
                         <button
                           key={m.key}
@@ -326,7 +326,7 @@ export function CollectionView({
           </section>
 
           <p className="mx-4 mt-3 text-xs text-muted">
-            払い方ごとに PayPay の履歴や手元のお金と見比べて「受け取った」を押してください。
+            PayPay の履歴や手元のお金と見比べて「受け取った」を押してください。
           </p>
         </>
       )}

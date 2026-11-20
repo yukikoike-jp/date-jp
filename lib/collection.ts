@@ -90,19 +90,21 @@ export function nextPayment(isHost: boolean, current: Payment | undefined, paid:
   return current?.by === "self" ? null : "forbidden";
 }
 
-/** 払い方の並びと名前 */
+/** 選べる払い方(集金で振込はまず使わないので、PayPay と現金だけ。2026-11-20) */
 export const PAY_METHODS: { key: PayMethod; label: string }[] = [
   { key: "paypay", label: "PayPay" },
   { key: "cash", label: "現金" },
-  { key: "bank", label: "振込" },
 ];
+
+/** 払い方の名前(前に「振込」で記録したものも読めるようにしておく) */
+const PAY_LABELS: Record<PayMethod, string> = { paypay: "PayPay", cash: "現金", bank: "振込" };
 
 export function isPayMethod(v: unknown): v is PayMethod {
   return v === "paypay" || v === "cash" || v === "bank";
 }
 
 export function payMethodLabel(m: PayMethod | undefined): string | null {
-  return PAY_METHODS.find((x) => x.key === m)?.label ?? null;
+  return m ? PAY_LABELS[m] : null;
 }
 
 
