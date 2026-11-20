@@ -1,21 +1,19 @@
 "use client";
 
-import { Check, ChevronDown, Crown, QrCode, RotateCcw, Users, Wallet } from "lucide-react";
+import { Check, ChevronDown, Crown, RotateCcw, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCollectionPayment } from "@/app/actions";
-import { FREE_LIVE_PAYERS, PAY_METHODS, isConfirmed, payMethodLabel } from "@/lib/collection";
+import { PAY_METHODS, isConfirmed, payMethodLabel } from "@/lib/collection";
 import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText } from "@/lib/share";
 import type { Collection, PayMethod } from "@/lib/store/types";
-import { LiveCollect } from "./LiveCollect";
-import { ProPaywall, useFunAccess } from "./ProGate";
 import { SendButtons, useCanShare } from "./SendButtons";
 
 // 集金のページ。払った人は自分で「払った」を押し(申告)、幹事が受け取りを確かめて記録する(2段階)。
 // 払ったと数えるのは幹事が記録したものだけ。色だけでなく ✓ と文字でも分かるようにする。
-// 大人数でも、まだの人が上に来る。お店を出る前に「その場で集める」(QR と、まだの人の一覧)で、払わずに帰る人を出さない
+// 大人数でも、まだの人が上に来る。払い方(PayPay・現金・振込)ごとの人数も出す。集金は全部無料(2026-11-20)
 
 /** 幹事の鍵。集金のページを作った端末に残し、鍵なしの URL で開いても幹事として使えるようにする */
 const hostKey = (id: string) => `nomi:collect:${id}`;
@@ -83,11 +81,6 @@ export function CollectionView({
   const unpaidYen = unpaid.reduce((sum, p) => sum + p.amount, 0);
   const claimedCount = unpaid.filter((p) => c.payments[p.id]?.by === "self").length;
   const byMethod = PAY_METHODS.map((m) => ({ ...m, count: payers.filter((p) => c.payments[p.id]?.method === m.key).length })).filter((m) => m.count > 0);
-  const access = useFunAccess();
-  const [live, setLive] = useState(false);
-  const [showBuy, setShowBuy] = useState(false);
-  // 少ない人数なら無料。多い会(払う人が FREE_LIVE_PAYERS 人より多い)は Tsudoro+
-  const liveLocked = payers.length > FREE_LIVE_PAYERS && !access.loading && !access.unlocked;
   // 並べる順: 払ったと申告した人(幹事が確かめる)→ まだの人 → 幹事 → 受け取り済み(人数が多いときはたたむ)
   const rank = (p: (typeof c.people)[number]) => {
     const pay = c.payments[p.id];
@@ -163,25 +156,6 @@ export function CollectionView({
               <span className="rounded-full bg-surface-2 px-2.5 py-1 text-danger ring-1 ring-white/10">まだ {unpaid.length - claimedCount}人</span>
             )}
           </p>
-        )}
-        {isHost && unpaid.length > 0 && (
-          <button
-            type="button"
-            onClick={() => (liveLocked ? setShowBuy((v) => !v) : setLive(true))}
-            className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text active:scale-[0.98]"
-          >
-            <QrCode className="size-5" aria-hidden />
-            その場で集める
-          </button>
-        )}
-        {isHost && unpaid.length > 0 && !showBuy && (
-          <p className="mt-2 text-center text-xs text-muted">お店を出る前に、QRを見せて全員に「払った」を押してもらいます。</p>
-        )}
-        {isHost && showBuy && (
-          <div className="mt-3">
-            <p className="mb-2 text-xs text-muted">{FREE_LIVE_PAYERS}人までの会は無料。それより多い会は Tsudoro+ で使えます。</p>
-            <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
-          </div>
         )}
         {!isHost && unpaid.length > 0 && (
           <p className="mt-3 rounded-2xl bg-surface-2 px-4 py-3 text-sm">
@@ -334,16 +308,6 @@ export function CollectionView({
           </>
         );
       })()}
-      {live && isHost && (
-        <LiveCollect
-          url={url}
-          payers={payers.length}
-          pending={pending}
-          unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount, claimed: c.payments[p.id]?.by === "self", method: c.payments[p.id]?.method }))}
-          onReceive={(id, method) => setPaid(id, true, method)}
-          onClose={() => setLive(false)}
-        />
-      )}
       {error && (
         <p role="alert" className="mx-4 mt-3 text-sm font-bold text-danger">
           {error}

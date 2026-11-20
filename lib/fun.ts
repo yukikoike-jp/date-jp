@@ -73,14 +73,6 @@ export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Ran
   return { rows: [order] };
 }
 
-/** チーム分け。人数がかたよらないよう、順に配る(最大と最小の差は1人まで) */
-export function splitTeams(names: readonly string[], teams: number, rand: Rand = Math.random): string[][] {
-  const n = Math.max(1, Math.min(teams, names.length || 1));
-  const out: string[][] = Array.from({ length: n }, () => []);
-  shuffle(names, rand).forEach((name, i) => out[i % n].push(name));
-  return out;
-}
-
 export type KingDraw = { name: string; card: "王様" | number };
 
 /** 王様ゲームのくじ。1人が王様、残りは 1〜(人数−1) の番号。誰が何を引いたかを返す */

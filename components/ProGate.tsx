@@ -43,8 +43,8 @@ export function useFunAccess(): FunAccess {
 /** 有料の機能を使おうとしたときに出す案内。買う、または別の端末で買ったものを戻す */
 /** Tsudoro+ で使えるようになるもの(購入の案内のチェック項目) */
 const PLUS_ITEMS: { name?: string; body: string }[] = [
-  { name: "Play", body: "ワードウルフ・NGワード・王様ゲームなど6つの遊び" },
-  { name: "Support", body: "大人数でもその場で集められる集金チェックと、席替え・幹事メモ・進行表" },
+  { name: "Play", body: "NGワード・王様ゲーム・ルーレット" },
+  { name: "Support", body: "席替え・幹事メモ・進行表" },
   { body: "これからふえる機能も追加料金なし" },
 ];
 

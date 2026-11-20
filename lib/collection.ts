@@ -105,8 +105,6 @@ export function payMethodLabel(m: PayMethod | undefined): string | null {
   return PAY_METHODS.find((x) => x.key === m)?.label ?? null;
 }
 
-/** その場で集める画面を、Tsudoro+ なしで使える人数(払う人の数)。これより多い会は Tsudoro+ */
-export const FREE_LIVE_PAYERS = 10;
 
 /** 払ったと数えるか。幹事が受け取りを記録したものだけ(前に本人が押した「払った」は、幹事が確かめるまで数えない) */
 export function isConfirmed(payment: Payment | undefined): boolean {

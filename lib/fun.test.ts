@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_NAMES, kingGame, parseNames, pickIndex, seatPlan, shuffle, splitTeams } from "./fun";
+import { DEMO_NAMES, kingGame, parseNames, pickIndex, seatPlan, shuffle } from "./fun";
 
 // 乱数を固定する(0.1, 0.2, ... を順に返す)
 function seq(...v: number[]) {
@@ -54,18 +54,6 @@ describe("seatPlan", () => {
   it("円卓とカウンターは1列(1周)", () => {
     expect(seatPlan(DEMO_NAMES, "round").rows).toHaveLength(1);
     expect(seatPlan(DEMO_NAMES, "counter").rows[0]).toHaveLength(DEMO_NAMES.length);
-  });
-});
-
-describe("splitTeams", () => {
-  it("全員をどこかのチームに入れ、人数の差は1人まで", () => {
-    const t = splitTeams(DEMO_NAMES.concat("くう"), 3);
-    expect(t.flat().sort()).toEqual([...DEMO_NAMES, "くう"].sort());
-    const sizes = t.map((x) => x.length);
-    expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
-  });
-  it("人数より多いチームは作らない", () => {
-    expect(splitTeams(["a", "b"], 5)).toHaveLength(2);
   });
 });
 

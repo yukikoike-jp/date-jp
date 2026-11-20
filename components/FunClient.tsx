@@ -1,28 +1,26 @@
 "use client";
 
-import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
+import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Lock, LockOpen, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
-import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
+import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, type KingDraw, type SeatLayout } from "@/lib/fun";
+import { ngWords, wordWolf } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { CHECKLIST, timeline } from "@/lib/work";
 import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
 
-// 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
+// 有料プレミアムの「Play」(ワードウルフ・NGワード・王様ゲーム・ルーレット。ワードウルフは無料)。
 // 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "memo" | "seat" | "schedule" | "collect";
+type Tool = "wolf" | "ng" | "king" | "wheel" | "memo" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
-  { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
   { key: "king", label: "王様ゲーム", icon: Crown },
   { key: "wheel", label: "ルーレット", icon: Dices },
-  { key: "team", label: "チーム分け", icon: Users },
 ];
 
 /** Support: 幹事の道具。集金チェックが主役で、席替え・幹事メモ・進行表だけに絞る(2026-11-20。お礼・ご連絡と話題ガチャは外した) */
@@ -38,18 +36,19 @@ type Tone = "gold" | "red" | "blue" | "green" | "purple" | "orange" | "cyan";
 const TOOL_TONE: Record<Tool, Tone> = {
   wolf: "purple",
   ng: "red",
-  truth: "blue",
   king: "gold",
   wheel: "orange",
-  team: "green",
   memo: "purple",
   seat: "orange",
   schedule: "red",
   collect: "green",
 };
 
+/** 買わなくても使える道具(集金チェックと、Play のワードウルフ。2026-11-20) */
+const FREE_TOOLS: Tool[] = ["collect", "wolf"];
+
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
-const NEEDS_NAMES: Tool[] = ["wolf", "ng", "truth", "king", "wheel", "team", "seat"];
+const NEEDS_NAMES: Tool[] = ["wolf", "ng", "king", "wheel", "seat"];
 
 /** Tsudoro+(有料・買い切り)の印。鍵のマークだけ(買う前かどうかは、上の案内に書く) */
 function PackBadge({ locked }: { locked: boolean }) {
@@ -98,18 +97,20 @@ export function FunClient() {
   const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
+  // 無料で自由に使える道具。買う前でも、もやをかけず、名前も入れられる
+  const toolLocked = locked && !FREE_TOOLS.includes(tool);
 
   // 買ったあと(鍵が開いたあと)は、前に入れた名前を思い出す
   useEffect(() => {
-    if (access.loading || locked) return;
+    if (access.loading) return;
     try {
       const saved = localStorage.getItem(NAMES_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved) setText(saved);
     } catch {}
-  }, [access.loading, locked]);
+  }, [access.loading]);
 
-  const names = useMemo(() => (locked ? DEMO_NAMES : parseNames(text)), [locked, text]);
+  const names = useMemo(() => (toolLocked ? DEMO_NAMES : parseNames(text)), [toolLocked, text]);
 
   function edit(v: string) {
     setText(v);
@@ -169,21 +170,21 @@ export function FunClient() {
       </div>
 
       {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける(話題・ひとこと・メモでは出さない) */}
-      {!locked && NEEDS_NAMES.includes(tool) && (
+      {!toolLocked && NEEDS_NAMES.includes(tool) && (
       <section className="mx-4 mt-4 rounded-3xl border panel px-4 py-4">
         <label className="flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-white/70" htmlFor="fun-names">
           <span className="flex items-center gap-2">
             <Users className="size-4" aria-hidden />
             参加する人({names.length}人)
           </span>
-          {locked && (
+          {toolLocked && (
             <span className="inline-flex items-center gap-1 text-[11px] font-black text-accent">
               <Lock className="size-3" aria-hidden />
               見本の名前(Tsudoro+ で入力できます)
             </span>
           )}
         </label>
-        {locked ? (
+        {toolLocked ? (
           // デモ版は見本の名前を並べるだけ(入力はできない)。場所をとらないよう、小さな札にする
           <ul id="fun-names" className="mt-2.5 grid grid-cols-3 gap-1.5 opacity-70" aria-label="見本の名前">
             {DEMO_NAMES.map((n) => (
@@ -202,24 +203,22 @@ export function FunClient() {
             className="mt-2 w-full resize-none rounded-2xl bg-white/8 px-4 py-3 text-base text-white outline-none ring-1 ring-white/12 placeholder:text-white/25 focus:ring-accent/50"
           />
         )}
-        {!locked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
+        {!toolLocked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
       </section>
       )}
 
       <div className="mt-4">
-        {locked && showBuy ? (
+        {toolLocked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
-        ) : locked && tool !== "collect" ? (
+        ) : toolLocked ? (
           // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
           <div className="relative min-h-[26rem]">
             <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
-              {tool === "truth" && <TruthDare names={names} locked={locked} />}
-              {tool === "wolf" && <Wolf names={names} locked={locked} />}
+              {tool === "wolf" && <Wolf names={names} locked={toolLocked} />}
               {tool === "king" && <King names={names} locked={locked} />}
               {tool === "ng" && <NgWord names={names} locked={locked} />}
               {tool === "wheel" && <Wheel names={names} locked={locked} />}
-              {tool === "team" && <Teams names={names} locked={locked} />}
               {tool === "memo" && <Memo locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
@@ -244,17 +243,15 @@ export function FunClient() {
           </div>
         ) : (
           <>
-            {tool === "truth" && <TruthDare names={names} locked={locked} />}
-            {tool === "wolf" && <Wolf names={names} locked={locked} />}
+            {tool === "wolf" && <Wolf names={names} locked={toolLocked} />}
             {tool === "king" && <King names={names} locked={locked} />}
             {tool === "ng" && <NgWord names={names} locked={locked} />}
             {tool === "wheel" && <Wheel names={names} locked={locked} />}
-            {tool === "team" && <Teams names={names} locked={locked} />}
             {tool === "memo" && <Memo locked={locked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
             {tool === "collect" && (
-              <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
+              <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked} free>
                 <CollectList />
               </Box>
             )}
@@ -274,7 +271,8 @@ function sliceColor(i: number, n: number): string {
 }
 
 /** 道具の箱。デモ版のときは右上に印を付ける */
-function Box({ title, tone, locked, children }: { title: string; tone: Tone; locked: boolean; children: React.ReactNode }) {
+/** free = 買わなくても使える道具。鍵の印の代わりに「無料」と出す */
+function Box({ title, tone, locked, free = false, children }: { title: string; tone: Tone; locked: boolean; free?: boolean; children: React.ReactNode }) {
   return (
     <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5 shadow-[0_0_28px_-18px_var(--accent)]`}>
       <h2 className="mb-3 flex items-center justify-between text-lg font-black">
@@ -282,7 +280,11 @@ function Box({ title, tone, locked, children }: { title: string; tone: Tone; loc
           <span className="h-5 w-1.5 rounded-full bg-accent" aria-hidden />
           {title}
         </span>
-        {!locked && <PackBadge locked={locked} />}
+        {free ? (
+          <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-black text-accent ring-1 ring-accent/40">無料</span>
+        ) : (
+          !locked && <PackBadge locked={locked} />
+        )}
       </h2>
       {children}
     </section>
@@ -302,63 +304,6 @@ function RerollButton({ onClick, disabled, children }: { onClick: () => void; di
   );
 }
 
-// ───── チーム分け ─────
-function Teams({ names, locked }: { names: string[]; locked: boolean }) {
-  const [count, setCount] = useState(2);
-  const [teams, setTeams] = useState<string[][] | null>(null);
-  const [round, setRound] = useState(0);
-  const max = Math.max(2, Math.min(6, names.length));
-  const n = Math.min(count, max);
-  return (
-    <Box title="チーム分け" tone={TOOL_TONE.team} locked={locked}>
-      <div className="flex items-center gap-2" role="group" aria-label="チームの数">
-        {[2, 3, 4, 5, 6].map((c) => (
-          <button
-            key={c}
-            type="button"
-            disabled={c > max}
-            aria-pressed={n === c}
-            onClick={() => setCount(c)}
-            className={`${PILL} flex-1 px-0 disabled:opacity-30 ${n === c ? PILL_ON : PILL_OFF}`}
-          >
-            {c}
-          </button>
-        ))}
-        <span className="shrink-0 text-xs font-bold text-muted">チーム</span>
-      </div>
-      {teams && (
-        <div key={round} className="anim-rise mt-4 grid grid-cols-2 gap-2">
-          {teams.map((t, i) => (
-            <div key={i} className="rounded-2xl bg-surface-2 p-3 ring-1 ring-white/10">
-              <p className="text-xs font-black text-accent">
-                チーム {i + 1}({t.length}人)
-              </p>
-              <ul className="mt-1.5 space-y-1">
-                {t.map((m) => (
-                  <li key={m} className="truncate text-sm font-bold">
-                    {m}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="mt-4">
-        <RerollButton
-          disabled={names.length < 2}
-          onClick={() => {
-            setTeams(splitTeams(names, n));
-            setRound((r) => r + 1);
-          }}
-        >
-          <Shuffle className="size-4" aria-hidden />
-          {teams ? "分け直す" : "チームに分ける"}
-        </RerollButton>
-      </div>
-    </Box>
-  );
-}
 
 // ───── 王様ゲーム ─────
 function King({ names, locked }: { names: string[]; locked: boolean }) {
@@ -432,92 +377,6 @@ function King({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-// ───── 真実か挑戦 ─────
-function TruthDare({ names, locked }: { names: string[]; locked: boolean }) {
-  const [level, setLevel] = useState<Level>("soft");
-  const [player, setPlayer] = useState<number | null>(null);
-  const [done, setDone] = useState<Set<number>>(new Set());
-  const [card, setCard] = useState<{ kind: CardKind; text: string } | null>(null);
-  const [used, setUsed] = useState<{ truth: Set<number>; dare: Set<number> }>({ truth: new Set(), dare: new Set() });
-  const ok = names.length >= 2;
-
-  function pick() {
-    const r = nextPlayer(names.length, done);
-    setPlayer(r.index);
-    setDone(r.reset ? new Set([r.index]) : new Set([...done, r.index]));
-    setCard(null);
-  }
-
-  function draw(kind: CardKind) {
-    const c = drawCard(kind, level, used[kind]);
-    setUsed({ ...used, [kind]: c.reset ? new Set([c.index]) : new Set([...used[kind], c.index]) });
-    setCard({ kind, text: c.text });
-  }
-
-  const total = TRUTHS[level].length + DARES[level].length;
-
-  return (
-    <Box title="真実か挑戦" tone={TOOL_TONE.truth} locked={locked}>
-      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければパスしても大丈夫です。</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="盛り上がり度">
-        {LEVELS.map((l) => (
-          <button
-            key={l.key}
-            type="button"
-            aria-pressed={level === l.key}
-            onClick={() => {
-              setLevel(l.key);
-              setCard(null);
-            }}
-            className={`${PILL} ${level === l.key ? PILL_ON : PILL_OFF}`}
-          >
-            {level === l.key && "✓ "}
-            {l.key === "spicy" && <Flame className="size-4" aria-hidden />}
-            {l.label}
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-xs text-muted">{LEVELS.find((l) => l.key === level)!.note}(お題は{total}個)</p>
-
-      {player !== null && (
-        <div className="anim-rise mt-4 rounded-2xl border border-accent/40 px-4 py-4 text-center" aria-live="polite">
-          <p className="text-xs font-bold text-muted">次は</p>
-          <p className="mt-1 text-3xl font-black text-accent">{names[player]}</p>
-          <p className="mt-1 text-sm font-bold">さんの番です</p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {(["truth", "dare"] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => draw(k)}
-                className="min-h-12 rounded-xl bg-white/8 text-base font-black ring-1 ring-white/12 transition active:scale-95 hover:bg-white/12"
-              >
-                {k === "truth" ? "真実" : "挑戦"}
-              </button>
-            ))}
-          </div>
-          {card && (
-            <div className="anim-rise mt-3 rounded-xl bg-surface-2 px-4 py-4 text-left ring-1 ring-white/10">
-              <p className="text-xs font-black text-accent">{card.kind === "truth" ? "真実: 正直に答える" : "挑戦: やりきる"}</p>
-              <p className="mt-1.5 text-lg font-black leading-snug">{card.text}</p>
-              <button type="button" onClick={() => draw(card.kind)} className="mt-3 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-muted underline underline-offset-2">
-                <Shuffle className="size-3.5" aria-hidden />
-                別のお題にする(パス)
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-      <div className="mt-4">
-        <RerollButton onClick={pick} disabled={!ok}>
-          <MessageCircleQuestionMark className="size-4" aria-hidden />
-          {player === null ? "最初の人を選ぶ" : "次の人を選ぶ"}
-        </RerollButton>
-        {!ok && <p className="mt-2 text-center text-xs text-muted">2人から遊べます</p>}
-      </div>
-    </Box>
-  );
-}
 
 // ───── ワードウルフ ─────
 function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
@@ -541,7 +400,7 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
   }
 
   return (
-    <Box title="ワードウルフ" tone={TOOL_TONE.wolf} locked={locked}>
+    <Box title="ワードウルフ" tone={TOOL_TONE.wolf} locked={locked} free>
       <p className="text-sm text-white/70">
         全員にお題の言葉が配られますが1人だけ(ウルフ)は少し違う言葉です。自分の名前を押してこっそり言葉を見たら、見せずに話し合ってウルフを当てます。
       </p>
