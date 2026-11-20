@@ -37,7 +37,7 @@ const TOOL_TONE: Record<Tool, Tone> = {
   wolf: "purple",
   ng: "red",
   king: "gold",
-  wheel: "orange",
+  wheel: "cyan",
   memo: "purple",
   seat: "orange",
   schedule: "red",
@@ -92,7 +92,7 @@ export function FunClient() {
     const t = e.changedTouches[0];
     const dx = t.clientX - s0.x;
     const dy = t.clientY - s0.y;
-    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) chooseSide(dx < 0 ? "support" : "play");
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) chooseSide(dx < 0 ? "play" : "support");
   }
   const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
@@ -125,7 +125,7 @@ export function FunClient() {
         <h1 className="sr-only">Play と Support</h1>
         {/* Play と Support。どちらも Tsudoro+ で使える。左右にスワイプしても切り替わる */}
         <div role="tablist" aria-label="Play と Support" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
-          {(["play", "support"] as const).map((k) => (
+          {(["support", "play"] as const).map((k) => (
             <button
               key={k}
               type="button"
