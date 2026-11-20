@@ -9,10 +9,8 @@ import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText } from "@/lib/share";
 import type { Collection } from "@/lib/store/types";
-import { AutoRemindPanel } from "./AutoRemindPanel";
 import { LiveCollect } from "./LiveCollect";
 import { ProPaywall, useFunAccess } from "./ProGate";
-import { PushOptIn } from "./PushOptIn";
 import { SendButtons, useCanShare } from "./SendButtons";
 
 // 集金のページ。払った人は自分で「払った」を押し(申告)、幹事が受け取りを確かめて記録する(2段階)。
@@ -46,15 +44,9 @@ function Burst() {
 export function CollectionView({
   collection: c,
   hostToken,
-  pushKey,
-  subscribedIds,
 }: {
   collection: Omit<Collection, "adminHash">;
   hostToken: string | null;
-  /** 通知を送る準備ができているときの公開鍵(なければ null) */
-  pushKey: string | null;
-  /** 通知をオンにした人の番号 */
-  subscribedIds: number[];
 }) {
   const router = useRouter();
   const canShare = useCanShare();
@@ -182,15 +174,6 @@ export function CollectionView({
         )}
       </section>
 
-      {/* 参加する人: 自分の金額と、払い方(PayPay)、払うまでの通知(幹事が自動でお知らせをオンにしているとき) */}
-      {!isHost && unpaid.length > 0 && (c.payLink || (autoOn && pushKey)) && (
-        <PushOptIn
-          collectionId={c.id}
-          payers={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount }))}
-          pushKey={autoOn ? pushKey : null}
-          payLink={c.payLink ?? null}
-        />
-      )}
 
       {(() => {
         const ordered = [...c.people].sort((a, b) => rank(a) - rank(b));
@@ -337,20 +320,6 @@ export function CollectionView({
             <SendButtons mainLabel="共有してみんなに送る" share={{ text: askText }} copy={askText} copyLabel="送る文をコピー" canShare={canShare} />
           </section>
 
-          {/* 払い方(PayPay のリンク。無料)と、払っていない人に Tsudoro が知らせる(Tsudoro+) */}
-          {token && (
-            <AutoRemindPanel
-              collectionId={c.id}
-              hostToken={token}
-              title={c.title}
-              initialPayLink={c.payLink ?? null}
-              initialAutoRemindAt={c.autoRemindAt ?? null}
-              pushReady={pushKey !== null}
-              subscribed={unpaid.filter((p) => subscribedIds.includes(p.id)).length}
-              unpaid={unpaid.length}
-              sampleAmount={unpaid[0]?.amount ?? payers[0]?.amount ?? 0}
-            />
-          )}
           <p className="mx-4 mt-3 text-xs text-muted">
             現金で受け取ったら「受け取った」
           </p>

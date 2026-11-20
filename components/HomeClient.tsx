@@ -48,7 +48,7 @@ const HOME_BY_AUDIENCE: Record<
     lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "集金の催促をアプリにまかせる",
+    play: "誰が払ってないか一目でわかる集金",
   },
   private: {
     lead: "サークル・友達の飲み会をURLひとつで",

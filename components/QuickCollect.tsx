@@ -9,8 +9,7 @@ import { rememberCollection } from "@/lib/myCollections";
 import { loadLicense } from "./ProGate";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
-// 集金をすぐはじめる(ホームの「集金の催促を、アプリにまかせる」の行き先)。割り勘の計算の画面を通らず、
-// 合計と名前を入れるだけで、集金のページ(幹事の画面。払い方・催促のおまかせはそこで)に進む。全員同じ額で割る
+// 集金をすぐはじめる。割り勘の計算の画面を通らず、合計と名前を入れるだけで集金のページ(幹事の画面)に進む。全員同じ額で割る
 
 /** 名前の一覧にする。改行・カンマ・読点で区切り、空は捨てて、20文字・30人まで */
 function parseNames(text: string): string[] {

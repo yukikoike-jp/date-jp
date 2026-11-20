@@ -465,7 +465,7 @@ export function SplitClient() {
             </p>
           )}
           <SendButtons mainLabel="共有して金額を送る" share={{ text: shareText }} copy={shareText} copyLabel="金額をコピー" canShare={canShare} subtleCopy />
-          {/* 送ったあとの回収は集金のページで。払っていない人には、幹事ではなく Tsudoro が知らせられる */}
+          {/* 送ったあとの回収は集金のページで(払った人が自分で押し、幹事が確かめる) */}
           {people.length >= 2 && (
             <button
               type="button"
@@ -478,7 +478,7 @@ export function SplitClient() {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-black">{collecting ? "集金のページを作っています…" : "この金額で集金を始める"}</span>
-                <span className="mt-0.5 block text-xs text-muted">払ったかを一覧で見られます。払っていない人には Tsudoro から知らせられます。</span>
+                <span className="mt-0.5 block text-xs text-muted">誰が払ってないか一目でわかります。お店を出る前にその場で集められます。</span>
               </span>
             </button>
           )}

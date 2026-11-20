@@ -1,6 +1,6 @@
 "use client";
 
-import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
+import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
@@ -25,13 +25,11 @@ const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "team", label: "チーム分け", icon: Users },
 ];
 
-/** 仕事の会: 幹事のサポート(会話のきっかけ・あいさつ・メモ・お礼・席替え・進行表)。ゲームは入れない。文言はすべて敬語 */
+/** Support: 幹事の道具。集金チェックが主役で、席替え・幹事メモ・進行表だけに絞る(2026-11-20。お礼・ご連絡と話題ガチャは外した) */
 const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "collect", label: "集金チェック", icon: Wallet },
-  { key: "thanks", label: "お礼・ご連絡", icon: Send },
-  { key: "memo", label: "幹事メモ", icon: ClipboardList },
-  { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
   { key: "seat", label: "席替え", icon: Armchair },
+  { key: "memo", label: "幹事メモ", icon: ClipboardList },
   { key: "schedule", label: "進行表", icon: CalendarClock },
 ];
 
@@ -160,7 +158,8 @@ export function FunClient() {
             onClick={() => setTool(key)}
             className={`${
               // 3つずつ並べる。余りが2つのときは最後の2つを半分ずつ、1つのときは最後の1つを横いっぱいに
-              TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : TOOLS.length % 3 === 1 && i === TOOLS.length - 1 ? "col-span-6" : "col-span-2"
+              // 4つのとき(Support)は2つずつ2段
+              TOOLS.length === 4 ? "col-span-3" : TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : TOOLS.length % 3 === 1 && i === TOOLS.length - 1 ? "col-span-6" : "col-span-2"
             } tone-${TOOL_TONE[key]} flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
               tool === key ? "bg-accent/18 text-text shadow ring-1 ring-accent/60" : "text-muted hover:text-text"
             }`}
