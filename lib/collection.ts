@@ -1,6 +1,6 @@
 import { isAudience, normalizeAudience, type Audience } from "./audience";
 import { ROUND_UNITS, splitBill, subsidyTotal, CUSTOM_MAX, CUSTOM_MIN } from "./split";
-import type { CollectionPerson, Payment } from "./store/types";
+import type { CollectionPerson, PayMethod, Payment } from "./store/types";
 
 // 傾斜会計から集金のページを作るときの、入力の確かめと金額の計算し直し。純粋関数
 
@@ -81,10 +81,28 @@ export function canSetPayment(isHost: boolean): boolean {
  * 幹事が受け取ったもの(by: "host")は、参加した人からは変えられない。参加した人が消せるのは、自分の申告だけ。
  * forbidden = 変えてはいけない
  */
-export function nextPayment(isHost: boolean, current: Payment | undefined, paid: boolean): Payment | null | "forbidden" {
-  if (isHost) return paid ? { by: "host" } : null;
-  if (paid) return isConfirmed(current) ? "forbidden" : { by: "self" };
+export function nextPayment(isHost: boolean, current: Payment | undefined, paid: boolean, method?: PayMethod | null): Payment | null | "forbidden" {
+  // 払い方は、選んだものを使う。幹事が申告を確かめるときは、本人が選んだ払い方を引き継ぐ
+  const m = method ?? current?.method;
+  const withMethod = (by: Payment["by"]): Payment => (m ? { by, method: m } : { by });
+  if (isHost) return paid ? withMethod("host") : null;
+  if (paid) return isConfirmed(current) ? "forbidden" : withMethod("self");
   return current?.by === "self" ? null : "forbidden";
+}
+
+/** 払い方の並びと名前 */
+export const PAY_METHODS: { key: PayMethod; label: string }[] = [
+  { key: "paypay", label: "PayPay" },
+  { key: "cash", label: "現金" },
+  { key: "bank", label: "振込" },
+];
+
+export function isPayMethod(v: unknown): v is PayMethod {
+  return v === "paypay" || v === "cash" || v === "bank";
+}
+
+export function payMethodLabel(m: PayMethod | undefined): string | null {
+  return PAY_METHODS.find((x) => x.key === m)?.label ?? null;
 }
 
 /** その場で集める画面を、Tsudoro+ なしで使える人数(払う人の数)。これより多い会は Tsudoro+ */

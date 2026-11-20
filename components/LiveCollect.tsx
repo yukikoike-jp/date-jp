@@ -4,12 +4,14 @@ import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { useEffect, useState } from "react";
+import { PAY_METHODS, payMethodLabel } from "@/lib/collection";
 import { yen } from "@/lib/sendai";
+import type { PayMethod } from "@/lib/store/types";
 
 // その場で集める画面(幹事だけ)。お店を出る前に、この画面を見せて全員に集金のページを開いてもらう。
 // 大きなQRと、まだ払っていない人の名前を出し、数秒ごとに読み直す。払わずに帰る人を出さないための画面
 
-export type LivePerson = { id: number; name: string; amount: number; claimed: boolean };
+export type LivePerson = { id: number; name: string; amount: number; claimed: boolean; method?: PayMethod };
 
 export function LiveCollect({
   url,
@@ -25,11 +27,13 @@ export function LiveCollect({
   /** 払う人の数(幹事を除く) */
   payers: number;
   pending: boolean;
-  onReceive: (personId: number) => void;
+  /** method = 払い方(本人が選んでいればそれ。分からなければ、ここで選ぶ) */
+  onReceive: (personId: number, method: PayMethod | null) => void;
   onClose: () => void;
 }) {
   const router = useRouter();
   const [qr, setQr] = useState<string | null>(null);
+  const [choosing, setChoosing] = useState<number | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -101,24 +105,44 @@ export function LiveCollect({
         {sorted.length > 0 && (
           <ul className="mt-3 divide-y divide-border overflow-hidden rounded-3xl border panel">
             {sorted.map((p) => (
-              <li key={p.id} className="flex min-h-16 items-center gap-3 px-4">
+              <li key={p.id} className="px-4">
+                <div className="flex min-h-16 items-center gap-3">
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-lg font-black">{p.name}</span>
                   <span className={`block text-xs font-bold ${p.claimed ? "text-accent" : "text-danger"}`}>
-                    {p.claimed ? "払ったと申告・確かめてください" : "まだ"}
+                    {p.claimed ? `${payMethodLabel(p.method) ?? ""}で払ったと申告・確かめてください`.replace(/^で/, "") : "まだ"}
                   </span>
                 </span>
                 <span className="shrink-0 text-base font-black tabular-nums">{yen(p.amount)}</span>
                 <button
                   type="button"
                   disabled={pending}
-                  onClick={() => onReceive(p.id)}
+                  onClick={() => (p.method ? onReceive(p.id, p.method) : setChoosing(choosing === p.id ? null : p.id))}
                   className={`inline-flex min-h-11 shrink-0 items-center rounded-full px-4 text-sm font-black active:scale-95 disabled:opacity-50 ${
                     p.claimed ? "bg-accent text-accent-text" : "border border-white/15 bg-surface-2 text-text"
                   }`}
                 >
                   受け取った
                 </button>
+                </div>
+                {choosing === p.id && (
+                  <div className="grid grid-cols-3 gap-1.5 pb-3" role="group" aria-label="払い方">
+                    {PAY_METHODS.map((m) => (
+                      <button
+                        key={m.key}
+                        type="button"
+                        disabled={pending}
+                        onClick={() => {
+                          setChoosing(null);
+                          onReceive(p.id, m.key);
+                        }}
+                        className="inline-flex min-h-11 items-center justify-center rounded-xl bg-surface-2 text-sm font-black ring-1 ring-white/12 active:scale-95 disabled:opacity-50"
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </li>
             ))}
           </ul>

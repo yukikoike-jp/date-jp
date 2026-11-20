@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience, normalizeAudience } from "@/lib/audience";
 import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
-import { canSetPayment, isConfirmed, nextPayment, parseCollection, type CollectionInput } from "@/lib/collection";
+import { canSetPayment, isConfirmed, isPayMethod, nextPayment, parseCollection, type CollectionInput } from "@/lib/collection";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
 import { findShop, searchSecondShops, searchShopsAlways, type Shop } from "@/lib/shops";
 import { getStore } from "@/lib/store";
@@ -190,6 +190,7 @@ export async function setCollectionPayment(
   personId: number,
   paid: boolean,
   adminToken: string | null,
+  method: unknown = null,
 ): Promise<{ ok: true } | Fail> {
   const store = getStore();
   const c = await store.getCollection(collectionId);
@@ -198,7 +199,7 @@ export async function setCollectionPayment(
   if (!person || person.organizer) return { ok: false, error: "この人の支払いは変えられません" };
   const isHost = verifyToken(adminToken, c.adminHash);
   // 幹事は受け取りの記録。参加した人は「払った」の申告(幹事が確かめるまで数えない)
-  const next = nextPayment(canSetPayment(isHost), c.payments[personId], paid === true);
+  const next = nextPayment(canSetPayment(isHost), c.payments[personId], paid === true, isPayMethod(method) ? method : null);
   if (next === "forbidden") return { ok: false, error: "幹事が受け取りを記録したものは、幹事だけが変えられます" };
   await store.setPayment(collectionId, personId, next);
   return { ok: true };

@@ -119,13 +119,14 @@ export function createSupabaseStore(url: string, serviceRoleKey: string): Store 
     async getCollection(id) {
       const [row, pays] = await Promise.all([
         db.from("nomi_collections").select("id, admin_hash, data").eq("id", id).maybeSingle(),
-        db.from("nomi_collection_payments").select("person_id, paid_by").eq("collection_id", id),
+        db.from("nomi_collection_payments").select("person_id, paid_by, method").eq("collection_id", id),
       ]);
       const r = check<{ id: string; admin_hash: string; data: Omit<Collection, "id" | "adminHash" | "payments"> & { people: CollectionPerson[] } } | null>(row);
       if (!r) return null;
       const payments: Record<number, Payment> = {};
-      for (const p of check<{ person_id: number; paid_by: string }[]>(pays)) {
-        payments[p.person_id] = { by: p.paid_by === "host" ? "host" : "self" };
+      for (const p of check<{ person_id: number; paid_by: string; method: string | null }[]>(pays)) {
+        const method = p.method === "paypay" || p.method === "cash" || p.method === "bank" ? p.method : undefined;
+        payments[p.person_id] = method ? { by: p.paid_by === "host" ? "host" : "self", method } : { by: p.paid_by === "host" ? "host" : "self" };
       }
       return { ...r.data, audience: isAudience(r.data.audience) ? r.data.audience : "student", id: r.id, adminHash: r.admin_hash, payments };
     },
@@ -134,7 +135,7 @@ export function createSupabaseStore(url: string, serviceRoleKey: string): Store 
         check(
           await db
             .from("nomi_collection_payments")
-            .upsert({ collection_id: collectionId, person_id: personId, paid_by: payment.by, paid_at: new Date().toISOString() }),
+            .upsert({ collection_id: collectionId, person_id: personId, paid_by: payment.by, method: payment.method ?? null, paid_at: new Date().toISOString() }),
         );
       } else {
         check(await db.from("nomi_collection_payments").delete().eq("collection_id", collectionId).eq("person_id", personId));

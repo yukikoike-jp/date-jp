@@ -57,3 +57,13 @@ describe("nextPayment(払ったの2段階)", () => {
     expect(nextPayment(false, undefined, false)).toBe("forbidden");
   });
 });
+
+describe("nextPayment(払い方)", () => {
+  it("選んだ払い方を記録し、幹事が確かめるときは本人の払い方を引き継ぐ", async () => {
+    const { nextPayment } = await import("./collection");
+    expect(nextPayment(false, undefined, true, "paypay")).toEqual({ by: "self", method: "paypay" });
+    expect(nextPayment(true, { by: "self", method: "paypay" }, true)).toEqual({ by: "host", method: "paypay" });
+    expect(nextPayment(true, undefined, true, "cash")).toEqual({ by: "host", method: "cash" });
+    expect(nextPayment(true, undefined, true)).toEqual({ by: "host" });
+  });
+});

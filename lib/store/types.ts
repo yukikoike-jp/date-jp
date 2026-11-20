@@ -56,7 +56,10 @@ export type CollectionPerson = {
 };
 
 /** 払ったかどうか。self = 本人が押した、host = 幹事が受け取りを記録した */
-export type Payment = { by: "self" | "host" };
+/** 払い方。PayPay・現金・振込 */
+export type PayMethod = "paypay" | "cash" | "bank";
+/** by = 誰が記録したか(self = 本人の申告、host = 幹事の受け取り)。method = 払い方(前の記録にはない) */
+export type Payment = { by: "self" | "host"; method?: PayMethod };
 
 /** 傾斜会計の集金。参加した人は URL から自分の「払った」を押し、幹事は鍵の入った URL で受け取りを記録する */
 export type Collection = {

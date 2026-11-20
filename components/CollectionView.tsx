@@ -4,11 +4,11 @@ import { Check, ChevronDown, Crown, QrCode, RotateCcw, Users, Wallet } from "luc
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { setCollectionPayment } from "@/app/actions";
-import { FREE_LIVE_PAYERS, isConfirmed } from "@/lib/collection";
+import { FREE_LIVE_PAYERS, PAY_METHODS, isConfirmed, payMethodLabel } from "@/lib/collection";
 import { yen } from "@/lib/sendai";
 import { loadMyCollections, rememberCollection } from "@/lib/myCollections";
 import { collectText } from "@/lib/share";
-import type { Collection } from "@/lib/store/types";
+import type { Collection, PayMethod } from "@/lib/store/types";
 import { LiveCollect } from "./LiveCollect";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { SendButtons, useCanShare } from "./SendButtons";
@@ -82,6 +82,7 @@ export function CollectionView({
   const unpaid = payers.filter((p) => !isConfirmed(c.payments[p.id]));
   const unpaidYen = unpaid.reduce((sum, p) => sum + p.amount, 0);
   const claimedCount = unpaid.filter((p) => c.payments[p.id]?.by === "self").length;
+  const byMethod = PAY_METHODS.map((m) => ({ ...m, count: payers.filter((p) => c.payments[p.id]?.method === m.key).length })).filter((m) => m.count > 0);
   const access = useFunAccess();
   const [live, setLive] = useState(false);
   const [showBuy, setShowBuy] = useState(false);
@@ -98,10 +99,13 @@ export function CollectionView({
   const url = `${origin}/c/${c.id}`;
   const heading = c.title ? `「${c.title}」の集金` : "お会計の集金";
 
-  function setPaid(personId: number, paid: boolean) {
+  // 払い方を選んでいる人(「払った」「受け取った」を押して、払い方がまだ分からないとき)
+  const [choosing, setChoosing] = useState<number | null>(null);
+  function setPaid(personId: number, paid: boolean, method: PayMethod | null = null) {
     setError(null);
+    setChoosing(null);
     start(async () => {
-      const r = await setCollectionPayment(c.id, personId, paid, token);
+      const r = await setCollectionPayment(c.id, personId, paid, token, method);
       if (!r.ok) setError(r.error);
       router.refresh();
     });
@@ -148,6 +152,18 @@ export function CollectionView({
             </span>
           )}
         </p>
+        {isHost && byMethod.length > 0 && (
+          <p className="mt-2 flex flex-wrap gap-1.5 text-xs font-bold" aria-label="払い方ごとの人数">
+            {byMethod.map((m) => (
+              <span key={m.key} className="rounded-full bg-surface-2 px-2.5 py-1 ring-1 ring-white/10">
+                {m.label} {m.count}人
+              </span>
+            ))}
+            {unpaid.length - claimedCount > 0 && (
+              <span className="rounded-full bg-surface-2 px-2.5 py-1 text-danger ring-1 ring-white/10">まだ {unpaid.length - claimedCount}人</span>
+            )}
+          </p>
+        )}
         {isHost && unpaid.length > 0 && (
           <button
             type="button"
@@ -187,7 +203,8 @@ export function CollectionView({
           const pay = isConfirmed(raw) ? raw : undefined;
           const claimed = raw && !pay;
             return (
-              <li key={p.id} className="anim-stagger flex min-h-16 items-center gap-2.5 px-4" style={{ "--i": i } as React.CSSProperties}>
+              <li key={p.id} className="anim-stagger px-4" style={{ "--i": i } as React.CSSProperties}>
+                <div className="flex min-h-16 items-center gap-2.5">
                 <span
                   aria-hidden
                   className={`tier-${p.tone} grid size-9 shrink-0 place-items-center rounded-full bg-[var(--ts)] text-sm font-black text-[var(--tc)]`}
@@ -207,6 +224,11 @@ export function CollectionView({
                       <span className="inline-flex items-center gap-0.5 rounded-md bg-accent px-1.5 py-0.5 text-[11px] font-bold leading-none text-accent-text">
                         <Crown className="size-3" aria-hidden />
                         幹事
+                      </span>
+                    )}
+                    {raw?.method && (
+                      <span className="inline-flex items-center whitespace-nowrap rounded-md bg-white/10 px-1.5 py-0.5 text-[11px] font-bold leading-none text-white/80">
+                        {payMethodLabel(raw.method)}
                       </span>
                     )}
                   </span>
@@ -240,7 +262,7 @@ export function CollectionView({
                       <button
                         type="button"
                         disabled={pending}
-                        onClick={() => setPaid(p.id, true)}
+                        onClick={() => (raw?.method ? setPaid(p.id, true) : setChoosing(choosing === p.id ? null : p.id))}
                         className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-white/15 bg-surface-2 text-xs font-bold text-text hover:border-white/30 disabled:opacity-50"
                       >
                         受け取った
@@ -263,13 +285,32 @@ export function CollectionView({
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() => setPaid(p.id, true)}
+                      onClick={() => setChoosing(choosing === p.id ? null : p.id)}
                       className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-accent text-xs font-black text-accent-text active:scale-95 disabled:opacity-50"
                     >
                       払った
                     </button>
                   )}
                 </span>
+                </div>
+                {choosing === p.id && (
+                  <div className="anim-rise pb-3">
+                    <p className="mb-1.5 text-xs font-bold text-muted">{isHost ? "どれで受け取った?" : "どれで払った?"}</p>
+                    <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="払い方">
+                      {PAY_METHODS.map((m) => (
+                        <button
+                          key={m.key}
+                          type="button"
+                          disabled={pending}
+                          onClick={() => setPaid(p.id, true, m.key)}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-surface-2 text-sm font-black ring-1 ring-white/12 active:scale-95 disabled:opacity-50"
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </li>
             );
         };
@@ -298,8 +339,8 @@ export function CollectionView({
           url={url}
           payers={payers.length}
           pending={pending}
-          unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount, claimed: c.payments[p.id]?.by === "self" }))}
-          onReceive={(id) => setPaid(id, true)}
+          unpaid={unpaid.map((p) => ({ id: p.id, name: p.name, amount: p.amount, claimed: c.payments[p.id]?.by === "self", method: c.payments[p.id]?.method }))}
+          onReceive={(id, method) => setPaid(id, true, method)}
           onClose={() => setLive(false)}
         />
       )}
@@ -321,7 +362,7 @@ export function CollectionView({
           </section>
 
           <p className="mx-4 mt-3 text-xs text-muted">
-            現金で受け取ったら「受け取った」
+            払い方ごとに PayPay の履歴や手元のお金と見比べて「受け取った」を押してください。
           </p>
         </>
       )}
