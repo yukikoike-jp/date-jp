@@ -5,7 +5,6 @@ import { connection } from "next/server";
 import { SiteHeader } from "@/components/SiteHeader";
 import { cleanEnv } from "@/lib/env";
 import { findShop } from "@/lib/shops";
-import { activeSponsors } from "@/lib/sponsors";
 import { getStore } from "@/lib/store";
 import { timelineSince, weeklyCounts } from "@/lib/weekly";
 
@@ -60,11 +59,6 @@ export default async function StatsPage(props: PageProps<"/stats">) {
     label: { parties: "作られた会", answers: "回答", clicks: "お店が押された" }[k],
     weeks: weeklyCounts(timeline[k], now.getTime(), WEEKS),
   }));
-  // 広告主に見せる実績。載せている広告は、まだ数がなくても0回で出す
-  const adRows = [
-    ...activeSponsors().map((s) => ({ ...(ads.find((a) => a.sponsorId === s.id) ?? { sponsorId: s.id, views: 0, clicks: 0 }), name: s.name })),
-    ...ads.filter((a) => !a.sponsorId.startsWith("src:") && !activeSponsors().some((s) => s.id === a.sponsorId)).map((a) => ({ ...a, name: `${a.sponsorId}(掲載終了)` })),
-  ];
   // どこから来たか(SNS のリンクの ?s=ig など。1日1回、端末ごとに数える)
   const sources = ads
     .filter((a) => a.sponsorId.startsWith("src:"))
@@ -164,25 +158,6 @@ export default async function StatsPage(props: PageProps<"/stats">) {
                   <span className="min-w-0 flex-1 truncate font-bold">{SOURCE_NAMES[x.key] ?? x.key}</span>
                   <span className="shrink-0 text-sm tabular-nums">
                     <span className="font-black">{x.visits.toLocaleString("ja-JP")}</span>人
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <h2 className="mt-9 mb-3 px-1 text-sm font-bold text-muted">今月の広告の実績(広告主に見せる数)</h2>
-        <section className="overflow-hidden rounded-3xl border panel">
-          {adRows.length === 0 ? (
-            <p className="px-5 py-5 text-sm text-muted">載せている広告はありません(lib/sponsors.ts に書くと出ます)</p>
-          ) : (
-            <ul>
-              {adRows.map((a) => (
-                <li key={a.sponsorId} className="flex min-h-14 items-center gap-3 border-t border-border px-5 first:border-t-0">
-                  <span className="min-w-0 flex-1 truncate font-bold">{a.name}</span>
-                  <span className="shrink-0 text-right text-sm tabular-nums">
-                    <span className="font-black">{a.views.toLocaleString("ja-JP")}</span>回 見られた
-                    <span className="ml-3 font-black">{a.clicks.toLocaleString("ja-JP")}</span>回 押された
                   </span>
                 </li>
               ))}

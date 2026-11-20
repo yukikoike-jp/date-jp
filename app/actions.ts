@@ -4,15 +4,10 @@ import { headers } from "next/headers";
 import { AUDIENCES, isAudience, normalizeAudience } from "@/lib/audience";
 import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
 import { canSetPayment, isConfirmed, nextPayment, parseCollection, type CollectionInput } from "@/lib/collection";
-import { parsePushSub } from "@/lib/pushRemind";
-import { cleanPayLink } from "@/lib/reminder";
-import { pushReady } from "@/lib/webpush";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
 import { findShop, searchSecondShops, searchShopsAlways, type Shop } from "@/lib/shops";
 import { getStore } from "@/lib/store";
 import type { Decision } from "@/lib/store/types";
-import { findSponsor } from "@/lib/sponsors";
-import { loadParty } from "@/lib/view";
 import { summarize } from "@/lib/summary";
 import { isStation, normalizeStationQuery, type Station } from "@/lib/stations";
 import { generateGroupId, generateToken, hashToken, verifyToken } from "@/lib/tokens";
@@ -209,60 +204,6 @@ export async function setCollectionPayment(
   return { ok: true };
 }
 
-/**
- * 集金の設定。幹事(鍵が合う)だけが変えられる。
- * payLink = 幹事の PayPay のリンク(空で消す。参加する人の画面に「払う」ボタンが出る)。
- * autoRemind = 自動でお知らせ(有料プレミアム。オンにするには、契約中の端末の鍵 license が要る)
- */
-export async function saveCollectionSettings(
-  collectionId: string,
-  adminToken: string | null,
-  input: { payLink: string; autoRemind?: boolean },
-  license: string | null,
-): Promise<{ ok: true; payLink: string | null; autoRemindAt: number | null } | Fail> {
-  const store = getStore();
-  const c = await store.getCollection(collectionId);
-  if (!c) return { ok: false, error: "集金のページが見つかりません" };
-  if (!verifyToken(adminToken, c.adminHash)) return { ok: false, error: "設定を変えられるのは幹事だけです" };
-
-  const raw = typeof input?.payLink === "string" ? input.payLink.trim() : "";
-  const payLink = raw === "" ? null : cleanPayLink(raw);
-  if (raw !== "" && payLink === null) return { ok: false, error: "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" };
-
-  let autoRemindAt: number | null = c.autoRemindAt ?? null;
-  if (input?.autoRemind === true) {
-    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは Tsudoro+ の機能です" };
-    if (!pushReady()) return { ok: false, error: "通知の準備がまだできていません" };
-    autoRemindAt = autoRemindAt ?? Date.now();
-  } else if (input?.autoRemind === false) {
-    autoRemindAt = null;
-  }
-  await store.setCollectionSettings(collectionId, { payLink, autoRemindAt });
-  return { ok: true, payLink, autoRemindAt };
-}
-
-/**
- * 払うまで、この端末にお知らせを送ってよいと登録する。「自動でお知らせ」がオンの集金で、払っていない人だけ。
- * 名前の確認はしない(ログインがないため)。ほかの人の名前で登録しても、通知が届くのはその端末だけ
- */
-export async function subscribePush(
-  collectionId: string,
-  personId: number,
-  subscription: unknown,
-): Promise<{ ok: true } | Fail> {
-  const sub = parsePushSub(subscription);
-  if (!sub) return { ok: false, error: "通知の登録に失敗しました" };
-  const store = getStore();
-  const c = await store.getCollection(collectionId);
-  if (!c || c.autoRemindAt === undefined) return { ok: false, error: "この集金は自動でお知らせを使っていません" };
-  const person = c.people.find((p) => p.id === personId);
-  if (!person || person.organizer || isConfirmed(c.payments[person.id])) return { ok: false, error: "この人にはお知らせは要りません" };
-  const subs = await store.listPushSubs(collectionId);
-  if (subs.length >= 200) return { ok: false, error: "登録できる数をこえました" };
-  await store.addPushSub({ collectionId, personId, ...sub });
-  return { ok: true };
-}
-
 /** 「集金のチェック」の一覧に出す、集金ごとの進み具合。払ったかどうかの数だけを返す */
 export async function collectionProgress(
   ids: string[],
@@ -283,39 +224,6 @@ export async function collectionProgress(
     }),
   );
   return rows.filter((r): r is NonNullable<typeof r> => r !== null);
-}
-
-/**
- * 二次会のお店。一次会のお店が決まっていればその近く、なければ一番人気の場所の近くで探す。
- * 人数は二次会に残れる人(いなければ行く人全員)
- */
-export async function findSecondShops(
-  partyId: string,
-  genre: string | null,
-): Promise<{ shops: Shop[]; size: number; near: string }> {
-  const view = await loadParty(partyId);
-  if (!view?.party.decision) return { shops: [], size: 0, near: "" };
-  const { party, summary } = view;
-  const decision = party.decision!;
-  const first = decision.shopId ? await findShop(decision.shopId) : null;
-  const area = AREAS.find((a) => a.key === summary.area) ?? AREAS[0];
-  const base =
-    first?.lat != null && first.lng != null
-      ? { lat: first.lat, lng: first.lng }
-      : summary.meeting ?? { lat: area.lat, lng: area.lng };
-  const size = summary.secondParty.length || summary.attendees.length;
-  const shops = await searchSecondShops({
-    ...base,
-    size,
-    genre: isSecondGenreKey(genre) ? genre : null,
-    exclude: decision.shopId,
-    area: area.key,
-  });
-  return {
-    shops,
-    size,
-    near: first?.lat != null ? (decision.shopName ?? first.name) : summary.meeting ? `${summary.meeting.name}駅` : area.label,
-  };
 }
 
 /**
@@ -341,15 +249,6 @@ export async function searchStations(query: string): Promise<Station[]> {
     console.error("[stations] 駅を探せませんでした", e);
     return [];
   }
-}
-
-/** 広告が画面に出たことを数える。lib/sponsors.ts にある広告だけを数える */
-export async function logAdView(sponsorId: string): Promise<void> {
-  const sponsor = typeof sponsorId === "string" ? findSponsor(sponsorId) : null;
-  if (!sponsor) return;
-  await getStore()
-    .logAdEvent(sponsor.id, "view")
-    .catch((e) => console.error("[ad] 数えられませんでした", e));
 }
 
 /** going = 決まった日に行く人の数(決まっていなければ 0)。audience = 学生・プライベート・会社のどれの会か */

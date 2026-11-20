@@ -5,7 +5,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
 import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
-import { CHECKLIST, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type ThanksKind, type TopicKind } from "@/lib/work";
+import { CHECKLIST, timeline } from "@/lib/work";
 import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
@@ -15,7 +15,7 @@ import { clock, yen } from "@/lib/sendai";
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "memo" | "thanks" | "seat" | "schedule" | "collect";
+type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "memo" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
@@ -42,9 +42,7 @@ const TOOL_TONE: Record<Tool, Tone> = {
   king: "gold",
   wheel: "orange",
   team: "green",
-  topic: "cyan",
   memo: "purple",
-  thanks: "blue",
   seat: "orange",
   schedule: "red",
   collect: "green",
@@ -222,9 +220,7 @@ export function FunClient() {
               {tool === "ng" && <NgWord names={names} locked={locked} />}
               {tool === "wheel" && <Wheel names={names} locked={locked} />}
               {tool === "team" && <Teams names={names} locked={locked} />}
-              {tool === "topic" && <Topic locked={locked} />}
               {tool === "memo" && <Memo locked={locked} />}
-              {tool === "thanks" && <Thanks locked={locked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
             </div>
@@ -254,9 +250,7 @@ export function FunClient() {
             {tool === "ng" && <NgWord names={names} locked={locked} />}
             {tool === "wheel" && <Wheel names={names} locked={locked} />}
             {tool === "team" && <Teams names={names} locked={locked} />}
-            {tool === "topic" && <Topic locked={locked} />}
             {tool === "memo" && <Memo locked={locked} />}
-            {tool === "thanks" && <Thanks locked={locked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
             {tool === "collect" && (
@@ -832,58 +826,6 @@ function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-// ───── 話題ガチャ(会社の会)─────
-function Topic({ locked }: { locked: boolean }) {
-  const [kind, setKind] = useState<TopicKind>("chat");
-  const [card, setCard] = useState<string | null>(null);
-  const [used, setUsed] = useState<Record<TopicKind, Set<number>>>({ chat: new Set(), work: new Set(), future: new Set() });
-
-  function draw() {
-    const r = drawIndex(TOPICS[kind].length, used[kind]);
-    setUsed({ ...used, [kind]: r.reset ? new Set([r.index]) : new Set([...used[kind], r.index]) });
-    setCard(TOPICS[kind][r.index]);
-  }
-
-  return (
-    <Box title="話題ガチャ" tone={TOOL_TONE.topic} locked={locked}>
-      <p className="text-sm text-white/70">会話に困ったら引いてみてください。みんなに順番に聞いても盛り上がります。</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="話題の種類">
-        {TOPIC_KINDS.map((k, i) => {
-          // デモ版は最初の種類だけ。ほかは鍵つき
-          const closed = locked && i > 0;
-          return (
-            <button
-              key={k.key}
-              type="button"
-              disabled={closed}
-              aria-pressed={kind === k.key}
-              onClick={() => {
-                setKind(k.key);
-                setCard(null);
-              }}
-              className={`${PILL} disabled:opacity-50 ${kind === k.key ? PILL_ON : PILL_OFF}`}
-            >
-              {closed ? <Lock className="size-3.5" aria-hidden /> : kind === k.key && "✓ "}
-              {k.label}
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-2 text-xs text-muted">{TOPIC_KINDS.find((k) => k.key === kind)!.note}</p>
-      {card && (
-        <div className="anim-rise mt-4 rounded-2xl border border-accent/40 px-4 py-5 text-center" aria-live="polite">
-          <p className="text-xl leading-snug font-black">{card}</p>
-        </div>
-      )}
-      <div className="mt-4">
-        <RerollButton onClick={draw}>
-          <MessageCircleQuestionMark className="size-4" aria-hidden />
-          {card ? "次の話題を引く" : "話題を引く"}
-        </RerollButton>
-      </div>
-    </Box>
-  );
-}
 
 // ───── 席替え(仕事の会)─────
 function Seats({ names, locked }: { names: string[]; locked: boolean }) {
@@ -1090,71 +1032,6 @@ function Schedule({ locked }: { locked: boolean }) {
   );
 }
 
-// ───── お礼の連絡(会社の会)─────
-function Thanks({ locked }: { locked: boolean }) {
-  const [kind, setKind] = useState<ThanksKind>("all");
-  const [n, setN] = useState(0);
-  const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState("");
-  const list = THANKS[kind];
-  const yenText = /^\d{1,6}$/.test(amount) ? `${Number(amount).toLocaleString("ja-JP")}円` : "○○円";
-  const text = list[n % list.length].replace("○○円", yenText);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {}
-  }
-
-  return (
-    <Box title="お礼・ご連絡" tone={TOOL_TONE.thanks} locked={locked}>
-      <p className="text-sm text-white/70">会の翌日にお送りするお礼やご連絡の文の例です。キャンセル料のお願いもやわらかい言い方でお伝えできます。コピーしてそのままお使いいただけます。</p>
-      <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="送る相手">
-        {THANKS_KINDS.map((k) => (
-          <button
-            key={k.key}
-            type="button"
-            aria-pressed={kind === k.key}
-            onClick={() => {
-              setKind(k.key);
-              setN(0);
-            }}
-            className={`${PILL} w-full px-2 text-[13px] ${kind === k.key ? PILL_ON : PILL_OFF}`}
-          >
-            {kind === k.key && "✓ "}
-            {k.label}
-          </button>
-        ))}
-      </div>
-      {kind === "cancel" && (
-        <label className="mt-3 block">
-          <span className="text-xs font-bold text-muted">キャンセル料(1名さま・円)</span>
-          <input
-            inputMode="numeric"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-            placeholder="例 3000"
-            className="mt-1 w-full rounded-2xl bg-white/8 px-4 py-3 text-base text-white ring-1 ring-white/12 outline-none placeholder:text-white/25 focus:ring-accent/50"
-          />
-        </label>
-      )}
-      <p className="anim-rise mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-base leading-relaxed font-bold ring-1 ring-white/10" key={`${kind}${n}${yenText}`}>
-        {text}
-      </p>
-      <div className="mt-3 flex gap-2">
-        <button type="button" onClick={copy} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-accent px-3 text-sm font-black text-accent-text active:scale-95">
-          {copied ? "コピーしました" : "コピーする"}
-        </button>
-        <button type="button" onClick={() => setN((v) => v + 1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
-          <Shuffle className="size-4" aria-hidden />
-          別の例を見る
-        </button>
-      </div>
-    </Box>
-  );
-}
 
 // ───── 幹事メモ(会社の会)─────
 const MEMO_KEY = "nomi:work-memo";

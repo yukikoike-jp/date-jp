@@ -75,18 +75,6 @@ export type Collection = {
   autoRemindAt?: number;
 };
 
-/** 払うまでお知らせを受け取る端末(ブラウザの通知の宛先)。名前や連絡先は持たない */
-export type PushSub = {
-  collectionId: string;
-  personId: number;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-  /** これまでに通知した回数と、最後に通知した時刻(ミリ秒) */
-  sentCount: number;
-  lastSentAt: number | null;
-};
-
 export type AdEventKind = "view" | "click";
 export type AdStat = { sponsorId: string; views: number; clicks: number };
 
@@ -114,15 +102,4 @@ export interface Store {
   getCollection(id: string): Promise<Collection | null>;
   /** null なら「まだ」に戻す */
   setPayment(collectionId: string, personId: number, payment: Payment | null): Promise<void>;
-  /** 集金の設定を変える。null でその設定を消す(自動でお知らせをやめる、など) */
-  setCollectionSettings(collectionId: string, patch: { payLink?: string | null; autoRemindAt?: number | null }): Promise<void>;
-  /** 「自動でお知らせ」がオンの集金 */
-  listAutoRemind(): Promise<Collection[]>;
-  /** 通知の宛先を足す(同じ端末なら置き換える) */
-  addPushSub(sub: Omit<PushSub, "sentCount" | "lastSentAt">): Promise<void>;
-  listPushSubs(collectionId: string): Promise<PushSub[]>;
-  /** 通知を送ったことを記録する */
-  markPushSent(collectionId: string, personId: number, endpoint: string, at: number): Promise<void>;
-  /** 届かなくなった(解除された)宛先を消す */
-  removePushSub(collectionId: string, personId: number, endpoint: string): Promise<void>;
 }

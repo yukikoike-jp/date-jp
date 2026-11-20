@@ -242,10 +242,6 @@ h3 {
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes wiggle { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
 
-/* 回す選び方(components/WheelPicker.tsx)のスクロールバーを隠す */
-.no-scrollbar { scrollbar-width: none; }
-.no-scrollbar::-webkit-scrollbar { display: none; }
-
 /* Play の道具ごとの色。--accent を差し替えるので、中の text-accent / bg-accent / border-accent がその色になる */
 .tone-gold { --accent: #f5b83d; --accent-strong: #ffc85c; }
 .tone-red { --accent: #e07a88; --accent-strong: #ea95a0; }
