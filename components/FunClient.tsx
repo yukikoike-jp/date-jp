@@ -73,12 +73,18 @@ export function FunClient() {
   // Play か Support か。最初は会の種類(仕事なら Support)。買えばどちらも使えるので、上のボタンか左右のスワイプで切り替える
   const [side, setSide] = useState<"play" | "support">("support");
   const company = side === "support";
-  const [tool, setTool] = useState<Tool>("collect");
-  // 最初はどの会の種類でも Support の集金チェック(2026-11-21)
+  const [tool, setTool] = useState<Tool>("memo");
+  // 最初はどの会の種類でも Support の幹事メモ(無料。2026-11-21)。会計から(?tab=collect)来たときだけ集金チェック
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("tab") === "collect") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTool("collect");
+    }
+  }, []);
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
     setSide(next);
-    setTool(next === "support" ? "collect" : "wheel");
+    setTool(next === "support" ? "memo" : "wheel");
     setShowBuy(false);
   }
   // 左右にスワイプ(入力欄・選ぶ欄の上から始めたときは、切り替えない)
