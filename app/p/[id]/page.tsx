@@ -48,17 +48,15 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
         </div>
         {party.decision && <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />}
-        {!party.decision && <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />}
-        {/* 決まったあとは、みんなの答えはたたんでおく。お店まで決まったら、ほかの候補のお店は出さない */}
-        {party.decision ? (
-          <Fold title={`みんなの答え(${summary.answered}人)`} note="日にち・時間・予算・場所">
-            <SummaryView summary={summary} />
-          </Fold>
-        ) : (
-          <div className="mt-4">
-            <SummaryView summary={summary} />
+        {/* 自分の答えはいちばん下。まだ決まっていない間は、そこへすぐ行けるボタンを上に置く */}
+        {!party.decision && (
+          <div className="px-4">
+            <a href="#my-answer" className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text active:scale-[0.98]">
+              自分の予定を答える
+            </a>
           </div>
         )}
+        {/* どの段階でも同じ並び: お店の候補(お店が決まるまで)→ みんなの答え(たたむ)→ 自分の答え(いちばん下) */}
         {!party.decision?.shopId && (
           <ShopList
             partyId={party.id}
@@ -72,12 +70,12 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
             initial={6}
           />
         )}
-        {/* 決まったあとは、自分の答えはいちばん下(直したいときだけ使う) */}
-        {party.decision && (
-          <div className="mt-4">
-            <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-          </div>
-        )}
+        <Fold title={`みんなの答え(${summary.answered}人)`} note="日にち・時間・予算・場所">
+          <SummaryView summary={summary} />
+        </Fold>
+        <div id="my-answer" className="mt-4 scroll-mt-20">
+          <AnswerPanel partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
+        </div>
       </div>
     </PageMotion>
     </PullToRefresh>

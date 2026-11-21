@@ -85,11 +85,6 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           scene={{ audience: party.audience, budget: summary.budget }}
         />
         {/* 幹事も自分の予定を入れられる。ふだんは1行のボタンにたたみ、押すと開く */}
-        {!party.decision && (
-          <div className="mt-4">
-            <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-          </div>
-        )}
         {/* みんなの答えの細かい表は、いつもたたんでおく(いちばん良い日は「幹事が決める」に出ている) */}
         {summary.answered > 0 && (
           <Fold title={`みんなの答え(${summary.answered}人)`} note="日にち・時間・予算・場所">
@@ -97,11 +92,10 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           </Fold>
         )}
         {/* お店の一覧は AdminPanel の中に1つだけ出す(選ぶのと予約のリンクを同じ一覧に) */}
-        {party.decision && (
-          <div className="mt-4">
-            <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-          </div>
-        )}
+        {/* 幹事の答えは、どの段階でもいちばん下 */}
+        <div className="mt-4">
+          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
+        </div>
       </div>
     </PageMotion>
     </PullToRefresh>
