@@ -44,7 +44,7 @@ export function useFunAccess(): FunAccess {
 /** Tsudoro+ で使えるようになるもの(購入の案内のチェック項目) */
 const PLUS_ITEMS: { name?: string; body: string }[] = [
   { name: "Support", body: "集金チェック・席替え・進行表" },
-  { name: "Play", body: "NGワード・ウソはどれ?" },
+  { name: "Play", body: "ワードウルフ・NGワード・ウソはどれ?" },
   { body: "これからふえる機能も追加料金なし" },
 ];
 
@@ -86,7 +86,7 @@ export function ProPaywall({ feature, price, onClose, purchasable = true, work =
       <p className="mt-1 text-sm text-muted">{yen(price)}の買い切り。1回払えばどちらもずっと使えます。月額も自動更新もありません。</p>
       {/* 買うと使えるようになるもの。プライベートでも仕事でも、両方とも使える */}
       <ul className="mt-4 space-y-2 text-sm">
-        {(work ? [PLUS_ITEMS[1], PLUS_ITEMS[0], ...PLUS_ITEMS.slice(2)] : PLUS_ITEMS).map((t) => (
+        {PLUS_ITEMS.map((t) => (
           <li key={t.body} className="flex items-start gap-2">
             <Check className="mt-0.5 size-4 shrink-0 text-accent" aria-hidden />
             <span>

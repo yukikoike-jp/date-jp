@@ -48,13 +48,13 @@ const HOME_BY_AUDIENCE: Record<
     lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "誰が払ってないか一目でわかる集金",
+    play: "幹事の仕事を徹底的にサポート",
   },
   private: {
     lead: "サークル・友達の飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "幹事がいる会をもっと楽しく",
+    play: "幹事の仕事を徹底的にサポート",
   },
   worker: {
     lead: "歓送迎会・忘年会をURLひとつで",

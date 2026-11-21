@@ -9,7 +9,6 @@ import { CHECKLIST, timeline } from "@/lib/work";
 import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
-import { loadAudience } from "@/lib/audience";
 
 // 有料プレミアムの「Play」(ワードウルフ・NGワード・ウソはどれ?・ルーレット。ワードウルフは無料)。会社の会でも遊べるものだけにする(2026-11-21)
 // 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
@@ -18,9 +17,9 @@ import { loadAudience } from "@/lib/audience";
 const NAMES_KEY = "date:fun-names";
 type Tool = "wolf" | "ng" | "lie" | "wheel" | "memo" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
-  // 無料で使えるものを左上に(2026-11-21)
-  { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
+  // 無料で使えるルーレットを左上に(2026-11-21)
   { key: "wheel", label: "ルーレット", icon: Dices },
+  { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
   { key: "lie", label: "ウソはどれ?", icon: MessageCircleQuestion },
 ];
@@ -47,8 +46,8 @@ const TOOL_TONE: Record<Tool, Tone> = {
   collect: "green",
 };
 
-/** 買わなくても使える道具(幹事メモと、Play のワードウルフ・ルーレット(11-21 に追加)。2026-11-21。集金チェックは Tsudoro+ の主役にした) */
-const FREE_TOOLS: Tool[] = ["memo", "wolf", "wheel"];
+/** 買わなくても使える道具(幹事メモと、Play のルーレット。ワードウルフは 11-21 に有料へ戻した。2026-11-21。集金チェックは Tsudoro+ の主役にした) */
+const FREE_TOOLS: Tool[] = ["memo", "wheel"];
 
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
 const NEEDS_NAMES: Tool[] = ["wolf", "ng", "lie", "wheel", "seat"];
@@ -75,19 +74,11 @@ export function FunClient() {
   const [side, setSide] = useState<"play" | "support">("support");
   const company = side === "support";
   const [tool, setTool] = useState<Tool>("collect");
-  // 最初に開く場所: 会計から(?tab=collect)は集金チェック。プライベートの人は Play、会社の人は Support(2026-11-21)
-  useEffect(() => {
-    const fromSplit = new URLSearchParams(window.location.search).get("tab") === "collect";
-    if (!fromSplit && loadAudience() !== "worker") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSide("play");
-      setTool("wolf");
-    }
-  }, []);
+  // 最初はどの会の種類でも Support の集金チェック(2026-11-21)
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
     setSide(next);
-    setTool(next === "support" ? "collect" : "wolf");
+    setTool(next === "support" ? "collect" : "wheel");
     setShowBuy(false);
   }
   // 左右にスワイプ(入力欄・選ぶ欄の上から始めたときは、切り替えない)
@@ -150,7 +141,8 @@ export function FunClient() {
           ))}
         </div>
         <p className="mt-2 flex items-center gap-2 text-sm text-muted">
-          {company ? "幹事の仕事を徹底的にサポート" : "幹事がいる会をもっと楽しく"}
+          {/* Tsudoro+ の説明は、プライベートも仕事も同じ(2026-11-21) */}
+          幹事の仕事を徹底的にサポート
           {/* 買う前は、もやの上のボタンだけにする(黄色いものを2つ出さない)。買ったあとは開いた鍵の印 */}
           {!access.loading && !locked && <PackBadge locked={locked} />}
         </p>
@@ -420,7 +412,7 @@ function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
   }
 
   return (
-    <Box title="ワードウルフ" tone={TOOL_TONE.wolf} locked={locked} free>
+    <Box title="ワードウルフ" tone={TOOL_TONE.wolf} locked={locked}>
       <p className="text-sm text-white/70">
         全員にお題の言葉が配られますが1人だけ(ウルフ)は少し違う言葉です。自分の名前を押してこっそり言葉を見たら、見せずに話し合ってウルフを当てます。
       </p>

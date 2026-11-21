@@ -252,7 +252,7 @@ export function SplitClient() {
       {/* 決まった会があれば、行く人の名前とお酒を飲まない人をそのまま読み込める */}
       {decidedParties.length > 0 && (
         <section className="mx-4 mb-2">
-          <p className="mb-1 px-1 text-[10px] font-black tracking-[0.15em] text-stone-400">決まった会から名前を読み込む</p>
+          <p className="mb-1.5 px-1 text-xs font-black tracking-[0.1em] text-stone-400">決まった会から名前を読み込む</p>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {decidedParties.map(({ party: p, date }) => (
               <button
@@ -260,11 +260,11 @@ export function SplitClient() {
                 type="button"
                 disabled={importing}
                 onClick={() => importParty(p)}
-                className="flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-surface px-3 text-left ring-1 ring-white/12 transition hover:bg-stone-800 active:scale-95 disabled:opacity-50"
+                className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full bg-surface px-4 text-left ring-1 ring-white/12 transition hover:bg-stone-800 active:scale-95 disabled:opacity-50"
               >
                 <Users className="size-3.5 shrink-0 text-accent" aria-hidden />
-                <span className="max-w-[8rem] truncate text-xs font-black">{p.title}</span>
-                <span className="text-[10px] text-white/40">{dateLabel(date)}</span>
+                <span className="max-w-[9rem] truncate text-sm font-black">{p.title}</span>
+                <span className="text-xs text-white/40">{dateLabel(date)}</span>
               </button>
             ))}
           </div>
@@ -272,22 +272,22 @@ export function SplitClient() {
       )}
 
       {/* 何の会計か(催促の文にも入る)と合計を、1つの枠にまとめる */}
-      <div className="mx-4 rounded-3xl border panel px-4 py-3">
+      <div className="mx-4 rounded-3xl border panel px-4 py-4">
         <label className="flex items-center gap-2">
-          <NotebookPen className="size-4 shrink-0 text-accent" aria-hidden />
+          <NotebookPen className="size-5 shrink-0 text-accent" aria-hidden />
           <input
-            className="min-h-9 w-full min-w-0 bg-transparent text-sm font-bold outline-none placeholder:font-normal placeholder:text-muted"
+            className="min-h-11 w-full min-w-0 bg-transparent text-base font-bold outline-none placeholder:font-normal placeholder:text-muted"
             value={title}
             onChange={(e) => setTitle(e.target.value.slice(0, 30))}
             placeholder="何の会計? 例: ゼミの打ち上げ 10/30"
             aria-label="何の会計かのメモ"
           />
         </label>
-        <label className="mt-1 flex items-baseline gap-2 border-t border-border pt-2">
-          <span className="shrink-0 text-xs font-bold text-muted">合計</span>
-          <span className="text-xl font-black text-muted">¥</span>
+        <label className="mt-2 flex items-baseline gap-2 border-t border-border pt-3">
+          <span className="shrink-0 text-sm font-bold text-muted">合計</span>
+          <span className="text-2xl font-black text-muted">¥</span>
           <input
-            className="w-full min-w-0 bg-transparent text-3xl font-black tracking-tight tabular-nums outline-none placeholder:text-border"
+            className="w-full min-w-0 bg-transparent text-4xl font-black tracking-tight tabular-nums outline-none placeholder:text-border"
             inputMode="numeric"
             value={total === "" ? "" : Number(total).toLocaleString("ja-JP")}
             onChange={(e) => setTotal(e.target.value.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 7))}
@@ -299,8 +299,8 @@ export function SplitClient() {
 
       {/* 会社や部署からの補助(会社の会だけ)。入れると、その分を引いた残りをみんなで割る。最初は 0円 */}
       {isFormal(audience) && (
-        <div className="mx-4 mt-2 flex items-center gap-2 rounded-2xl border panel px-4 py-2">
-          <span className="shrink-0 text-xs font-bold text-muted">会社の補助</span>
+        <div className="mx-4 mt-2 flex items-center gap-2 rounded-2xl border panel px-4 py-3">
+          <span className="shrink-0 text-sm font-bold text-muted">会社の補助</span>
           <div className="grid shrink-0 grid-cols-2 gap-0.5 rounded-lg bg-surface-2 p-0.5" role="group" aria-label="補助の出し方">
             {(["per", "lump"] as const).map((k) => (
               <button
@@ -308,7 +308,7 @@ export function SplitClient() {
                 type="button"
                 aria-pressed={subsidyKind === k}
                 onClick={() => setSubsidyKind(k)}
-                className={`min-h-8 rounded-md px-2 text-[11px] font-bold ${subsidyKind === k ? "bg-surface text-text shadow" : "text-muted"}`}
+                className={`min-h-10 rounded-md px-3 text-sm font-bold ${subsidyKind === k ? "bg-surface text-text shadow" : "text-muted"}`}
               >
                 {k === "per" ? "1人" : "全体"}
               </button>
@@ -316,19 +316,19 @@ export function SplitClient() {
           </div>
           <span className="ml-auto flex min-w-0 items-baseline gap-0.5">
             <input
-              className="w-20 min-w-0 bg-transparent text-right text-base font-black tabular-nums outline-none"
+              className="w-24 min-w-0 bg-transparent text-right text-lg font-black tabular-nums outline-none"
               inputMode="numeric"
               value={Number(subsidyYen || 0).toLocaleString("ja-JP")}
               onChange={(e) => setSubsidyYen(e.target.value.replace(/[^\d]/g, "").replace(/^0+/, "").slice(0, 7))}
               onFocus={(e) => e.target.select()}
               aria-label={subsidyKind === "per" ? "1人あたりの補助(円)" : "全体の補助(円)"}
             />
-            <span className="text-xs font-bold text-muted">円</span>
+            <span className="text-sm font-bold text-muted">円</span>
           </span>
         </div>
       )}
       {subsidy > 0 && (
-        <p className="mx-4 mt-1 px-1 text-xs font-bold text-accent">
+        <p className="mx-4 mt-1 px-1 text-sm font-bold text-accent">
           補助 {yen(subsidy)} を引いて、{yen(totalYen - subsidy)} をみんなで割る計算
         </p>
       )}
@@ -342,7 +342,7 @@ export function SplitClient() {
               type="button"
               aria-pressed={weighted === v}
               onClick={() => setWeighted(v)}
-              className={`min-h-10 rounded-lg text-sm font-bold transition-colors ${weighted === v ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
+              className={`min-h-12 rounded-lg text-base font-bold transition-colors ${weighted === v ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
             >
               {v ? "傾斜" : "割り勘"}
             </button>
@@ -352,7 +352,7 @@ export function SplitClient() {
           value={unit}
           onChange={(e) => setUnit(Number(e.target.value) as typeof unit)}
           aria-label="何円単位にそろえるか"
-          className="min-h-10 shrink-0 rounded-xl bg-surface-2 px-2 text-sm font-bold outline-none"
+          className="min-h-12 shrink-0 rounded-xl bg-surface-2 px-3 text-base font-bold outline-none"
         >
           {ROUND_UNITS.map((u) => (
             <option key={u} value={u}>
@@ -369,35 +369,49 @@ export function SplitClient() {
           const customOn = p.weight === "custom";
           const customBad = customOn && p.custom.trim() !== "" && tenthsFromInput(p.custom) === null;
           return (
-            <li key={p.id} className={`tier-${w.tone} px-2 py-1.5`}>
-              <div className="flex items-center gap-1.5">
+            <li key={p.id} className={`tier-${w.tone} px-3 py-2.5`}>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setOrganizer(i)}
                   aria-pressed={organizer === i}
                   aria-label={`${nameOf(p, i)}を幹事にする(端数を受け持つ)`}
-                  className="relative grid size-9 shrink-0 place-items-center"
+                  className="relative grid size-11 shrink-0 place-items-center"
                 >
-                  <Avatar name={nameOf(p, i)} tone={w.tone} size="sm" />
+                  <Avatar name={nameOf(p, i)} tone={w.tone} />
                   {organizer === i && (
-                    <span className="absolute -top-0.5 -right-0.5 grid size-4 place-items-center rounded-full bg-accent text-accent-text" aria-hidden>
-                      <Crown className="size-2.5" />
+                    <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-accent text-accent-text" aria-hidden>
+                      <Crown className="size-3" />
                     </span>
                   )}
                 </button>
                 <input
-                  className="min-h-9 w-full min-w-0 rounded-lg bg-surface-2 px-2 text-sm font-bold outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
+                  className="min-h-11 w-full min-w-0 rounded-lg bg-surface-2 px-3 text-base font-bold outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
                   value={p.name}
                   onChange={(e) => update(p.id, { name: e.target.value.slice(0, 20) })}
                   placeholder={`${i + 1}人目`}
                   aria-label={`${i + 1}人目の名前`}
                 />
+                <span className="w-[5.2rem] shrink-0 text-right text-base font-black tabular-nums">{result ? yen(result.amounts[i]) : "—"}</span>
+                {people.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => remove(i)}
+                    aria-label={`${nameOf(p, i)}を外す`}
+                    className="grid size-10 shrink-0 place-items-center rounded-full text-muted hover:text-text"
+                  >
+                    <X className="size-5" aria-hidden />
+                  </button>
+                )}
+              </div>
+              {/* 傾斜の区分は名前の下の段に(名前の欄をせまくしない。2026-11-21) */}
+              <div className={weighted ? "mt-2 ml-13 flex flex-wrap items-center gap-2" : "hidden"}>
                 {weighted && (
                   <select
                     value={p.weight}
                     onChange={(e) => update(p.id, { weight: e.target.value as typeof p.weight })}
                     aria-label={`${nameOf(p, i)}の区分`}
-                    className="min-h-9 w-[6.4rem] shrink-0 rounded-lg bg-[var(--ts)] px-1 text-xs font-bold text-[var(--tc)] outline-none"
+                    className="min-h-10 w-[8rem] shrink-0 rounded-lg bg-[var(--ts)] px-1 text-sm font-bold text-[var(--tc)] outline-none"
                   >
                     {weights.map((opt) => (
                       <option key={opt.key} value={opt.key}>
@@ -407,35 +421,24 @@ export function SplitClient() {
                     <option value="custom">倍率を入力</option>
                   </select>
                 )}
-                <span className="w-[4.2rem] shrink-0 text-right text-sm font-black tabular-nums">{result ? yen(result.amounts[i]) : "—"}</span>
-                {people.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => remove(i)}
-                    aria-label={`${nameOf(p, i)}を外す`}
-                    className="grid size-8 shrink-0 place-items-center rounded-full text-muted hover:text-text"
-                  >
-                    <X className="size-4" aria-hidden />
-                  </button>
+                {weighted && customOn && (
+                  <label className="flex items-center gap-1.5">
+                    <span className="text-sm font-black text-[var(--tc)]" aria-hidden>
+                      ×
+                    </span>
+                    <input
+                      className="min-h-10 w-20 rounded-lg bg-surface-2 px-2 text-base font-black tabular-nums outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
+                      inputMode="decimal"
+                      value={p.custom}
+                      onChange={(e) => update(p.id, { custom: e.target.value.slice(0, 4) })}
+                      placeholder="1.2"
+                      aria-label={`${nameOf(p, i)}の倍率`}
+                      autoFocus
+                    />
+                    <span className={`text-xs ${customBad ? "font-bold text-danger" : "text-muted"}`}>{customBad ? "0.1〜5.0 の数で" : "ふつうが1.0"}</span>
+                  </label>
                 )}
               </div>
-              {weighted && customOn && (
-                <label className="mt-1 ml-10 flex items-center gap-1.5">
-                  <span className="text-sm font-black text-[var(--tc)]" aria-hidden>
-                    ×
-                  </span>
-                  <input
-                    className="min-h-8 w-16 rounded-lg bg-surface-2 px-2 text-sm font-black tabular-nums outline-none placeholder:font-normal placeholder:text-muted focus:ring-1 focus:ring-[var(--tb)]"
-                    inputMode="decimal"
-                    value={p.custom}
-                    onChange={(e) => update(p.id, { custom: e.target.value.slice(0, 4) })}
-                    placeholder="1.2"
-                    aria-label={`${nameOf(p, i)}の倍率`}
-                    autoFocus
-                  />
-                  <span className={`text-[11px] ${customBad ? "font-bold text-danger" : "text-muted"}`}>{customBad ? "0.1〜5.0 の数で" : "ふつうが1.0"}</span>
-                </label>
-              )}
             </li>
           );
         })}
@@ -444,29 +447,29 @@ export function SplitClient() {
             type="button"
             onClick={() => setPeople((ps) => [...ps, person("normal")])}
             disabled={people.length >= 30}
-            className="flex min-h-10 w-full items-center justify-center gap-1.5 text-sm font-bold text-muted hover:text-text disabled:opacity-40"
+            className="flex min-h-12 w-full items-center justify-center gap-1.5 text-base font-bold text-muted hover:text-text disabled:opacity-40"
           >
-            <Plus className="size-4" aria-hidden />
+            <Plus className="size-5" aria-hidden />
             人を足す
           </button>
         </li>
       </ul>
-      <p className="mx-4 mt-1 px-1 text-[11px] text-muted">顔のマークを押した人が幹事。端数を受け持ちます。</p>
+      <p className="mx-4 mt-1.5 px-1 text-xs text-muted">顔のマークを押した人が幹事。端数を受け持ちます。</p>
 
       {/* 合計と送る。金額は上の一覧に出ているので、ここは合計と送るボタンだけ */}
       {result ? (
-        <section className="mx-4 mt-3 rounded-3xl border border-accent/40 bg-surface px-4 py-3">
+        <section className="mx-4 mt-3 rounded-3xl border border-accent/40 bg-surface px-4 py-4">
           <p className="flex items-baseline justify-between">
-            <span className="text-sm font-bold">合計</span>
-            <span className="text-lg font-black tabular-nums">{yen(totalYen)}</span>
+            <span className="text-base font-bold">合計</span>
+            <span className="text-2xl font-black tabular-nums">{yen(totalYen)}</span>
           </p>
           {result.surplus > 0 && (
-            <p className="text-xs text-muted">
+            <p className="mt-1 text-sm text-muted">
               全員 {yen(result.amounts[0])} で同じ額。{yen(result.surplus)} のお釣りが出ます(幹事が預かる)
             </p>
           )}
           {result.organizerDiff !== 0 && (
-            <p className="text-xs text-muted">
+            <p className="mt-1 text-sm text-muted">
               端数の{yen(Math.abs(result.organizerDiff))}ぶん幹事が{result.organizerDiff > 0 ? "多め" : "少なめ"}です
             </p>
           )}
