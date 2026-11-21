@@ -34,6 +34,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#000000",
+  // アプリ(Capacitor)で画面いっぱいに出し、切り欠きは globals.css の safe-area で避ける
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

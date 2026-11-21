@@ -52,7 +52,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
       </SiteHeader>
       <div className={`mx-auto max-w-xl ${party.decision ? "pb-16" : "pb-40"}`}>
         <div className="px-4 pt-6 pb-4">
-          <p className="text-[11px] font-black tracking-[0.2em] text-stone-400">幹事の画面</p>
+          <p className="text-[11px] font-black text-stone-400">幹事の画面</p>
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
         </div>
         {party.decision && (

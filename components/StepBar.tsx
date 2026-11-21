@@ -19,14 +19,14 @@ export function StepBar({ current }: { current: 0 | 1 | 2 }) {
             <div className="flex items-center gap-1.5">
               <span
                 className={`grid size-7 shrink-0 place-items-center rounded-lg transition-colors duration-300 ${
-                  now ? "bg-accent text-accent-text shadow-[0_0_14px_rgba(245,185,60,0.35)]" : done ? "bg-accent/20 text-accent" : "bg-white/6 text-white/30"
+                  now ? "bg-accent text-accent-text" : done ? "bg-accent/20 text-accent" : "bg-white/6 text-white/30"
                 }`}
               >
                 {done ? <Check className="size-4" aria-hidden /> : <Icon className="size-4" aria-hidden />}
               </span>
               <span className={`h-[3px] flex-1 rounded-full transition-all duration-500 ${done ? "bg-accent/60" : now ? "bg-gradient-to-r from-accent/60 to-white/12" : "bg-white/12"}`} />
             </div>
-            <span className={`pl-0.5 text-[10px] font-black tracking-[0.12em] ${now ? "text-accent" : done ? "text-accent/60" : "text-white/35"}`}>{label}</span>
+            <span className={`pl-0.5 text-[10px] font-black ${now ? "text-accent" : done ? "text-accent/60" : "text-white/35"}`}>{label}</span>
           </li>
         );
       })}

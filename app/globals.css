@@ -6,12 +6,13 @@
 */
 :root {
   /* 黒い地に、少し明るい黒のカード。主な色はビールの金色(主ボタン・選んだもの)で、文字は黒 */
+  /* 2026-11-21: Ionic(iOS のダークモード)の色にそろえる。光る縁やにじみは使わない */
   --bg: #000000;
-  --surface: #1d1d1d;
-  --surface-2: #2a2a2a;
+  --surface: #1c1c1e;
+  --surface-2: #2c2c2e;
   --text: #ffffff;
-  --muted: rgb(255 255 255 / 0.5);
-  --border: rgb(255 255 255 / 0.08);
+  --muted: rgb(235 235 245 / 0.6);
+  --border: rgb(84 84 88 / 0.6);
   --accent: #f5b83d;
   --accent-text: #000000;
   --accent-strong: #ffc85c;
@@ -22,7 +23,7 @@
   --ok-soft: #2a2112;
   --line: #06c755;
   --line-strong: #4fe08a;
-  --danger: #ff7a6b;
+  --danger: #ff453a;
   color-scheme: dark;
 }
 
@@ -46,8 +47,23 @@
   --color-danger: var(--danger);
   /* 名前「Date」の字体(app/layout.tsx で読み込む Poppins) */
   --font-logo: var(--font-poppins), "Poppins", system-ui, sans-serif;
-  --font-sans: "Hiragino Kaku Gothic ProN", "Hiragino Sans", var(--font-jp), "Noto Sans JP",
-    "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  /* iPhone・Android の本体の字(Ionic と同じ考え方)。ない端末だけ Noto Sans JP */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", Roboto, var(--font-jp),
+    "Noto Sans JP", "Yu Gothic UI", Meiryo, system-ui, sans-serif;
+  /* 角の丸みは iOS の一覧・カードに合わせて控えめに(大きな丸はAIっぽく見えるため) */
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 0.875rem;
+  /* いちばん太い字は使わない(iOS の見出しは太字まで) */
+  --font-weight-black: 700;
+}
+
+/* アプリ(Capacitor)で、画面の切り欠き・下のバーに重ならないようにする */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 body {
@@ -136,18 +152,17 @@ h3 {
 .page-bg { background: var(--bg); }
 @layer components {
   .panel {
-    border-color: rgb(255 255 255 / 0.08);
+    border-color: transparent;
     background: var(--surface);
   }
   .hero {
-    background: #0d0c0a;
-    border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
-    box-shadow: 0 24px 60px -20px color-mix(in srgb, var(--accent) 20%, transparent);
+    background: var(--surface);
+    border: 0;
   }
 }
 
 .glow {
-  box-shadow: 0 30px 90px -30px color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: none;
 }
 
 /* 起動の演出(components/SplashIntro.tsx)。グラスで乾杯し、名前がせり上がる。約3.2秒で消える */

@@ -252,7 +252,7 @@ export function SplitClient() {
       {/* 決まった会があれば、行く人の名前とお酒を飲まない人をそのまま読み込める */}
       {decidedParties.length > 0 && (
         <section className="mx-4 mb-2">
-          <p className="mb-1.5 px-1 text-xs font-black tracking-[0.1em] text-stone-400">決まった会から名前を読み込む</p>
+          <p className="mb-1.5 px-1 text-xs font-black text-stone-400">決まった会から名前を読み込む</p>
           <div className="flex gap-1.5 overflow-x-auto pb-1">
             {decidedParties.map(({ party: p, date }) => (
               <button

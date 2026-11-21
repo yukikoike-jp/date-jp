@@ -47,7 +47,7 @@ export function DecisionCard({ decision, partyId, title, url, photo = null, host
                 href={`/go/${partyId}/${shop.id}`}
                 target="_blank"
                 rel="nofollow noopener"
-                className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text shadow-[0_8px_24px_-12px_var(--accent)] transition active:scale-[0.98]"
+                className="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-base font-black text-accent-text transition active:scale-[0.98]"
               >
                 お店のページで予約する
                 <ExternalLink className="size-4" aria-hidden />

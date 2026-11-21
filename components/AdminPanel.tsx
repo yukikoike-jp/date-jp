@@ -258,7 +258,7 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
                     aria-pressed={date === r.date}
                     onClick={() => setDate(r.date)}
                     className={`flex min-h-14 flex-col items-center justify-center rounded-xl border px-2 py-1.5 text-sm font-bold transition-all active:scale-95 ${
-                      date === r.date ? "border-accent bg-accent text-accent-text shadow-[0_0_18px_-6px_var(--accent)]" : "border-white/10 bg-surface-2 text-text hover:border-white/25"
+                      date === r.date ? "border-accent bg-accent text-accent-text" : "border-white/10 bg-surface-2 text-text hover:border-white/25"
                     }`}
                   >
                     {/* 日付を大きく、人数を下に小さく。1行に詰めて途中で折り返さないようにする */}

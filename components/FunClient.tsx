@@ -243,7 +243,7 @@ export function FunClient() {
               <button
                 type="button"
                 onClick={() => setShowBuy(true)}
-                className="flex min-h-14 items-center gap-3 rounded-2xl bg-bg/90 px-5 py-3 text-left ring-1 ring-accent/60 shadow-[0_0_32px_-12px_var(--accent)] active:scale-95"
+                className="flex min-h-14 items-center gap-3 rounded-2xl bg-bg/90 px-5 py-3 text-left ring-1 ring-accent/60 active:scale-95"
               >
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
                   <Lock className="size-5" aria-hidden />
@@ -288,7 +288,7 @@ function sliceColor(i: number, n: number): string {
 /** free = 買わなくても使える道具。鍵の印の代わりに「無料」と出す */
 function Box({ title, tone, locked, free = false, children }: { title: string; tone: Tone; locked: boolean; free?: boolean; children: React.ReactNode }) {
   return (
-    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5 shadow-[0_0_28px_-18px_var(--accent)]`}>
+    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5`}>
       <h2 className="mb-3 flex items-center justify-between text-lg font-black">
         <span className="flex items-center gap-2">
           <span className="h-5 w-1.5 rounded-full bg-accent" aria-hidden />
@@ -769,7 +769,7 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
                     {t.rows.map((row, ri) => (
                       <div key={ri}>
                         {layout === "table" && ri === 1 && (
-                          <div className="mb-2 rounded-lg bg-white/8 py-1.5 text-center text-[11px] font-bold tracking-widest text-white/50">テーブル</div>
+                          <div className="mb-2 rounded-lg bg-white/8 py-1.5 text-center text-[11px] font-bold text-white/50">テーブル</div>
                         )}
                         <ul className="flex flex-wrap justify-center gap-2">
                           {row.map((n, i) => {
@@ -819,7 +819,7 @@ function RoundTable({ names, top = true, exit = true }: { names: string[]; top?:
   return (
     <div className="mx-auto" style={{ width: size, height: size, maxWidth: "100%" }}>
       <div className="relative h-full w-full">
-        <div className="absolute inset-[22%] grid place-items-center rounded-full bg-white/8 text-[11px] font-bold tracking-widest text-white/50 ring-1 ring-white/10">
+        <div className="absolute inset-[22%] grid place-items-center rounded-full bg-white/8 text-[11px] font-bold text-white/50 ring-1 ring-white/10">
           テーブル
         </div>
         {names.map((name, i) => {
