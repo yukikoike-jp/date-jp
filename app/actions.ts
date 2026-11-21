@@ -124,6 +124,8 @@ export async function setMust(partyId: string, adminToken: string, names: string
 export async function findShops(input: {
   /** 飲む場所の駅(全国) */
   station: unknown;
+  /** 駅をいくつか選んだとき(3つまで)。あれば station より優先 */
+  stations?: unknown;
   genres: string[];
   budget: number | null;
   privateRoom: boolean;
@@ -135,8 +137,26 @@ export async function findShops(input: {
   second?: { genre: string | null } | null;
   audience: string;
 }): Promise<{ shops: Shop[]; otherArea: boolean; relaxed: string | null }> {
-  if (!isStation(input.station)) return { shops: [], otherArea: false, relaxed: null };
-  const point = { lat: input.station.lat, lng: input.station.lng };
+  // 駅をいくつか選んだときは、駅ごとに探して、交互に並べる(同じお店は1つにする)
+  const many = Array.isArray(input.stations) ? input.stations.filter(isStation).slice(0, 3) : [];
+  if (many.length > 1) {
+    const each = await Promise.all(many.map((s) => findShops({ ...input, station: s, stations: undefined })));
+    const seen = new Set<string>();
+    const shops: Shop[] = [];
+    for (let i = 0; shops.length < 12 && each.some((r) => i < r.shops.length); i++) {
+      for (const r of each) {
+        const s = r.shops[i];
+        if (s && !seen.has(s.id)) {
+          seen.add(s.id);
+          shops.push(s);
+        }
+      }
+    }
+    return { shops: shops.slice(0, 12), otherArea: each.every((r) => r.otherArea), relaxed: each.find((r) => r.relaxed)?.relaxed ?? null };
+  }
+  const station = many[0] ?? input.station;
+  if (!isStation(station)) return { shops: [], otherArea: false, relaxed: null };
+  const point = { lat: station.lat, lng: station.lng };
   if (input.second) {
     const shops = await searchSecondShops({ ...point, size: 2, genre: isSecondGenreKey(input.second.genre) ? input.second.genre : null, exclude: null, area: AREAS[0].key });
     return { shops, otherArea: false, relaxed: null };

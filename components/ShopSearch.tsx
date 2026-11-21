@@ -23,6 +23,7 @@ function Option({
   note,
   compact,
   multi,
+  art,
 }: {
   on: boolean;
   onClick: () => void;
@@ -32,7 +33,27 @@ function Option({
   compact?: boolean;
   /** いくつでも選べる選択肢。印を四角にする */
   multi?: boolean;
+  /** 料理やお金のイラスト(絵文字)。あると、絵を上・名前を下に並べた大きめの札にする(2026-11-21) */
+  art?: string;
 }) {
+  if (compact && art) {
+    return (
+      <button
+        type="button"
+        aria-pressed={on}
+        onClick={onClick}
+        className={`relative flex min-h-[4.75rem] flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2 text-center transition-colors ${
+          on ? "border-accent bg-accent text-accent-text" : "border-border bg-surface-2 text-text hover:border-muted"
+        }`}
+      >
+        {on && <Check className="absolute top-1.5 right-1.5 size-3.5" aria-hidden />}
+        <span aria-hidden className="text-[26px] leading-none tracking-[-0.2em] whitespace-nowrap">
+          {art}
+        </span>
+        <span className="block text-[13px] font-bold tracking-tight whitespace-nowrap">{title}</span>
+      </button>
+    );
+  }
   return (
     <button
       type="button"
@@ -62,10 +83,31 @@ function Option({
 
 const SHOP_BUDGETS = [2000, 3000, 4000, 5000, 6000, 8000];
 
+/** 料理・お店のイラスト(絵文字)。名前だけより、ひと目で分かる(2026-11-21) */
+const GENRE_ART: Record<string, string> = {
+  izakaya: "🏮",
+  washoku: "🍣",
+  yoshoku: "🍝",
+  chuka: "🥟",
+  yakiniku: "🥩",
+  bar: "🍷",
+  sosaku: "🍽️",
+  ethnic: "🍜",
+  indian: "🍛",
+  okonomiyaki: "🥞",
+  takoyaki: "🐙",
+  karaoke: "🎤",
+};
+const SECOND_ART: Record<string, string> = { izakaya: "🏮", bar: "🍸", karaoke: "🎤" };
+/** 予算は、お札の枚数で高さが分かるようにする */
+const budgetArt = (b: number) => "💴".repeat(b <= 3000 ? 1 : b <= 5000 ? 2 : 3);
+
 export function ShopSearch() {
   const [audience, setAudience] = useState<Audience | null>(null);
-  // 駅は最初は選ばない(選ぶまではお店を出さない)
-  const [station, setStation] = useState<Station | null>(null);
+  // 駅は最初は選ばない(選ぶまではお店を出さない)。いくつでも(3つまで)選べる(2026-11-21)
+  const [stations, setStations] = useState<Station[]>([]);
+  const station = stations[0] ?? null;
+  const stationNames = stations.map((s) => `${s.name}駅`).join("・");
   const [genres, setGenres] = useState<GenreKey[]>([]);
   const [budget, setBudget] = useState<number | null>(null);
   const [privateRoom, setPrivateRoom] = useState(false);
@@ -94,15 +136,15 @@ export function ShopSearch() {
       return;
     }
     start(async () => {
-      setResult(await findShops({ station, genres, budget, privateRoom, freeDrink, smoking: audience !== null && smoking, second: second ? { genre: secondGenre } : null, audience }));
+      setResult(await findShops({ station, stations, genres, budget, privateRoom, freeDrink, smoking: audience !== null && smoking, second: second ? { genre: secondGenre } : null, audience }));
     });
-  }, [station, genres, budget, privateRoom, freeDrink, smoking, second, secondGenre, audience]);
+  }, [station, stations, genres, budget, privateRoom, freeDrink, smoking, second, secondGenre, audience]);
 
   const toggleGenre = (k: GenreKey) =>
     setGenres((cur) => (cur.includes(k) ? cur.filter((g) => g !== k) : [...cur, k]));
 
   const summary = [
-    station ? `${station.name}駅` : "場所はまだ",
+    station ? stationNames : "場所はまだ",
     second ? "二次会向け" : null,
     second ? (secondGenre ? SECOND_GENRES.find((g) => g.key === secondGenre)!.label : null) : budget === null ? "予算は決めない" : `${yen(budget)}まで`,
     !second && genres.length > 0 ? genres.map((k) => GENRES.find((g) => g.key === k)!.label).join("・") : null,
@@ -121,8 +163,9 @@ export function ShopSearch() {
           <p className={LABEL} aria-hidden>
             <MapPin className="size-4" />
             どこで飲む?
+            <span className="ml-auto text-xs font-normal">3つまで選べます</span>
           </p>
-          <StationPicker value={station} onChange={setStation} anyLabel={null} quick />
+          <StationPicker value={station} onChange={(s) => setStations(s ? [s] : [])} multi={stations} onMultiChange={setStations} anyLabel={null} quick />
           {/* 一次会か二次会か。二次会向けは、23時以降も開いているお店だけを出す */}
           <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="何次会">
             <Option compact on={!second} onClick={() => setSecond(false)} title="一次会向け" />
@@ -139,9 +182,9 @@ export function ShopSearch() {
               どんなお店?
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Option compact on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
+              <Option compact art="🍴" on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
               {SECOND_GENRES.map((g) => (
-                <Option compact key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
+                <Option compact art={SECOND_ART[g.key]} key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
               ))}
             </div>
           </fieldset>
@@ -157,7 +200,7 @@ export function ShopSearch() {
           <div className="grid grid-cols-3 gap-2">
             {/* 2・3・4・5・6・8千円の6つ(3つずつ2段)。選んだものをもう一度押すと「決めない」に戻る */}
             {SHOP_BUDGETS.map((b) => (
-              <Option compact key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
+              <Option compact art={budgetArt(b)} key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
             ))}
           </div>
         </fieldset>
@@ -170,9 +213,9 @@ export function ShopSearch() {
             <span className="ml-auto text-xs font-normal">いくつでも選べます</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
-            <Option compact on={genres.length === 0} onClick={() => setGenres([])} title="なんでも" />
+            <Option compact art="🍴" on={genres.length === 0} onClick={() => setGenres([])} title="なんでも" />
             {GENRES.map((g) => (
-              <Option compact multi key={g.key} on={genres.includes(g.key)} onClick={() => toggleGenre(g.key)} title={g.label} />
+              <Option compact multi art={GENRE_ART[g.key]} key={g.key} on={genres.includes(g.key)} onClick={() => toggleGenre(g.key)} title={g.label} />
             ))}
           </div>
         </fieldset>
@@ -250,7 +293,7 @@ export function ShopSearch() {
         {station && result && !pending &&
           (result.shops.length > 0 ? (
             <>
-              <ShopList partyId="search" heading="見つかったお店" lead={result.otherArea ? undefined : `${station.name}駅の近くで、選んだ条件に合うお店`} shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} scene={{ audience, budget }} />
+              <ShopList partyId="search" heading="見つかったお店" lead={result.otherArea ? undefined : `${stationNames}の近くで、選んだ条件に合うお店`} shops={result.shops} otherArea={result.otherArea} relaxed={result.relaxed} scene={{ audience, budget }} />
             </>
           ) : (
             <p id="shops" className="mx-4 rounded-3xl border panel px-5 py-6 text-sm text-muted">
