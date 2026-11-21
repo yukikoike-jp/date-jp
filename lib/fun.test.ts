@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_NAMES, LIE_THEMES, parseNames, pickIndex, seatPlan, shuffle } from "./fun";
+import { DEMO_NAMES, LIE_THEMES, maxTables, parseNames, pickIndex, seatPlan, seatTables, shuffle } from "./fun";
 
 // 乱数を固定する(0.1, 0.2, ... を順に返す)
 function seq(...v: number[]) {
@@ -69,5 +69,27 @@ describe("pickIndex", () => {
     expect(pickIndex(5, () => 0.999)).toBe(4);
     expect(pickIndex(5, () => 0)).toBe(0);
     expect(pickIndex(0)).toBe(-1);
+  });
+});
+
+describe("seatTables", () => {
+  const names = Array.from({ length: 11 }, (_, i) => `n${i}`);
+  it("全員を、人数の差が1人までの卓に分ける", () => {
+    const t = seatTables(names, "table", 3);
+    expect(t).toHaveLength(3);
+    const sizes = t.map((x) => x.rows.flat().length);
+    expect(Math.max(...sizes) - Math.min(...sizes)).toBeLessThanOrEqual(1);
+    expect(t.flatMap((x) => x.rows.flat()).sort()).toEqual([...names].sort());
+  });
+  it("上座は1卓目の席1、出口の人は最後の卓", () => {
+    for (let k = 0; k < 20; k++) {
+      const t = seatTables(names, "counter", 2, Math.random, { top: "n3", exit: "n5" });
+      expect(t[0].rows[0][0]).toBe("n3");
+      expect(t[1].rows[0].at(-1)).toBe("n5");
+    }
+  });
+  it("卓の数は1卓に2人まで", () => {
+    expect(maxTables(5)).toBe(2);
+    expect(seatTables(names.slice(0, 3), "round", 5)).toHaveLength(1);
   });
 });

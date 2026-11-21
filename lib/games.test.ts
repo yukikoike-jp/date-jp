@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NG_WORDS, WORD_PAIRS, ngWords, wordWolf } from "./games";
+import { SYNC_THEMES, WORD_PAIRS, wordWolf } from "./games";
 
 describe("wordWolf", () => {
   const names = ["あおい", "いずみ", "うた", "えま", "おと"];
@@ -18,15 +18,8 @@ describe("wordWolf", () => {
   });
 });
 
-describe("ngWords", () => {
-  it("全員に、重ならないNGワードを配る(30人まで)", () => {
-    const names = Array.from({ length: 30 }, (_, i) => `n${i}`);
-    const r = ngWords(names);
-    expect(r).toHaveLength(30);
-    expect(new Set(r.map((d) => d.word)).size).toBe(30);
-    expect(r.every((d) => NG_WORDS.includes(d.word))).toBe(true);
-  });
-  it("言葉の一覧に、同じ言葉はない", () => {
-    expect(new Set(NG_WORDS).size).toBe(NG_WORDS.length);
+describe("SYNC_THEMES", () => {
+  it("お題に同じものはない", () => {
+    expect(new Set(SYNC_THEMES).size).toBe(SYNC_THEMES.length);
   });
 });

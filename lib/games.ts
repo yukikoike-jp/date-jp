@@ -43,15 +43,10 @@ export function wordWolf(names: readonly string[], rand: Rand = Math.random): { 
   return { deals: names.map((name) => ({ name, word: name === wolf ? wolfWord : majorityWord })), wolf, majorityWord, wolfWord };
 }
 
-/** NGワードゲームの言葉。会話の中で、つい言ってしまいそうな、ふつうの言葉(30個。1人に1つずつ、重ならないように配る) */
-export const NG_WORDS = [
-  "確かに", "ていうか", "やばい", "マジで", "なるほど", "ほんと", "ちょっと", "たぶん", "とりあえず", "でも",
-  "ごめん", "いや", "ありがとう", "おいしい", "楽しい", "好き", "すごい", "わかる", "それな", "かわいい",
-  "たしかに", "だから", "うん", "えっと", "そうそう", "はい", "ねえ", "どうしよう", "最近", "今日",
+/** 「せーの!」のお題。全員が同時に答えを言い、同じ答えの人が多いほど成功。だれでも答えやすく、会社の会でも気まずくならないもの(2026-11-21。NGワードの代わり。覚えることがない) */
+export const SYNC_THEMES = [
+  "赤い食べものといえば?", "夏といえば?", "コンビニで買うものといえば?", "朝ごはんといえば?", "居酒屋の最初の一品といえば?",
+  "動物園の人気者といえば?", "冬の鍋といえば?", "日本一の山といえば?", "おにぎりの具といえば?", "黄色いものといえば?",
+  "お寿司のネタといえば?", "遊園地の乗り物といえば?", "雨の日に持つものといえば?", "北海道の名物といえば?", "丸いものといえば?",
+  "カレーの具といえば?", "お祭りの屋台といえば?", "スポーツといえば?", "白い食べものといえば?", "旅行に持っていくものといえば?",
 ];
-
-/** NGワードゲーム。全員に、重ならないNGワードを1つずつ配る(自分のNGワードを会話で言ったら、アウト) */
-export function ngWords(names: readonly string[], rand: Rand = Math.random): { name: string; word: string }[] {
-  const words = shuffle(NG_WORDS, rand);
-  return names.map((name, i) => ({ name, word: words[i % words.length] }));
-}

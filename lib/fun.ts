@@ -1,4 +1,4 @@
-// 有料パックの「もりあげ道具」(席替え・ウソはどれ?・ルーレット)。純粋関数。
+// 有料パックの「もりあげ道具」(席決め・ウソはどれ?・ルーレット)。純粋関数。
 // 乱数は引数で渡せるようにして、テストで結果を固定できるようにする
 
 export type Rand = () => number;
@@ -36,7 +36,7 @@ export const SEAT_LAYOUTS: { key: SeatLayout; label: string; note: string }[] = 
 ];
 
 /**
- * 席替え。席の順に名前を入れた一覧を返す。
+ * 席決め。席の順に名前を入れた一覧を返す。
  * table = 手前の列と奥の列(奥は手前と同じか1席少ない)、round と counter = 1周・1列の順
  */
 export type SeatPins = { top?: string | null; exit?: string | null };
@@ -64,13 +64,46 @@ function arrange(names: readonly string[], layout: SeatLayout, rand: Rand, pins:
   return order.map((x) => x ?? rest.shift() ?? "");
 }
 
-export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] } {
-  const order = arrange(names, layout, rand, pins);
+function toRows(order: string[], layout: SeatLayout): { rows: string[][] } {
   if (layout === "table") {
     const half = Math.ceil(order.length / 2);
     return { rows: [order.slice(0, half), order.slice(half)] };
   }
   return { rows: [order] };
+}
+
+export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] } {
+  return toRows(arrange(names, layout, rand, pins), layout);
+}
+
+/** 机(卓)の数の上限。1卓に2人はいるようにする */
+export function maxTables(count: number): number {
+  return Math.max(1, Math.min(8, Math.floor(count / 2)));
+}
+
+/**
+ * 机がいくつかあるときの席決め(2026-11-21)。人数はできるだけ同じにする(差は1人まで)。
+ * 上座の人は1卓目の席1、出口に近い席の人は最後の卓の出口の席
+ */
+export function seatTables(names: readonly string[], layout: SeatLayout, tables: number, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] }[] {
+  const n = names.length;
+  const t = Math.max(1, Math.min(Math.floor(tables) || 1, maxTables(n)));
+  if (t === 1) return [seatPlan(names, layout, rand, pins)];
+  const top = pins.top && names.includes(pins.top) ? pins.top : null;
+  const exit = pins.exit && pins.exit !== top && names.includes(pins.exit) ? pins.exit : null;
+  const rest = shuffle(
+    names.filter((x) => x !== top && x !== exit),
+    rand,
+  );
+  const out: { rows: string[][] }[] = [];
+  for (let i = 0; i < t; i++) {
+    const size = Math.floor(n / t) + (i < n % t ? 1 : 0);
+    const seats: (string | null)[] = Array(size).fill(null);
+    if (i === 0 && top) seats[0] = top;
+    if (i === t - 1 && exit) seats[seatExitIndex(layout, size)] = exit;
+    out.push(toRows(seats.map((x) => x ?? rest.shift() ?? ""), layout));
+  }
+  return out;
 }
 
 /** 「ウソはどれ?」のお題。会社の会でも話しやすい、仕事と私生活の軽いこと(2026-11-21) */
