@@ -18,17 +18,19 @@ import { loadAudience } from "@/lib/audience";
 const NAMES_KEY = "date:fun-names";
 type Tool = "wolf" | "ng" | "lie" | "wheel" | "memo" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
+  // 無料で使えるものを左上に(2026-11-21)
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
+  { key: "wheel", label: "ルーレット", icon: Dices },
   { key: "ng", label: "NGワード", icon: Ban },
   { key: "lie", label: "ウソはどれ?", icon: MessageCircleQuestion },
-  { key: "wheel", label: "ルーレット", icon: Dices },
 ];
 
 /** Support: 幹事の道具。集金チェックが主役で、席替え・幹事メモ・進行表だけに絞る(2026-11-20。お礼・ご連絡と話題ガチャは外した) */
 const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
+  // 無料で使える幹事メモを左上に(2026-11-21)
+  { key: "memo", label: "幹事メモ", icon: ClipboardList },
   { key: "collect", label: "集金チェック", icon: Wallet },
   { key: "seat", label: "席替え", icon: Armchair },
-  { key: "memo", label: "幹事メモ", icon: ClipboardList },
   { key: "schedule", label: "進行表", icon: CalendarClock },
 ];
 
