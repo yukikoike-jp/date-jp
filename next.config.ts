@@ -15,7 +15,10 @@ const nextConfig: NextConfig = {
     BILLING_ON: process.env.STRIPE_SECRET_KEY && process.env.LICENSE_SECRET ? "1" : "",
   },
   images: { remotePatterns: [{ protocol: "https", hostname: "imgfp.hotp.jp" }] },
-  // tsudoro.com → www.tsudoro.com の移動は、Vercel のドメインの設定で行う(ここで逆向きに移すと、行ったり来たりになる)
+  // tsudoro.com → www.tsudoro.com に移す(2026-11-21。Firebase App Hosting にはドメインの転送の設定がないので、ここで行う。逆向きは書かない)
+  async redirects() {
+    return [{ source: "/:path*", has: [{ type: "host", value: "tsudoro.com" }], destination: "https://www.tsudoro.com/:path*", permanent: true }];
+  },
   async headers() {
     return [
       {

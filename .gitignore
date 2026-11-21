@@ -49,3 +49,4 @@ next-env.d.ts
 
 # SNS のリール(書き出した動画)。作り方は scripts/make-reels.cjs
 marketing/
+.env.firebase-move
