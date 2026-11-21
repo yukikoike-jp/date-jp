@@ -166,8 +166,8 @@ export async function findShops(input: {
 
 /** 集金のページを作る(Tsudoro+ の機能。2026-11-19 から、会計ではなく Support の集金チェックから作る)。金額はサーバーで計算し直す */
 export async function startCollection(input: CollectionInput, license: string | null = null): Promise<{ ok: true; id: string; adminToken: string } | Fail> {
-  // 集金のページを作るのは無料(2026-11-20)。license は前の画面からの呼び出しとの互換のために受け取るだけ
-  void license;
+  // 集金のページを作るのは Tsudoro+(2026-11-21。集金が、幹事がお金を払ってでも解決したい悩みなので)
+  if (!(await hasFun(license))) return { ok: false, error: "集金チェックは Tsudoro+ で使えます" };
   const parsed = parseCollection(input);
   if (!parsed.ok) return parsed;
 

@@ -7,7 +7,7 @@ import { buyPro, funStatus, restorePro } from "@/app/actions";
 import { yen } from "@/lib/sendai";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
-// 買い切り500円(Play と、仕事の会の幹事サポート)。割り勘・傾斜・集金の表づくりは無料のまま。
+// 買い切り500円(Play と、仕事の会の幹事サポート)。割り勘・傾斜は無料。集金チェックは Tsudoro+ の主役(2026-11-21)。
 // 買った鍵はこの端末に保存する(ログインなし)。別の端末では、買ったときのメールアドレスで戻せる
 
 const KEY = "date:pro";
@@ -43,8 +43,8 @@ export function useFunAccess(): FunAccess {
 /** 有料の機能を使おうとしたときに出す案内。買う、または別の端末で買ったものを戻す */
 /** Tsudoro+ で使えるようになるもの(購入の案内のチェック項目) */
 const PLUS_ITEMS: { name?: string; body: string }[] = [
-  { name: "Play", body: "NGワード・王様ゲーム・ルーレット" },
-  { name: "Support", body: "席替え・幹事メモ・進行表" },
+  { name: "Support", body: "集金チェック・席替え・進行表" },
+  { name: "Play", body: "NGワード・ウソはどれ?" },
   { body: "これからふえる機能も追加料金なし" },
 ];
 

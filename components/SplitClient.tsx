@@ -6,7 +6,7 @@ import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { Wallet } from "lucide-react";
 import { rememberCollection } from "@/lib/myCollections";
-import { loadLicense } from "./ProGate";
+import { loadLicense, useFunAccess } from "./ProGate";
 import { isFormal, loadAudience, type Audience } from "@/lib/audience";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
@@ -197,8 +197,14 @@ export function SplitClient() {
   const router = useRouter();
   const [collecting, startCollecting] = useTransition();
   const [collectError, setCollectError] = useState<string | null>(null);
+  const access = useFunAccess();
   function toCollection() {
     setCollectError(null);
+    // 集金チェックは Tsudoro+。買う前は、もやのかかった集金チェックへ
+    if (!access.unlocked) {
+      router.push("/fun?tab=collect");
+      return;
+    }
     startCollecting(async () => {
       const r = await startCollection(
         {

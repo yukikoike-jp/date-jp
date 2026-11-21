@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_NAMES, kingGame, parseNames, pickIndex, seatPlan, shuffle } from "./fun";
+import { DEMO_NAMES, LIE_THEMES, parseNames, pickIndex, seatPlan, shuffle } from "./fun";
 
 // 乱数を固定する(0.1, 0.2, ... を順に返す)
 function seq(...v: number[]) {
@@ -57,11 +57,10 @@ describe("seatPlan", () => {
   });
 });
 
-describe("kingGame", () => {
-  it("王様は1人だけ、ほかは 1〜(人数−1) の番号が1つずつ", () => {
-    const d = kingGame(DEMO_NAMES);
-    expect(d.filter((x) => x.card === "王様")).toHaveLength(1);
-    expect(d.filter((x) => x.card !== "王様").map((x) => x.card).sort()).toEqual([1, 2, 3, 4, 5]);
+describe("LIE_THEMES", () => {
+  it("お題が重ならない", () => {
+    expect(new Set(LIE_THEMES).size).toBe(LIE_THEMES.length);
+    expect(LIE_THEMES.length).toBeGreaterThan(5);
   });
 });
 

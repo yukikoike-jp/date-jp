@@ -1,25 +1,26 @@
 "use client";
 
-import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Lock, LockOpen, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
+import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Lock, LockOpen, MessageCircleQuestion, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, type KingDraw, type SeatLayout } from "@/lib/fun";
+import { DEMO_NAMES, LIE_THEMES, SEAT_LAYOUTS, parseNames, pickIndex, seatExitIndex, seatPlan, shuffle, type SeatLayout } from "@/lib/fun";
 import { ngWords, wordWolf } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
 import { CHECKLIST, timeline } from "@/lib/work";
 import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
+import { loadAudience } from "@/lib/audience";
 
-// 有料プレミアムの「Play」(ワードウルフ・NGワード・王様ゲーム・ルーレット。ワードウルフは無料)。
+// 有料プレミアムの「Play」(ワードウルフ・NGワード・ウソはどれ?・ルーレット。ワードウルフは無料)。会社の会でも遊べるものだけにする(2026-11-21)
 // 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "wolf" | "ng" | "king" | "wheel" | "memo" | "seat" | "schedule" | "collect";
+type Tool = "wolf" | "ng" | "lie" | "wheel" | "memo" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
   { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
   { key: "ng", label: "NGワード", icon: Ban },
-  { key: "king", label: "王様ゲーム", icon: Crown },
+  { key: "lie", label: "ウソはどれ?", icon: MessageCircleQuestion },
   { key: "wheel", label: "ルーレット", icon: Dices },
 ];
 
@@ -36,7 +37,7 @@ type Tone = "gold" | "red" | "blue" | "green" | "purple" | "orange" | "cyan";
 const TOOL_TONE: Record<Tool, Tone> = {
   wolf: "purple",
   ng: "red",
-  king: "gold",
+  lie: "gold",
   wheel: "cyan",
   memo: "purple",
   seat: "orange",
@@ -44,11 +45,11 @@ const TOOL_TONE: Record<Tool, Tone> = {
   collect: "green",
 };
 
-/** 買わなくても使える道具(集金チェックと、Play のワードウルフ。2026-11-20) */
-const FREE_TOOLS: Tool[] = ["collect", "wolf"];
+/** 買わなくても使える道具(幹事メモと、Play のワードウルフ・ルーレット(11-21 に追加)。2026-11-21。集金チェックは Tsudoro+ の主役にした) */
+const FREE_TOOLS: Tool[] = ["memo", "wolf", "wheel"];
 
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
-const NEEDS_NAMES: Tool[] = ["wolf", "ng", "king", "wheel", "seat"];
+const NEEDS_NAMES: Tool[] = ["wolf", "ng", "lie", "wheel", "seat"];
 
 /** Tsudoro+(有料・買い切り)の印。鍵のマークだけ(買う前かどうかは、上の案内に書く) */
 function PackBadge({ locked }: { locked: boolean }) {
@@ -72,7 +73,15 @@ export function FunClient() {
   const [side, setSide] = useState<"play" | "support">("support");
   const company = side === "support";
   const [tool, setTool] = useState<Tool>("collect");
-  // 集金が Tsudoro+ の主役なので、どの会の種類でも最初は Support の集金チェックを開く(会計から ?tab=collect で来たときも同じ)
+  // 最初に開く場所: 会計から(?tab=collect)は集金チェック。プライベートの人は Play、会社の人は Support(2026-11-21)
+  useEffect(() => {
+    const fromSplit = new URLSearchParams(window.location.search).get("tab") === "collect";
+    if (!fromSplit && loadAudience() !== "worker") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setSide("play");
+      setTool("wolf");
+    }
+  }, []);
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
     setSide(next);
@@ -216,10 +225,15 @@ export function FunClient() {
           <div className="relative min-h-[26rem]">
             <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
               {tool === "wolf" && <Wolf names={names} locked={toolLocked} />}
-              {tool === "king" && <King names={names} locked={locked} />}
+              {tool === "lie" && <Lie names={names} locked={locked} />}
+              {tool === "collect" && (
+                <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
+                  <CollectList demo />
+                </Box>
+              )}
               {tool === "ng" && <NgWord names={names} locked={locked} />}
-              {tool === "wheel" && <Wheel names={names} locked={locked} />}
-              {tool === "memo" && <Memo locked={locked} />}
+              {tool === "wheel" && <Wheel names={names} locked={toolLocked} />}
+              {tool === "memo" && <Memo locked={toolLocked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
             </div>
@@ -244,14 +258,14 @@ export function FunClient() {
         ) : (
           <>
             {tool === "wolf" && <Wolf names={names} locked={toolLocked} />}
-            {tool === "king" && <King names={names} locked={locked} />}
+            {tool === "lie" && <Lie names={names} locked={locked} />}
             {tool === "ng" && <NgWord names={names} locked={locked} />}
-            {tool === "wheel" && <Wheel names={names} locked={locked} />}
-            {tool === "memo" && <Memo locked={locked} />}
+            {tool === "wheel" && <Wheel names={names} locked={toolLocked} />}
+            {tool === "memo" && <Memo locked={toolLocked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
             {tool === "collect" && (
-              <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked} free>
+              <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
                 <CollectList />
               </Box>
             )}
@@ -305,78 +319,82 @@ function RerollButton({ onClick, disabled, children }: { onClick: () => void; di
 }
 
 
-// ───── 王様ゲーム ─────
-function King({ names, locked }: { names: string[]; locked: boolean }) {
-  const [draw, setDraw] = useState<KingDraw[] | null>(null);
-  const [open, setOpen] = useState<number | null>(null);
-  const [order, setOrder] = useState<string | null>(null);
+// ───── ウソはどれ? ─────
+// 1人ずつ、お題について自分の話を3つする(2つは本当、1つはウソ)。みんなでウソを当てる。
+// 会社の会でも気まずくならず、おたがいを知れる(2026-11-21。王様ゲームの代わり)
+function Lie({ names, locked }: { names: string[]; locked: boolean }) {
+  const [order, setOrder] = useState<string[] | null>(null);
+  const [turn, setTurn] = useState(0);
+  const [theme, setTheme] = useState(LIE_THEMES[0]);
+  const [left, setLeft] = useState<number | null>(null);
+
+  // 考える時間(1分)
+  useEffect(() => {
+    if (left === null || left <= 0) return;
+    const t = window.setTimeout(() => setLeft((v) => (v === null ? v : v - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [left]);
+
+  function next(i: number) {
+    setTurn(i);
+    setTheme(LIE_THEMES[pickIndex(LIE_THEMES.length)]);
+    setLeft(null);
+  }
+  const done = order !== null && turn >= order.length;
+
   return (
-    <Box title="王様ゲーム" tone={TOOL_TONE.king} locked={locked}>
-      <p className="text-sm text-white/70">くじを引いたら自分の名前を押してこっそりカードを見ます。見たらもう一度押して隠します。</p>
-      {draw && (
-        <ul className="mt-4 grid grid-cols-2 gap-2">
-          {draw.map((d, i) => {
-            const shown = open === i;
-            return (
-              <li key={d.name}>
-                <button
-                  type="button"
-                  onClick={() => setOpen(shown ? null : i)}
-                  aria-pressed={shown}
-                  className="flex min-h-16 w-full flex-col items-center justify-center rounded-2xl bg-surface-2 px-2 py-2 ring-1 ring-white/10 transition active:scale-95"
-                >
-                  <span className="max-w-full truncate text-sm font-bold">{d.name}</span>
-                  <span className={`mt-0.5 inline-flex items-center gap-1 text-xs font-black ${shown ? "text-accent" : "text-muted"}`}>
-                    {shown ? (
-                      <>
-                        <Eye className="size-3.5" aria-hidden />
-                        {d.card === "王様" ? "王様" : `${d.card}番`}
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="size-3.5" aria-hidden />
-                        カードを見る
-                      </>
-                    )}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {draw && (
-        <div className="mt-4 rounded-2xl border border-border px-4 py-3">
-          <p className="text-xs font-bold text-muted">王様の命令のヒント</p>
-          <p className="mt-1 min-h-6 text-sm font-bold">{order ?? "「命令をひとつ出す」を押すと例が出ます"}</p>
-          <button
-            type="button"
-            onClick={() => setOrder(KING_ORDERS[pickIndex(KING_ORDERS.length)])}
-            className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95"
-          >
-            <PartyPopper className="size-4" aria-hidden />
-            命令をひとつ出す
-          </button>
+    <Box title="ウソはどれ?" tone={TOOL_TONE.lie} locked={locked}>
+      <p className="text-sm text-white/70">話す人はお題について自分のことを3つ話します。2つは本当で1つだけウソ。ほかの人は話し合ってウソを当てます。</p>
+      {order && !done && (
+        <div className="mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-center ring-1 ring-white/10">
+          <p className="text-xs font-bold text-muted">
+            {turn + 1}人目 / {order.length}人
+          </p>
+          <p className="mt-1 text-2xl font-black">{order[turn]}さん</p>
+          <p className="mt-3 text-xs font-bold text-muted">お題</p>
+          <p className="mt-0.5 text-lg font-black text-accent">{theme}</p>
+          <div className="mt-3 flex justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setTheme(LIE_THEMES[pickIndex(LIE_THEMES.length)])}
+              className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95"
+            >
+              <Shuffle className="size-4" aria-hidden />
+              お題を変える
+            </button>
+            <button
+              type="button"
+              onClick={() => setLeft(60)}
+              className="inline-flex min-h-11 items-center gap-1 rounded-xl bg-white/8 px-3 text-sm font-bold tabular-nums ring-1 ring-white/12 active:scale-95"
+            >
+              <Timer className="size-4" aria-hidden />
+              {left === null ? "考える時間 1分" : left > 0 ? `のこり ${left}秒` : "時間です"}
+            </button>
+          </div>
         </div>
       )}
+      {done && <p className="mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-center font-black ring-1 ring-white/10">全員話しました。おつかれさまでした</p>}
       <div className="mt-4">
-        <RerollButton
-          disabled={names.length < 3}
-          onClick={() => {
-            setDraw(kingGame(names));
-            setOpen(null);
-            setOrder(null);
-          }}
-        >
-          <Crown className="size-4" aria-hidden />
-          {draw ? "くじを引き直す" : "くじを引く"}
-        </RerollButton>
-        {names.length < 3 && <p className="mt-2 text-center text-xs text-muted">3人から遊べます</p>}
+        {order && !done ? (
+          <RerollButton onClick={() => next(turn + 1)}>
+            {turn + 1 < order.length ? `次の人(${order[turn + 1]}さん)` : "おわる"}
+          </RerollButton>
+        ) : (
+          <RerollButton
+            disabled={names.length < 2}
+            onClick={() => {
+              setOrder(shuffle(names));
+              next(0);
+            }}
+          >
+            <MessageCircleQuestion className="size-4" aria-hidden />
+            {order ? "もう一度はじめる" : "話す順番を決めてはじめる"}
+          </RerollButton>
+        )}
       </div>
     </Box>
   );
 }
-
 
 // ───── ワードウルフ ─────
 function Wolf({ names, locked }: { names: string[]; locked: boolean }) {
@@ -523,7 +541,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   });
 
   return (
-    <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
+    <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked} free>
       <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます。</p>
       <div className="relative mx-auto mt-3 w-full max-w-[230px]">
         <svg viewBox="-160 -168 320 330" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
@@ -924,7 +942,7 @@ function Memo({ locked }: { locked: boolean }) {
   const done = checked.filter(Boolean).length;
 
   return (
-    <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked}>
+    <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked} free>
       <div className="flex items-center gap-3">
         <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10" aria-hidden>
           <span className="block h-full rounded-full bg-accent transition-[width]" style={{ width: `${(done / CHECKLIST.length) * 100}%` }} />

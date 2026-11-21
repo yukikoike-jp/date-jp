@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import { startCollection } from "@/app/actions";
 import { loadAudience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
-import { loadLicense } from "./ProGate";
+import { loadLicense, useFunAccess } from "./ProGate";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
 // 集金をすぐはじめる。割り勘の計算の画面を通らず、合計と名前を入れるだけで集金のページ(幹事の画面)に進む。全員同じ額で割る
@@ -27,6 +27,7 @@ export function QuickCollect() {
   const [names, setNames] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const access = useFunAccess();
 
   const list = parseNames(names);
   const totalYen = Number(total);
@@ -34,6 +35,10 @@ export function QuickCollect() {
 
   function submit() {
     setError(null);
+    if (!access.unlocked) {
+      router.push("/fun?tab=collect");
+      return;
+    }
     start(async () => {
       const r = await startCollection({
         title,

@@ -1,4 +1,4 @@
-// 有料パックの「もりあげ道具」(席替え・チーム分け・王様ゲーム・ルーレット)。純粋関数。
+// 有料パックの「もりあげ道具」(席替え・ウソはどれ?・ルーレット)。純粋関数。
 // 乱数は引数で渡せるようにして、テストで結果を固定できるようにする
 
 export type Rand = () => number;
@@ -73,27 +73,20 @@ export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Ran
   return { rows: [order] };
 }
 
-export type KingDraw = { name: string; card: "王様" | number };
-
-/** 王様ゲームのくじ。1人が王様、残りは 1〜(人数−1) の番号。誰が何を引いたかを返す */
-export function kingGame(names: readonly string[], rand: Rand = Math.random): KingDraw[] {
-  const cards: KingDraw["card"][] = ["王様", ...Array.from({ length: Math.max(0, names.length - 1) }, (_, i) => i + 1)];
-  const dealt = shuffle(cards, rand);
-  return names.map((name, i) => ({ name, card: dealt[i] }));
-}
-
-/** 王様の命令の例(だれでも楽しめる軽いもの) */
-export const KING_ORDERS = [
-  "◯番がみんなに乾杯の音頭をとる",
-  "◯番がいまの気分を一言で言う",
-  "◯番と◯番がグラスで軽く乾杯する",
-  "◯番が最近いちばん笑ったことを話す",
-  "◯番が好きな食べものを発表する",
-  "◯番が右隣の人をほめる",
-  "◯番が今日のおすすめの一品を決める",
-  "◯番が次に行きたい場所を1つ言う",
-  "◯番と◯番が席を交換する",
-  "◯番がみんなの写真を撮る",
+/** 「ウソはどれ?」のお題。会社の会でも話しやすい、仕事と私生活の軽いこと(2026-11-21) */
+export const LIE_THEMES = [
+  "休みの日のすごし方",
+  "子どものころの話",
+  "好きな食べもの・苦手な食べもの",
+  "行ったことのある場所",
+  "最近ハマっていること",
+  "学生時代の部活・サークル",
+  "はじめてのアルバイト・仕事",
+  "朝のすごし方",
+  "特技・意外な一面",
+  "最近買ってよかったもの",
+  "家族・ペットの話",
+  "これまでの失敗談",
 ];
 
 /** 名前の一覧から1人を選ぶ(ルーレット)。選んだ人の番号を返す。いなければ -1 */
