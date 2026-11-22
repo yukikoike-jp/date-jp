@@ -147,8 +147,8 @@ export function FunClient() {
           ))}
         </div>
         <p className="mt-2 flex items-center gap-2 text-sm text-muted">
-          {/* Tsudoro+ の説明は、プライベートも仕事も同じ(2026-11-21) */}
-          幹事の仕事を徹底的にサポート
+          {/* Support は幹事の仕事、Play は会を楽しく(2026-11-22) */}
+          {company ? "幹事の仕事を徹底的にサポート" : "幹事がいる会をもっと楽しく"}
           {/* 買う前は、もやの上のボタンだけにする(黄色いものを2つ出さない)。買ったあとは開いた鍵の印 */}
           {!access.loading && !locked && <PackBadge locked={locked} />}
         </p>

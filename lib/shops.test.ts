@@ -150,12 +150,16 @@ describe("referralUrl(バリューコマースの提携リンク)", () => {
       else process.env.AFFILIATE_URL_TEMPLATE = before;
     }
   });
-  it("テンプレートがなければ、そのまま", async () => {
+  it("テンプレートに {url} がなければ、そのまま", async () => {
+    const { referralUrl } = await import("./shops");
+    expect(referralUrl("https://www.hotpepper.jp/strJ001155193", "https://example.com/")).toBe("https://www.hotpepper.jp/strJ001155193");
+  });
+  it("環境変数がなくても、ホットペッパーの提携リンクにする", async () => {
     const { referralUrl } = await import("./shops");
     const before = process.env.AFFILIATE_URL_TEMPLATE;
     delete process.env.AFFILIATE_URL_TEMPLATE;
     try {
-      expect(referralUrl("https://www.hotpepper.jp/strJ001155193")).toBe("https://www.hotpepper.jp/strJ001155193");
+      expect(referralUrl("https://www.hotpepper.jp/strJ001155193")).toContain("pid=892753048&vc_url=");
     } finally {
       if (before !== undefined) process.env.AFFILIATE_URL_TEMPLATE = before;
     }

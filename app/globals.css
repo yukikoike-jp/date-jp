@@ -59,6 +59,16 @@
   --font-weight-black: 700;
 }
 
+/* ホーム画面に追加して開いたとき(standalone)だけ、上の時計・切り欠きの分を下げる(ウェブサイトでは 0 になる) */
+.pwa-top {
+  padding-top: 1.5rem;
+}
+@media (display-mode: standalone) {
+  .pwa-top {
+    padding-top: calc(env(safe-area-inset-top) + 1rem);
+  }
+}
+
 /* アプリ(Capacitor)で、画面の切り欠き・下のバーに重ならないようにする */
 body {
   padding-left: env(safe-area-inset-left);

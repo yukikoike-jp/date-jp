@@ -48,20 +48,20 @@ const HOME_BY_AUDIENCE: Record<
     lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "幹事の仕事を徹底的にサポート",
+    play: "幹事はラクに、会はもっと楽しく",
   },
   private: {
     lead: "サークル・友達の飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "幹事の仕事を徹底的にサポート",
+    play: "幹事はラクに、会はもっと楽しく",
   },
   worker: {
     lead: "歓送迎会・忘年会をURLひとつで",
     shops: "個室・喫煙可で探す",
     split: "補助や上司多めの計算",
     // 会社の会では、ゲームではなく、会話・あいさつ・準備(話題ガチャ・ひとこと・幹事メモ)
-    play: "幹事の仕事を徹底的にサポート",
+    play: "幹事はラクに、会はもっと楽しく",
   },
 };
 
@@ -178,7 +178,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
   );
 
   return (
-    <div className="anim-rise mx-auto flex min-h-dvh max-w-xl flex-col gap-5 px-4 pt-6 pb-8">
+    <div className="anim-rise pwa-top mx-auto flex min-h-dvh max-w-xl flex-col gap-5 px-4 pb-8">
       {/* いちばん上: 名前と、学生・プライベート・会社。隅に小さく置き、押すと選び直す画面を開く */}
       <div className="flex items-center justify-between pt-2">
         <Wordmark size={26} />

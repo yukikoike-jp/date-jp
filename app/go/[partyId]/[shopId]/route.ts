@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
-import { findShop } from "@/lib/shops";
+import { findShop, referralUrl } from "@/lib/shops";
 import { getStore } from "@/lib/store";
 
 // お店のページへ飛ばす。押された数を数えてから、お店のページへそのまま移動する。
 // 飛ばす先は id から引いたお店のページだけ(外から渡された URL には飛ばさない)。
 // 「お店を探す」から来たときは partyId が "search"。
-// 紹介料のリンクは使わない(フリーミアムで行く)。ホットペッパーのアプリが入っている人は、
-// ログイン済みのアプリでそのまま予約できるよう、アプリで開くのを止めない
+// 2026-11-22: ホットペッパーはバリューコマースの提携リンクを通す(ユーザーの判断)。
+// アプリが入っている人はアプリに飛ぶ(止めない)。アプリを入れていない人がブラウザで予約したときに紹介料が付く
 
 export async function GET(request: Request, ctx: RouteContext<"/go/[partyId]/[shopId]">) {
   const { partyId, shopId } = await ctx.params;
@@ -18,5 +18,5 @@ export async function GET(request: Request, ctx: RouteContext<"/go/[partyId]/[sh
 
   await store.logShopClick(party?.id ?? null, shop.id).catch((e) => console.error("[go] 数えられませんでした", e));
   if (!shop.url) return NextResponse.redirect(back);
-  return NextResponse.redirect(shop.url, { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } });
+  return NextResponse.redirect(referralUrl(shop.url), { headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } });
 }

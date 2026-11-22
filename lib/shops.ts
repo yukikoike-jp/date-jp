@@ -412,8 +412,10 @@ export function browserShopUrl(shopUrl: string): string {
 /** バリューコマース経由でホットペッパーへ送るときに、お店の URL に付ける印(MyLink が付けるものと同じ) */
 const VC_HOTPEPPER_VOS = "nhppvccp99002";
 
-export function referralUrl(shopUrl: string): string {
-  const template = process.env.AFFILIATE_URL_TEMPLATE?.trim();
+/** バリューコマースの提携リンク(ホットペッパー)。環境変数 AFFILIATE_URL_TEMPLATE があればそちらを使う */
+const VC_HOTPEPPER_TEMPLATE = "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3788519&pid=892753048&vc_url={url}";
+
+export function referralUrl(shopUrl: string, template: string = process.env.AFFILIATE_URL_TEMPLATE?.trim() || VC_HOTPEPPER_TEMPLATE): string {
   if (!template || !template.includes("{url}")) return shopUrl;
   let target = shopUrl;
   try {

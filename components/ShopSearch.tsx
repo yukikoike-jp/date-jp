@@ -23,7 +23,6 @@ function Option({
   note,
   compact,
   multi,
-  art,
 }: {
   on: boolean;
   onClick: () => void;
@@ -33,27 +32,7 @@ function Option({
   compact?: boolean;
   /** いくつでも選べる選択肢。印を四角にする */
   multi?: boolean;
-  /** 料理やお金のイラスト(絵文字)。あると、絵を上・名前を下に並べた大きめの札にする(2026-11-21) */
-  art?: string;
 }) {
-  if (compact && art) {
-    return (
-      <button
-        type="button"
-        aria-pressed={on}
-        onClick={onClick}
-        className={`relative flex min-h-[4.75rem] flex-col items-center justify-center gap-1 rounded-2xl border px-1 py-2 text-center transition-colors ${
-          on ? "border-accent bg-accent text-accent-text" : "border-border bg-surface-2 text-text hover:border-muted"
-        }`}
-      >
-        {on && <Check className="absolute top-1.5 right-1.5 size-3.5" aria-hidden />}
-        <span aria-hidden className="text-[26px] leading-none tracking-[-0.2em] whitespace-nowrap">
-          {art}
-        </span>
-        <span className="block text-[13px] font-bold tracking-tight whitespace-nowrap">{title}</span>
-      </button>
-    );
-  }
   return (
     <button
       type="button"
@@ -82,25 +61,6 @@ function Option({
 }
 
 const SHOP_BUDGETS = [2000, 3000, 4000, 5000, 6000, 8000];
-
-/** 料理・お店のイラスト(絵文字)。名前だけより、ひと目で分かる(2026-11-21) */
-const GENRE_ART: Record<string, string> = {
-  izakaya: "🏮",
-  washoku: "🍣",
-  yoshoku: "🍝",
-  chuka: "🥟",
-  yakiniku: "🥩",
-  bar: "🍷",
-  sosaku: "🍽️",
-  ethnic: "🍜",
-  indian: "🍛",
-  okonomiyaki: "🥞",
-  takoyaki: "🐙",
-  karaoke: "🎤",
-};
-const SECOND_ART: Record<string, string> = { izakaya: "🏮", bar: "🍸", karaoke: "🎤" };
-/** 予算は、お札の枚数で高さが分かるようにする */
-const budgetArt = (b: number) => "💴".repeat(b <= 3000 ? 1 : b <= 5000 ? 2 : 3);
 
 export function ShopSearch() {
   const [audience, setAudience] = useState<Audience | null>(null);
@@ -182,9 +142,9 @@ export function ShopSearch() {
               どんなお店?
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Option compact art="🍴" on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
+              <Option compact on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
               {SECOND_GENRES.map((g) => (
-                <Option compact art={SECOND_ART[g.key]} key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
+                <Option compact key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
               ))}
             </div>
           </fieldset>
@@ -200,7 +160,7 @@ export function ShopSearch() {
           <div className="grid grid-cols-3 gap-2">
             {/* 2・3・4・5・6・8千円の6つ(3つずつ2段)。選んだものをもう一度押すと「決めない」に戻る */}
             {SHOP_BUDGETS.map((b) => (
-              <Option compact art={budgetArt(b)} key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
+              <Option compact key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
             ))}
           </div>
         </fieldset>
@@ -213,9 +173,9 @@ export function ShopSearch() {
             <span className="ml-auto text-xs font-normal">いくつでも選べます</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
-            <Option compact art="🍴" on={genres.length === 0} onClick={() => setGenres([])} title="なんでも" />
+            <Option compact on={genres.length === 0} onClick={() => setGenres([])} title="なんでも" />
             {GENRES.map((g) => (
-              <Option compact multi art={GENRE_ART[g.key]} key={g.key} on={genres.includes(g.key)} onClick={() => toggleGenre(g.key)} title={g.label} />
+              <Option compact multi key={g.key} on={genres.includes(g.key)} onClick={() => toggleGenre(g.key)} title={g.label} />
             ))}
           </div>
         </fieldset>
