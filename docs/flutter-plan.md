@@ -48,13 +48,25 @@
 Flutter アプリ (mobile/)
    │  HTTPS + JSON
    ▼
-Next.js  app/api/v1/*  ← 新しく作る。中身は app/actions.ts と同じ lib/ の関数を呼ぶだけ
+Next.js  app/api/v1/*  ← 新しく作る。中身は app/actions.ts の関数を呼ぶだけ
    │
    ▼
 lib/store (Supabase / 仮DB)   lib/summary.ts   lib/shops.ts …
 ```
 
-- `app/actions.ts` の中身を `lib/server/` などの関数に出し、Server Actions と REST API の両方から呼ぶ。**ロジックは1か所**
+### API の技術選定(2026-11-22)
+
+| 決めたこと | 選んだもの | 選ばなかったもの |
+|---|---|---|
+| どこで動かすか | **今の Next.js の Route Handler(`app/api/v1/**/route.ts`)** | 別のサーバー(Hono・Express など): 置き場所と本番に出す手間が2つになる。Supabase に直接つなぐ(RLS のポリシーを書く): 鍵の照合と予算を隠す処理を、DB 側にもう一度書くことになる |
+| 中身 | **`app/actions.ts` の関数をそのまま呼ぶ** | 中身を `lib/server/` に移す: 移す量が多いわりに得るものがない。Server Actions はもともと外から呼べる入口なので、入力の確かめと鍵の照合は、すでに関数の中にある |
+| 入力の確かめ | **今の `lib/validation.ts` など(手で書いたもの)** | zod: 確かめ方が2通りになる |
+| 形の取り決め | **JSON。`docs/api.md` に書き、Vitest のテストで形を守る。** Dart のモデルは `freezed` で手で書く | OpenAPI からの自動生成: 道具が増える。API が20本をこえる、または使う側が3つ目になったら考える |
+| 鍵の渡し方 | **幹事の鍵は `Authorization: Bearer`。参加者の鍵は、直すときはボディ、読むときは `X-Answer-Token` ヘッダー** | Cookie: アプリでは扱いにくい |
+| 失敗のとき | **`{ ok: false, error: "日本語の文" }`。見つからないときは 404、それ以外は 400** | 失敗の種類ごとのコード: 今は画面に文を出すだけなので要らない |
+| 呼びすぎ対策 | **Vercel の Firewall(WAF)のレート制限。** 本番の設定なので、ユーザーの「出して」のあとに入れる | サーバーのメモリで数える: Vercel では効かない |
+
+- **ロジックは1か所**(`app/actions.ts` と `lib/`)。API は、受け取った JSON を関数に渡し、結果を JSON で返すだけ
 - 幹事の鍵は `Authorization: Bearer <adminToken>`、参加者の鍵はヘッダーかボディで渡す。照合は今と同じ `verifyToken`
 - 返すエラーは今の `{ ok: false, error: "日本語の文" }` をそのまま使い、アプリはその文を出す(文章のきまりをサーバー側でそろえるため)
 - 共有の文(`lib/share.ts`・`lib/reminder.ts`)もサーバーで作って返す。かっこを入れない・プライベートは敬語にしない、などのきまりを2か所で守らなくてよくなる
@@ -73,9 +85,12 @@ lib/store (Supabase / 仮DB)   lib/summary.ts   lib/shops.ts …
 | `GET /api/v1/parties/:id/answers/:answerId` | `getMyAnswer`(本人の鍵で読む) |
 | `POST /api/v1/devices` | 通知の宛先(端末のトークン)を登録する。**幹事の通知は幹事の鍵、参加者の通知は本人の回答の鍵を `verifyToken` で確かめてから登録する**(会の id は参加者全員の URL に入っているので、id だけでは登録させない) |
 | `POST /api/v1/parties/statuses` | `partyStatuses`(作った会の一覧の表示) |
-| `GET /api/v1/shops` | `findShops` / `findSecondShops` |
+| `GET /api/v1/parties/:id/attendees` | `partyAttendees`(会計に行く人を読み込む。幹事だけ) |
+| `POST /api/v1/shops/search` | `findShops`(条件が多いので POST。二次会も `second` で探せる) |
 | `GET /api/v1/stations?q=` | `searchStations` |
-| `GET /api/v1/share-text` | `lib/share.ts` の文 |
+
+- 共有の文(`lib/share.ts`)は、別の API にせず `GET /api/v1/parties/:id` の `share` に入れて返す
+- `POST /api/v1/devices` 以外は作った(2026-11-22)。形の詳しい取り決めは `docs/api.md`
 
 2段目: `collections`(集金)、`pro`(購入。Web へのリンクにするなら、今の `buyPro` を呼ぶだけ)、`fun`(Play / Support のお題。お題を Dart に持たせるか API で配るかは、そのときに決める)。
 
@@ -134,7 +149,7 @@ mobile/
 
 ## 進め方
 
-1. **API を作る**(Next.js 側): `app/actions.ts` の中身を共通の関数に出し、`/api/v1` を作る。Vitest で API のテスト。Web の動きは変えない
+1. **API を作る**(Next.js 側): `/api/v1` を作り、`app/actions.ts` の関数を呼ぶ。Vitest で API のテスト。Web の動きは変えない → 済み(2026-11-22。通知の登録だけ残り)
 2. **Flutter の土台**: `mobile/` を作り、色・フォント・`go_router`・API の呼び出しまで。仮DB の `npm run dev` につないで動かす
 3. **MVP の画面**: ホーム(作った会の一覧)→ 会を作る → 答える → 回答の集計 → 日にちとお店を決める → 共有。会計(`split`)
 4. **Universal Links / App Links と通知**: `/p/:id` と `/p/:id/admin` をアプリで開く。FCM の通知
