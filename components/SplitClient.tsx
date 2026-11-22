@@ -51,8 +51,9 @@ let nextId = 1;
 const person = (weight: string, name = ""): Person => ({ id: nextId++, name, weight, custom: "" });
 const startPeople = () => [person("normal", "幹事"), person("normal"), person("normal"), person("normal")];
 
-function Avatar({ name, tone, size = "md" }: { name: string; tone: Weight["tone"]; size?: "sm" | "md" }) {
-  const initial = [...name.trim()][0] ?? "?";
+function Avatar({ name, tone, size = "md", no }: { name: string; tone: Weight["tone"]; size?: "sm" | "md"; no?: number }) {
+  // 名前を入れていないときは、何人目かの番号を出す(「10人目」の頭の文字が「1」になるのを防ぐ。2026-11-22)
+  const initial = no !== undefined ? String(no) : ([...name.trim()][0] ?? "?");
   return (
     <span
       aria-hidden
@@ -378,7 +379,7 @@ export function SplitClient() {
                   aria-label={`${nameOf(p, i)}を幹事にする(端数を受け持つ)`}
                   className="relative grid size-11 shrink-0 place-items-center"
                 >
-                  <Avatar name={nameOf(p, i)} tone={w.tone} />
+                  <Avatar name={nameOf(p, i)} tone={w.tone} no={p.name.trim() ? undefined : i + 1} />
                   {organizer === i && (
                     <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-accent text-accent-text" aria-hidden>
                       <Crown className="size-3" />
