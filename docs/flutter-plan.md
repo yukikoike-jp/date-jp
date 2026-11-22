@@ -6,7 +6,7 @@
 
 - **Flutter アプリは「幹事の道具箱」として作り、データと決めるロジックは今の Next.js サーバーに残す。** アプリは新しく作る REST API(`/api/v1/...`)だけを呼ぶ。Supabase には直接つながない
 - **参加する人はアプリでも Web でも答えられる。** アプリが入っている人は、LINE の URL がアプリで開き、そのまま答える(Universal Links / App Links)。入っていない人は今までどおり Web で答える。「アプリを入れないと答えられない」にはしない(30秒・登録なしが Tsudoro の約束のため)
-- **アプリでの Tsudoro+ の買い方は、「Web(今の Stripe)へのリンク」と「ストアのアプリ内課金」から、手数料を比べて選ぶ。** 日本では、スマホ新法に合わせて Apple が 2025年12月から、App Store のアプリから Web の購入ページへのリンクを認めている。Web へのリンクなら、今の Stripe と鍵(ライセンス)の仕組みをそのまま使えるので、作るものが少ない
+- **アプリでの Tsudoro+ の買い方は、iOS と Android で分ける(案)。** iOS は Web(今の Stripe)へのリンク。Apple は日本で 2025年12月から認めていて、今の Stripe と鍵(ライセンス)の仕組みをそのまま使える。Android は Google Play の課金だけ。Google は日本で 2026年9月30日から、Web へのリンクを出すなら Google Play の課金も並べて選ばせる決まりにしたので、どのみち Google Play の課金を作ることになる
 - **置き場所は、このリポジトリの `mobile/` に作る。** API の形と Flutter のモデルを同じ PR で直せるようにするため
 - 最初に出すのは「会を作る→答える→回答を見る→日にち・お店を決める→会計」までの最小版(MVP)。Play / Support と集金は2段目
 - **iOS と Android は同時に出さなくてよい。** Mac が届くまでは Windows で Android を先に進め、先にできた方から出す
@@ -23,12 +23,24 @@
 - アプリが入っている人は、アプリで答えた方が早い(名前や駅を覚えておける)
 - 幹事にとってのアプリの価値: 作った会をなくさない・回答が集まったら通知で知らせる・すぐ共有できる
 
-### 3. 買い方(Web へのリンクか、アプリ内課金か)
-- Apple の日本向けの決まり(2025年12月から): App Store のアプリから Web の購入ページへリンクしてよい。Web で買った分の手数料は 15%。ストアのアプリ内課金の手数料は 10%(小さな開発者向けの制度に入った場合)か 21%。13歳未満の人には、Web へのリンクを出せない。Web で買った分は Apple が返金できない
-- Web へのリンクなら、今の `buyPro`・`/pro/done`・鍵の仕組みをそのまま使える。アプリは購入のページを外のブラウザで開き、買い終わったら鍵をアプリに渡す(Universal Links で `/pro/done` をアプリで開く)
-- アプリ内課金にするなら、`in_app_purchase` か RevenueCat で買い、サーバーでレシートを確かめてから同じ形の鍵を出す。作るものが増える
-- Google Play の日本向けの決まりは、まだ確かめていない。作り始める前に確かめる
-- どちらにするか、値段を500円のままにするかは決めること(下の一覧)。Apple の条件が 2026年に変わっていないかも、決める前に確かめる
+### 3. 買い方(2026-11-22 に調べた内容)
+
+**iOS(Apple)**
+- 2025年12月から、日本の App Store のアプリは、Web の購入ページへリンクしてよい。Web で買った分の手数料は 15%(小さな開発者向けの制度に入れば 10%)。ストアのアプリ内課金は 10% か 21%(Apple の決済を使うと、さらに 5% かかるという説明もある)
+- 13歳未満の人には、Web へのリンクを出せない。Web で買った分は Apple が返金できない
+- 2026年に日本の条件が変わったという情報は見つからなかった(Apple の公式の発表は 2025年12月のまま)。Apple 以外の解説によると、手数料がかかるのはリンクを押してから7日以内の購入。また、開発者は 2026年3月17日までに新しい規約に同意する必要があった
+- → **Web へのリンクにする。** 今の `buyPro`・`/pro/done`・鍵の仕組みをそのまま使える。アプリは購入のページを外のブラウザで開き、買い終わったら鍵をアプリに渡す(Universal Links で `/pro/done` をアプリで開く)
+
+**Android(Google Play)**
+- 日本では 2026年9月30日から「billing choice」という制度になった。前の「external payments」の制度は、新しい申し込みを 2026年9月30日で締め切り、2027年3月31日で終わる
+- billing choice では、**Web へのリンクだけを出すことはできない。** Google Play の課金と並べて、使う人に選ばせる。選ぶ画面の前に、一度だけ説明の画面を出す。Web で売れた分は24時間以内に API で Google に知らせる。Play Billing Library 9.1 以上が要る。返金の窓口も自分で持つ
+- Web へのリンクの手数料: 20%(年の売上の最初の100万ドルまでは 10%)。リンクを押してから24時間以内の購入にかかる
+- billing choice に入るかは自由。入らなければ、Google Play の課金だけを使う(この場合の手数料は Google の別のページにあり、まだ読んでいない)
+- → **Google Play の課金だけにする(billing choice には入らない)。** Web へのリンクを出しても、Google Play の課金・選ぶ画面・売上を知らせる API を作ることになり、手数料もほとんど下がらないため
+- Android は `in_app_purchase` で買い、サーバーで Google にレシートを確かめてから、Web と同じ形の鍵を出す。`lib/license.ts` の鍵は、今は Stripe のお会計の id(`cs_...`)だけを受け付けるので、Google の購入でも使える形に広げる
+
+- 値段を500円のままにするかは決めること(下の一覧)
+- 出どころ: [Apple の発表(2025年12月)](https://www.apple.com/newsroom/2025/12/apple-announces-changes-to-ios-in-japan/)、[Google: billing choice への申し込み](https://support.google.com/googleplay/android-developer/answer/17161464)、[Google: billing choice の説明](https://developer.android.com/google/play/billing/billingchoice)、[Google: external payments への申し込み](https://support.google.com/googleplay/android-developer/answer/16787536)、[Stora の解説(7日以内の購入の件)](https://stora.sh/blog/2026-05-21-distribute-ios-app-japan-alternative-marketplaces-notarization-guide)
 
 ## 全体の作り
 
@@ -76,7 +88,7 @@ lib/store (Supabase / 仮DB)   lib/summary.ts   lib/shops.ts …
 - 保存: 幹事の鍵は `flutter_secure_storage`、ほかは `shared_preferences`
 - 共有: `share_plus`。LINE は `https://line.me/R/share?text=` を `url_launcher` で開く
 - 外のリンク: `url_launcher` で**外のブラウザ**で開く。お店へは今と同じく `/go/...` を通す(紹介料と数えるため。アプリ内の WebView で開くと計測や報酬がずれやすい)
-- 課金: Web へのリンクにするなら追加のパッケージは要らない(`url_launcher` で開く)。アプリ内課金にするときだけ `in_app_purchase`(または RevenueCat)
+- 課金: iOS は Web へのリンクなので、追加のパッケージは要らない(`url_launcher` で開く)。Android は `in_app_purchase`(Google Play の課金)
 - フォント: Poppins をアプリに同梱(`google_fonts` の通信に頼らない)
 
 ### フォルダ
@@ -118,7 +130,7 @@ mobile/
 - 年齢の区分: お酒を扱うので、iOS は 17+(または 18+)、Google Play も相当の区分にする
 - 審査の注意: 中身が Web を包んだだけだと iOS で落ちやすい(ガイドライン 4.2)。画面は Flutter で作り、WebView で Web を表示しない
 - プライバシー: ストアの「データの扱い」の申告と、`/privacy` にアプリの項を足す
-- 特定商取引法の表記(`/legal`): Web へのリンクなら今の書き方のまま。アプリ内課金にするなら、その書き方を足す
+- 特定商取引法の表記(`/legal`): iOS(Web で買う)は今の書き方のまま。Android の Google Play での購入の書き方(支払い方法・返金は Google の決まりによる、など)を足す
 
 ## 進め方
 
@@ -127,13 +139,13 @@ mobile/
 3. **MVP の画面**: ホーム(作った会の一覧)→ 会を作る → 答える → 回答の集計 → 日にちとお店を決める → 共有。会計(`split`)
 4. **Universal Links / App Links と通知**: `/p/:id` と `/p/:id/admin` をアプリで開く。FCM の通知
 5. **テスト配信**: 先に Android(Google Play の内部テスト)、Mac が届いたら iOS(TestFlight)
-6. **2段目**: 集金、Play / Support、購入(Web へのリンクか、アプリ内課金か)
+6. **2段目**: 集金、Play / Support、購入(iOS は Web へのリンク、Android は Google Play の課金)
 7. **公開**
 
 ## 決めること(ユーザー)
 
 1. ~~Mac を使えるか~~ → 買う前提(2026-11-22)
-2. アプリでの Tsudoro+ の買い方(Web へのリンクか、アプリ内課金か)と値段(500円のままか、手数料ぶん上げるか)
+2. アプリでの Tsudoro+ の買い方(案: iOS は Web へのリンク、Android は Google Play の課金)と値段(500円のままか、手数料ぶん上げるか)
 3. ~~参加する人もアプリで答えられるようにするか~~ → 答えられる(Web でも答えられるまま。2026-11-22)
 4. ~~アプリならではの通知を入れるか~~ → 入れる(2026-11-22)
 5. ~~Android と iOS を同時に出すか~~ → 同時でなくてよい(2026-11-22)
