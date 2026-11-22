@@ -14,6 +14,7 @@ import { dietNotice } from "@/lib/diet";
 import { findShop } from "@/lib/shops";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
+import { StartTime } from "@/components/StartTime";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
 export const metadata: Metadata = { title: "幹事の画面", robots: { index: false } };
@@ -54,6 +55,7 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
         <div className="px-4 pt-6 pb-4">
           <p className="text-[11px] font-black text-stone-400">幹事の画面</p>
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
+          {!party.decision && <StartTime start={party.start} />}
         </div>
         {party.decision && (
           <div className="mb-4">

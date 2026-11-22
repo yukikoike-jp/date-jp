@@ -10,7 +10,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SummaryView } from "@/components/SummaryView";
 import { getStore } from "@/lib/store";
 import { dietNotice } from "@/lib/diet";
-import { clock } from "@/lib/sendai";
+import { StartTime } from "@/components/StartTime";
 import { findShop } from "@/lib/shops";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
@@ -44,8 +44,9 @@ export default async function PartyPage(props: PageProps<"/p/[id]">) {
       <SiteHeader />
       <div className="mx-auto max-w-xl pb-16">
         <div className="px-4 pt-6 pb-4">
-          <p className="text-sm font-bold text-muted">飲み会の日程とお店{party.start !== null ? ` ・ ${clock(party.start)}から` : ""}</p>
+          <p className="text-sm font-bold text-muted">飲み会の日程とお店</p>
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
+          {!party.decision && <StartTime start={party.start} />}
         </div>
         {party.decision && <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />}
         {/* 自分の答えはいちばん下。まだ決まっていない間は、そこへすぐ行けるボタンを上に置く */}
