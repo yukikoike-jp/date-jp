@@ -1,6 +1,6 @@
 "use client";
 
-import { Beer, Check, Cigarette, DoorClosed, MapPin, SlidersHorizontal, TrainFront, UtensilsCrossed, Wallet } from "lucide-react";
+import { Beef, Beer, ChefHat, Check, Cigarette, CookingPot, DoorClosed, Fish, Flame, MapPin, Martini, MicVocal, SlidersHorizontal, Soup, TrainFront, Utensils, UtensilsCrossed, Wallet, Wine } from "lucide-react";
 import { useEffect, useState, useTransition } from "react";
 import { findShops } from "@/app/actions";
 import { loadAudience, type Audience } from "@/lib/audience";
@@ -23,6 +23,7 @@ function Option({
   note,
   compact,
   multi,
+  icon,
 }: {
   on: boolean;
   onClick: () => void;
@@ -32,7 +33,30 @@ function Option({
   compact?: boolean;
   /** いくつでも選べる選択肢。印を四角にする */
   multi?: boolean;
+  /** 料理・お金の絵(線の絵。アプリのほかのマークとそろえる。2026-11-22) */
+  icon?: React.ReactNode;
 }) {
+  // 3つ並べる札は、✓を右上に重ねる(✓を文字の横に置くと、長い名前(ダイニングバー)がずれるため)
+  if (compact) {
+    return (
+      <button
+        type="button"
+        aria-pressed={on}
+        onClick={onClick}
+        className={`relative flex flex-col items-center justify-center gap-1 rounded-2xl border px-1 text-center transition-colors ${icon ? "min-h-[4.5rem] py-2" : "min-h-12 py-2"} ${
+          on ? "border-accent bg-accent text-accent-text" : "border-border bg-surface-2 text-text hover:border-muted"
+        }`}
+      >
+        {on && <Check className="absolute top-1.5 right-1.5 size-3.5" strokeWidth={3} aria-hidden />}
+        {icon && (
+          <span aria-hidden className={`flex h-6 items-center ${on ? "" : "text-accent"}`}>
+            {icon}
+          </span>
+        )}
+        <span className="block text-[13px] font-bold tracking-tight whitespace-nowrap">{title}</span>
+      </button>
+    );
+  }
   return (
     <button
       type="button"
@@ -61,6 +85,66 @@ function Option({
 }
 
 const SHOP_BUDGETS = [2000, 3000, 4000, 5000, 6000, 8000];
+
+/** お好み焼きを返すヘラ(コテ)。lucide にないので、同じ線の太さで描く */
+function Hera({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M9 9.5 15 15.5 9.5 21 3 14.5Z" />
+      <path d="M12 12.5 19.5 5" />
+      <path d="M18 3l3 3" />
+    </svg>
+  );
+}
+
+/** たこ焼きのタコ */
+function Tako({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M6 13v-2a6 6 0 0 1 12 0v2" />
+      <path d="M6 13c0 3-1.5 4.5-3 5.5" />
+      <path d="M9.5 14c0 3-.5 5-2 7" />
+      <path d="M14.5 14c0 3 .5 5 2 7" />
+      <path d="M18 13c0 3 1.5 4.5 3 5.5" />
+      <path d="M10 10h.01" />
+      <path d="M14 10h.01" />
+    </svg>
+  );
+}
+
+/** 料理の絵(2026-11-22。絵文字は AI っぽく見えるので、アプリのほかのマークと同じ線の絵にする) */
+const ICON = "size-6";
+const GENRE_ICON: Record<string, React.ReactNode> = {
+  izakaya: <Beer className={ICON} />,
+  washoku: <Fish className={ICON} />,
+  yoshoku: <Utensils className={ICON} />,
+  chuka: <CookingPot className={ICON} />,
+  yakiniku: <Beef className={ICON} />,
+  bar: <Wine className={ICON} />,
+  sosaku: <ChefHat className={ICON} />,
+  ethnic: <Soup className={ICON} />,
+  indian: <Flame className={ICON} />,
+  okonomiyaki: <Hera className={ICON} />,
+  takoyaki: <Tako className={ICON} />,
+};
+const SECOND_ICON: Record<string, React.ReactNode> = {
+  izakaya: <Beer className={ICON} />,
+  bar: <Martini className={ICON} />,
+  karaoke: <MicVocal className={ICON} />,
+};
+/** 予算の高さ。¥ の数で見せる(3段。使わない ¥ はうすく) */
+function YenLevel({ budget }: { budget: number }) {
+  const level = budget <= 3000 ? 1 : budget <= 5000 ? 2 : 3;
+  return (
+    <span className="text-[17px] font-bold tracking-wide">
+      {[1, 2, 3].map((i) => (
+        <span key={i} className={i <= level ? "" : "opacity-25"}>
+          ¥
+        </span>
+      ))}
+    </span>
+  );
+}
 
 export function ShopSearch() {
   const [audience, setAudience] = useState<Audience | null>(null);
@@ -142,9 +226,9 @@ export function ShopSearch() {
               どんなお店?
             </p>
             <div className="grid grid-cols-2 gap-2">
-              <Option compact on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
+              <Option compact icon={<UtensilsCrossed className={ICON} />} on={secondGenre === null} onClick={() => setSecondGenre(null)} title="なんでも" />
               {SECOND_GENRES.map((g) => (
-                <Option compact key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
+                <Option compact icon={SECOND_ICON[g.key]} key={g.key} on={secondGenre === g.key} onClick={() => setSecondGenre(g.key)} title={g.label} />
               ))}
             </div>
           </fieldset>
@@ -160,7 +244,7 @@ export function ShopSearch() {
           <div className="grid grid-cols-3 gap-2">
             {/* 2・3・4・5・6・8千円の6つ(3つずつ2段)。選んだものをもう一度押すと「決めない」に戻る */}
             {SHOP_BUDGETS.map((b) => (
-              <Option compact key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
+              <Option compact icon={<YenLevel budget={b} />} key={b} on={budget === b} onClick={() => setBudget(budget === b ? null : b)} title={`〜${yen(b)}`} />
             ))}
           </div>
         </fieldset>
@@ -173,9 +257,9 @@ export function ShopSearch() {
             <span className="ml-auto text-xs font-normal">いくつでも選べます</span>
           </p>
           <div className="grid grid-cols-3 gap-2">
-            <Option compact on={genres.length === 0} onClick={() => setGenres([])} title="なんでも" />
+            <Option compact icon={<UtensilsCrossed className={ICON} />} on={genres.length === 0} onClick={() => setGenres([])} title="なんでも" />
             {GENRES.map((g) => (
-              <Option compact multi key={g.key} on={genres.includes(g.key)} onClick={() => toggleGenre(g.key)} title={g.label} />
+              <Option compact multi icon={GENRE_ICON[g.key]} key={g.key} on={genres.includes(g.key)} onClick={() => toggleGenre(g.key)} title={g.label} />
             ))}
           </div>
         </fieldset>
