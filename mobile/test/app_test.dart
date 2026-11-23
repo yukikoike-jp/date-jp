@@ -103,7 +103,7 @@ void main() {
     expect(created?['start'], 1140);
     expect((created?['dates'] as List).length, 1);
     expect(l.adminToken('abc123'), 'secret');
-    expect(find.text('幹事'), findsOneWidget);
+    expect(find.text('幹事の画面'), findsOneWidget);
   });
 
   testWidgets('作れなかったときは、サーバーの文を出す', (tester) async {

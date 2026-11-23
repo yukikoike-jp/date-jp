@@ -35,6 +35,11 @@ final ThemeData darkTheme = ThemeData(
     onSurfaceVariant: Palette.muted,
     primary: Palette.accent,
     onPrimary: Colors.black,
+    // 選んだチップ(ChoiceChip・FilterChip)は金に黒い字。Flutter の既定の青緑にしない
+    secondary: Palette.accent,
+    onSecondary: Colors.black,
+    secondaryContainer: Palette.accent,
+    onSecondaryContainer: Colors.black,
     error: Palette.danger,
     outlineVariant: Palette.border,
   ),

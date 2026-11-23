@@ -83,6 +83,24 @@ class Api {
     return Answer.fromJson(j['answer'] as Map<String, dynamic>);
   }
 
+  /// 日にちとお店を決める(幹事)。shopId が null なら、お店はあとで決める
+  Future<void> decide(String partyId, String adminToken, {required String date, String? shopId}) => _send(
+    _http.post(
+      _uri('/parties/${Uri.encodeComponent(partyId)}/decision'),
+      headers: {..._json, 'authorization': 'Bearer $adminToken'},
+      body: jsonEncode({'date': date, 'shopId': ?shopId}),
+    ),
+  );
+
+  /// 決定を取り消す(幹事)。みんなの回答は消えない
+  Future<void> undecide(String partyId, String adminToken) => _send(
+    _http.post(
+      _uri('/parties/${Uri.encodeComponent(partyId)}/decision'),
+      headers: {..._json, 'authorization': 'Bearer $adminToken'},
+      body: jsonEncode({'clear': true}),
+    ),
+  );
+
   Future<List<Station>> stations(String q) async {
     final j = await _send(_http.get(_uri('/stations', {'q': q})));
     return (j['stations'] as List).map((s) => Station.fromJson(s as Map<String, dynamic>)).toList();

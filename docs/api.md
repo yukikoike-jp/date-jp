@@ -21,10 +21,12 @@ Flutter アプリが呼ぶ API。中身は `app/actions.ts` の関数を呼ぶ�
 
 ### `GET /parties/:id` 会の中身
 - 幹事の鍵は付けても付けなくてもよい。中身は同じで、`admin` だけが変わる
-- 200 `{ "ok": true, "party": {...}, "summary": {...}, "shops": [...], "otherArea": false, "relaxed": null, "basis": [...], "admin": true, "share": { "invite": "...", "decided": null } }`
+- 200 `{ "ok": true, "party": {...}, "summary": {...}, "shops": [...], "otherArea": false, "relaxed": null, "basis": [...], "admin": true, "notice": null, "pr": false, "share": { "invite": "...", "decided": null } }`
   - `summary`: 集計(`lib/summary.ts` の `Summary`)。1人ずつの予算は入らない
   - `shops`: おすすめのお店。お店へのリンクは必ず `https://www.tsudoro.com/go/<会のid>/<お店のid>` を外のブラウザで開く(紹介料を数えるため)
   - `share.invite`: 招待の文。`share.decided`: 決まったときの文(決まっていなければ null)
+  - `notice`: 予約のときにお店に伝えること(苦手なもの・お酒を飲まない人の数)。なければ null
+  - `pr`: お店のリンクが提携リンクか。true なら「#アフィリエイト広告」をはっきり出す
 - 404 会がない
 
 ### `POST /parties/:id/decision` 日にちとお店を決める(幹事)

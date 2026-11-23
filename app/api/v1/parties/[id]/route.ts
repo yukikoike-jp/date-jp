@@ -1,4 +1,5 @@
 import { normalizeAudience } from "@/lib/audience";
+import { dietNotice } from "@/lib/diet";
 import { decidedText, inviteText } from "@/lib/share";
 import { SITE_URL } from "@/lib/site";
 import { verifyToken } from "@/lib/tokens";
@@ -21,6 +22,10 @@ export async function GET(request: Request, ctx: RouteContext<"/api/v1/parties/[
     ok: true,
     ...rest,
     admin: verifyToken(bearer(request), adminHash),
+    // 予約のときにお店に伝えること(苦手なもの・お酒を飲まない人の数)。Web の幹事の画面と同じ
+    notice: dietNotice(rest.summary.diet),
+    // お店のリンクが提携リンクか。true なら「#アフィリエイト広告」を出す(components/PrNote.tsx と同じ決まり)
+    pr: process.env.AFFILIATE_ON === "1",
     share: {
       invite: inviteText(party.title, url, party.start, audience),
       decided: party.decision ? decidedText(party.title, party.decision.date, party.decision.start, party.decision.shopName, url, audience) : null,

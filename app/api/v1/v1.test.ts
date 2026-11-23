@@ -37,6 +37,8 @@ describe("API v1", () => {
     expect(JSON.stringify(guest)).not.toContain("adminHash");
     expect(guest.admin).toBe(false);
     expect(guest.share.invite).toContain(`/p/${id}`);
+    expect(typeof guest.pr).toBe("boolean");
+    expect(guest.notice).toBeNull();
     const host = await (await getParty(req("GET", { token: adminToken }), ctx({ id }))).json();
     expect(host.admin).toBe(true);
   });
