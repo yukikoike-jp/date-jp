@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show ChangeNotifier;
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../api/models.dart' show Shop;
+
 /// この端末で作った会(Web の lib/myParties.ts と同じ形)。幹事の鍵をなくさないよう、端末にだけ残す
 class MyParty {
   MyParty({required this.id, required this.title, required this.token, required this.createdAt});
@@ -69,6 +71,36 @@ class Local extends ChangeNotifier {
     } on Object {
       return null;
     }
+  }
+
+  // お気に入りのお店(Web の lib/favorites.ts と同じ形。名前・種類・行き方・予算だけ残す)
+  static const _favorites = 'nomi:favorites';
+  static const maxFavorites = 50;
+
+  List<Shop> get favorites {
+    final raw = _prefs.getString(_favorites);
+    if (raw == null) return [];
+    try {
+      return [for (final f in jsonDecode(raw) as List) Shop.fromJson(f as Map<String, dynamic>)];
+    } on Object {
+      return [];
+    }
+  }
+
+  bool isFavorite(String shopId) => favorites.any((f) => f.id == shopId);
+
+  /// 入っていれば外し、なければ先頭に入れる
+  Future<void> toggleFavorite(Shop s) async {
+    final list = favorites;
+    final next = list.any((f) => f.id == s.id) ? list.where((f) => f.id != s.id).toList() : [s, ...list];
+    await _prefs.setString(
+      _favorites,
+      jsonEncode([
+        for (final f in next.take(maxFavorites))
+          {'id': f.id, 'name': f.name, 'genre': f.genre, 'access': f.access, 'budgetLabel': f.budgetLabel},
+      ]),
+    );
+    notifyListeners();
   }
 
   // 最後の会計(続きから使えるよう、この端末にだけ残す。サーバーには送らない)

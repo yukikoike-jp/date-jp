@@ -22,6 +22,9 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// お店探しの結果。pr = お店のリンクが提携リンクか
+typedef ShopResult = ({List<Shop> shops, bool otherArea, String? relaxed, bool pr});
+
 /// 参加者の鍵。直すときと、自分の回答を読むときに使う
 typedef AnswerKey = ({String answerId, String token});
 
@@ -95,6 +98,41 @@ class Api {
       body: jsonEncode({'date': date, 'shopId': ?shopId}),
     ),
   );
+
+  /// 駅の近くのお店を探す(Web の「お店を探す」)。second = 二次会向け(23時以降も開いているお店)。null の種類は「なんでも」
+  Future<ShopResult> searchShops({
+    required Station station,
+    required String audience,
+    List<String> genres = const [],
+    int? budget,
+    bool privateRoom = false,
+    bool freeDrink = false,
+    bool smoking = false,
+    ({String? genre})? second,
+  }) async {
+    final j = await _send(
+      _http.post(
+        _uri('/shops/search'),
+        headers: _json,
+        body: jsonEncode({
+          'station': station.toJson(),
+          'genres': genres,
+          'budget': budget,
+          'privateRoom': privateRoom,
+          'freeDrink': freeDrink,
+          'smoking': smoking,
+          'second': second == null ? null : {'genre': second.genre},
+          'audience': audience,
+        }),
+      ),
+    );
+    return (
+      shops: [for (final s in j['shops'] as List) Shop.fromJson(s as Map<String, dynamic>)],
+      otherArea: j['otherArea'] == true,
+      relaxed: j['relaxed'] as String?,
+      pr: j['pr'] == true,
+    );
+  }
 
   /// 必ず来てほしい人を置き換える(幹事)。答えた人の名前だけ
   Future<void> setMust(String partyId, String adminToken, List<String> names) => _send(

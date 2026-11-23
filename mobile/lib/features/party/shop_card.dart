@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../api/client.dart';
+import '../../app_scope.dart';
 import '../../ui/theme.dart';
 import '../../ui/share.dart';
 
@@ -107,6 +108,7 @@ class ShopCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (!s.sample) FavoriteButton(shop: s),
             ],
           ),
           if (s.photo != null)
@@ -138,6 +140,30 @@ class ShopCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// ♡ お気に入りに入れる・外す。どの画面で押しても、同じお店の ♡ がそろって変わる
+class FavoriteButton extends StatelessWidget {
+  const FavoriteButton({super.key, required this.shop});
+  final Shop shop;
+
+  static const color = Color(0xFFFF6B74);
+
+  @override
+  Widget build(BuildContext context) {
+    final local = AppScope.of(context).local;
+    return ListenableBuilder(
+      listenable: local,
+      builder: (context, _) {
+        final on = local.isFavorite(shop.id);
+        return IconButton(
+          onPressed: () => local.toggleFavorite(shop),
+          tooltip: on ? '${shop.name}をお気に入りから外す' : '${shop.name}をお気に入りに入れる',
+          icon: Icon(on ? Icons.favorite : Icons.favorite_border, color: on ? color : Palette.muted),
+        );
+      },
     );
   }
 }

@@ -6,5 +6,6 @@ export async function POST(request: Request) {
   const b = await body(request);
   if (!b) return badBody();
   const result = await findShops(b as unknown as Parameters<typeof findShops>[0]);
-  return Response.json({ ok: true, ...result });
+  // pr = お店のリンクが提携リンクか(アプリが「#アフィリエイト広告」を出す)。会のページと同じ
+  return Response.json({ ok: true, ...result, pr: process.env.AFFILIATE_ON === "1" });
 }

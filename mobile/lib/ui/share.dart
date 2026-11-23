@@ -14,6 +14,9 @@ String adminUrl(String partyId, String token) => '$siteOrigin/p/$partyId/admin?t
 /// お店のページは /go/ を通す(押された数を数え、紹介料の対象にするため)。外のブラウザで開く
 String shopUrl(String partyId, String shopId) => '$siteOrigin/go/$partyId/$shopId';
 
+/// Google マップでお店を探す(lib/maps.ts の mapsUrl。API を使わない普通のリンク)
+String mapsUrl(String shopName) => 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeQueryComponent(shopName)}';
+
 /// LINE などに送る。端末の共有の画面を開く
 Future<void> shareText(String text) => SharePlus.instance.share(ShareParams(text: text));
 

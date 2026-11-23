@@ -6,6 +6,7 @@ import { PUT as setMust } from "./parties/[id]/must/route";
 import { POST as saveAnswer } from "./parties/[id]/answers/route";
 import { GET as getMyAnswer } from "./parties/[id]/answers/[answerId]/route";
 import { GET as attendees } from "./parties/[id]/attendees/route";
+import { POST as searchShops } from "./shops/search/route";
 
 // 仮DB(メモリ)で、API の形と鍵の照合を確かめる。鍵の照合が壊れたら、ここで落ちる
 
@@ -79,6 +80,18 @@ describe("API v1", () => {
     expect(fixed.answerId).toBe(saved.answerId);
     const again = await getMyAnswer(req("GET", { headers: { "x-answer-token": saved.token } }), ctx({ id, answerId: saved.answerId }));
     expect((await again.json()).answer.budget).toBe(5000);
+  });
+
+  it("お店を探すと、お店と提携リンクかどうかを返す。駅がなければ空", async () => {
+    const station = { name: "仙台", pref: "宮城県", lat: 38.260027, lng: 140.882158 };
+    const first = await (await searchShops(req("POST", { body: { station, genres: [], budget: null, privateRoom: false, audience: "private" } }))).json();
+    expect(first.ok).toBe(true);
+    expect(first.shops.length).toBeGreaterThan(0);
+    expect(typeof first.pr).toBe("boolean");
+    const second = await (await searchShops(req("POST", { body: { station, genres: [], budget: null, privateRoom: false, second: { genre: "bar" }, audience: "private" } }))).json();
+    expect(Array.isArray(second.shops)).toBe(true);
+    const none = await (await searchShops(req("POST", { body: { station: null, genres: [], audience: "private" } }))).json();
+    expect(none.shops).toEqual([]);
   });
 
   it("読めないボディは 400", async () => {

@@ -7,6 +7,7 @@ import 'features/answer/answer_screen.dart';
 import 'features/create/create_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/party/party_screen.dart';
+import 'features/shops/shops_screen.dart';
 import 'features/split/split_screen.dart';
 import 'storage/local.dart';
 import 'ui/theme.dart';
@@ -25,6 +26,7 @@ GoRouter buildRouter(Local local) => GoRouter(
       builder: (_, _) => const HomeScreen(),
       routes: [
         GoRoute(path: 'new', builder: (_, _) => const CreateScreen()),
+        GoRoute(path: 'shops', builder: (_, _) => const ShopsScreen()),
         // ?from=<会の id> なら、その会の行く人を読み込む
         GoRoute(
           path: 'split',

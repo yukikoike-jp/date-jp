@@ -73,7 +73,7 @@ Flutter アプリが呼ぶ API。中身は `app/actions.ts` の関数を呼ぶ�
 
 ### `POST /shops/search` お店を探す
 - ボディは `findShops` の入力と同じ(`station`・`genres`・`budget`・`privateRoom`・`freeDrink`・`smoking`・`second`・`audience`)
-- 200 `{ "ok": true, "shops": [...], "otherArea": false, "relaxed": null }`
+- 200 `{ "ok": true, "shops": [...], "otherArea": false, "relaxed": null, "pr": true }`(`pr` = お店のリンクが提携リンクか)
 
 ### `GET /stations?q=仙台` 駅を探す
 - 200 `{ "ok": true, "stations": [{ "name": "仙台", "pref": "宮城県", "lat": 38.26, "lng": 140.88 }] }`(8件まで)

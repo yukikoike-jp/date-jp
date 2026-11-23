@@ -87,19 +87,18 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 20),
               _Hero(lead: audiences[audience]?.lead ?? '', onTap: () => context.push('/new')),
               const SizedBox(height: 12),
-              Material(
-                color: Palette.surface,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: const BorderSide(color: Palette.border),
-                ),
-                child: ListTile(
-                  leading: const Icon(Icons.calculate, color: Palette.accent),
-                  title: const Text('会計', style: Styles.bold),
-                  subtitle: Text(audience == 'worker' ? '補助や上司多めの計算' : '割り勘と先輩多めの計算', style: Styles.note),
-                  trailing: const Icon(Icons.chevron_right, color: Palette.muted),
-                  onTap: () => context.push('/split'),
-                ),
+              _Tile(
+                icon: Icons.storefront,
+                title: 'お店探し',
+                sub: audience == 'worker' ? '個室・喫煙可で探す' : '飲み放題・個室で探す',
+                onTap: () => context.push('/shops'),
+              ),
+              const SizedBox(height: 8),
+              _Tile(
+                icon: Icons.calculate,
+                title: '会計',
+                sub: audience == 'worker' ? '補助や上司多めの計算' : '割り勘と先輩多めの計算',
+                onTap: () => context.push('/split'),
               ),
               const SizedBox(height: 28),
               if (parties.isNotEmpty) ...[
@@ -284,4 +283,31 @@ String? partyIdFrom(String input) {
   final m = RegExp(r'/p/([A-Za-z0-9]+)').firstMatch(s);
   if (m != null) return m.group(1);
   return RegExp(r'^[A-Za-z0-9]+$').hasMatch(s) ? s : null;
+}
+
+/// ホームの道具(お店探し・会計)
+class _Tile extends StatelessWidget {
+  const _Tile({required this.icon, required this.title, required this.sub, required this.onTap});
+  final IconData icon;
+  final String title;
+  final String sub;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Palette.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Palette.border),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Palette.accent),
+        title: Text(title, style: Styles.bold),
+        subtitle: Text(sub, style: Styles.note),
+        trailing: const Icon(Icons.chevron_right, color: Palette.muted),
+        onTap: onTap,
+      ),
+    );
+  }
 }

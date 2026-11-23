@@ -56,7 +56,10 @@ class _StationPickerState extends State<StationPicker> {
   Widget build(BuildContext context) {
     final v = widget.value;
     if (v != null) {
-      return InputChip(label: Text('${v.name}駅(${v.pref})'), onDeleted: () => widget.onChanged(null), deleteButtonTooltipMessage: '駅を外す');
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: InputChip(label: Text('${v.name}駅(${v.pref})'), onDeleted: () => widget.onChanged(null), deleteButtonTooltipMessage: '駅を外す'),
+      );
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

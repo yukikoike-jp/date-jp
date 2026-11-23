@@ -99,3 +99,9 @@ StayStep? stayStep(int stay, int? start) {
   if (stay <= stayFromStep(StayStep.train, start) + 60) return StayStep.train;
   return StayStep.last;
 }
+
+/// お店探しの予算(lib/audience.ts の budgets。プライベートと仕事で同じ)
+const searchBudgets = [2000, 3000, 4000, 5000, 6000, 8000];
+
+/// 二次会のお店の種類(lib/sendai.ts の SECOND_GENRES)
+const secondGenres = <Option>[(key: 'izakaya', label: '居酒屋'), (key: 'bar', label: 'バー'), (key: 'karaoke', label: 'カラオケ')];
