@@ -84,8 +84,8 @@ class ShopCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(s.name, style: const TextStyle(fontWeight: FontWeight.w900)),
-                    Text('${s.genre} ・ ${s.access}', style: const TextStyle(fontSize: 12, color: Palette.muted)),
+                    Text(s.name, style: Styles.bold),
+                    Text('${s.genre} ・ ${s.access}', style: Styles.note),
                     const SizedBox(height: 4),
                     Text(s.budgetLabel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                     if (s.features.isNotEmpty || s.smoking != null)
@@ -123,7 +123,7 @@ class ShopCard extends StatelessWidget {
                 backgroundColor: selected ? Palette.accent : Palette.surface2,
                 foregroundColor: selected ? Colors.black : Palette.text,
               ),
-              child: Text(selected ? '✓ このお店を選んでいます' : pickLabel ?? 'このお店を選ぶ', style: const TextStyle(fontWeight: FontWeight.w900)),
+              child: Text(selected ? '✓ このお店を選んでいます' : pickLabel ?? 'このお店を選ぶ', style: Styles.bold),
             ),
           ],
           const SizedBox(height: 8),

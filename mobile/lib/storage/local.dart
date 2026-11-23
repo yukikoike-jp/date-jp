@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show ChangeNotifier;
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// この端末で作った会(Web の lib/myParties.ts と同じ形)。幹事の鍵をなくさないよう、端末にだけ残す
@@ -17,7 +18,8 @@ class MyParty {
 
 /// 端末の保存。Web の localStorage と同じ扱い(アプリの外からは読めない)。
 /// shortcut: 幹事の鍵も shared_preferences に置く。Web の localStorage と同じ強さ。端末を盗まれる心配が要る機能が来たら flutter_secure_storage に移す
-class Local {
+/// 作った会やプライベート・仕事が変わったら知らせる(ホームの一覧を、どの画面で変わっても新しくする)
+class Local extends ChangeNotifier {
   Local(this._prefs);
   final SharedPreferences _prefs;
 
@@ -29,7 +31,10 @@ class Local {
 
   /// private / worker。まだ選んでいなければ null
   String? get audience => _prefs.getString(_audience);
-  Future<void> setAudience(String a) => _prefs.setString(_audience, a);
+  Future<void> setAudience(String a) async {
+    await _prefs.setString(_audience, a);
+    notifyListeners();
+  }
 
   List<MyParty> get parties {
     final raw = _prefs.getString(_parties);
@@ -41,12 +46,14 @@ class Local {
     }
   }
 
-  Future<void> rememberParty(MyParty p) {
-    final list = [p, ...parties.where((x) => x.id != p.id)].take(maxParties).toList();
-    return _prefs.setString(_parties, jsonEncode(list));
-  }
+  Future<void> rememberParty(MyParty p) => _setParties([p, ...parties.where((x) => x.id != p.id)].take(maxParties).toList());
 
-  Future<void> forgetParty(String id) => _prefs.setString(_parties, jsonEncode(parties.where((x) => x.id != id).toList()));
+  Future<void> forgetParty(String id) => _setParties(parties.where((x) => x.id != id).toList());
+
+  Future<void> _setParties(List<MyParty> list) async {
+    await _prefs.setString(_parties, jsonEncode(list));
+    notifyListeners();
+  }
 
   String? adminToken(String partyId) => parties.where((p) => p.id == partyId).firstOrNull?.token;
 

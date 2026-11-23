@@ -25,11 +25,24 @@ class _HomeScreenState extends State<HomeScreen> {
   var _choosing = false;
   Future<Map<String, PartyStatus>>? _statuses;
 
+  Local? _local;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (_local != null) return;
+    // どの画面で会が増えても(幹事の URL から開いたときも)、一覧と数を新しくする
+    _local = AppScope.of(context).local..addListener(_onLocal);
     _refresh();
   }
+
+  @override
+  void dispose() {
+    _local?.removeListener(_onLocal);
+    super.dispose();
+  }
+
+  void _onLocal() => setState(_refresh);
 
   void _refresh() {
     final scope = AppScope.of(context);
@@ -44,8 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (audience == null || _choosing) {
       return _Choose(
         onChoose: (a) async {
+          _choosing = false;
           await local.setAudience(a);
-          setState(() => _choosing = false);
         },
       );
     }
@@ -72,13 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-              _Hero(
-                lead: audiences[audience]?.lead ?? '',
-                onTap: () async {
-                  await context.push('/new');
-                  if (mounted) setState(_refresh);
-                },
-              ),
+              _Hero(lead: audiences[audience]?.lead ?? '', onTap: () => context.push('/new')),
               const SizedBox(height: 12),
               Material(
                 color: Palette.surface,
@@ -88,11 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: ListTile(
                   leading: const Icon(Icons.calculate, color: Palette.accent),
-                  title: const Text('会計', style: TextStyle(fontWeight: FontWeight.w900)),
-                  subtitle: Text(
-                    audience == 'worker' ? '補助や上司多めの計算' : '割り勘と先輩多めの計算',
-                    style: const TextStyle(fontSize: 12, color: Palette.muted),
-                  ),
+                  title: const Text('会計', style: Styles.bold),
+                  subtitle: Text(audience == 'worker' ? '補助や上司多めの計算' : '割り勘と先輩多めの計算', style: Styles.note),
                   trailing: const Icon(Icons.chevron_right, color: Palette.muted),
                   onTap: () => context.push('/split'),
                 ),
@@ -114,7 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           status: snap.data?[p.id],
                           onForget: () async {
                             await local.forgetParty(p.id);
-                            setState(() {});
                           },
                         ),
                     ],
@@ -130,7 +133,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   TextButton(
                     onPressed: () => openOutside('$siteOrigin/privacy'),
-                    child: const Text('プライバシーポリシー', style: TextStyle(fontSize: 12, color: Palette.muted)),
+                    child: const Text('プライバシーポリシー', style: Styles.note),
                   ),
                 ],
               ),
@@ -160,7 +163,7 @@ class _Choose extends StatelessWidget {
               const SizedBox(height: 24),
               Text('あなたは?', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w900)),
               const SizedBox(height: 8),
-              const Text('選んだものに合う予算・時間・お店を表示\nあとから切り替えOK', style: TextStyle(color: Palette.muted)),
+              const Text('選んだものに合う予算・時間・お店を表示\nあとから切り替えOK', style: Styles.muted),
               const SizedBox(height: 28),
               for (final MapEntry(key: a, value: v) in audiences.entries)
                 Padding(

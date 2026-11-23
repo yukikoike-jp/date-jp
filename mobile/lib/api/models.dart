@@ -1,5 +1,7 @@
 // API の JSON のうち、アプリで使うところ(docs/api.md)
 
+import '../domain/choices.dart' show unlimitedBudget;
+
 /// GET /parties/:id
 class PartyData {
   PartyData({
@@ -92,14 +94,13 @@ class Decision {
       Decision(date: j['date'] as String, start: j['start'] as int, shopId: j['shopId'] as String?, shopName: j['shopName'] as String?);
 }
 
-/// 日ごとの、行ける人(○)とたぶん(△)の数。mustOk = 必ず来てほしい人が全員来られる
-typedef DateRank = ({String date, int ok, int maybe, bool mustOk});
+/// 日ごとの、行ける人(○)とたぶん(△)の数
+typedef DateRank = ({String date, int ok, int maybe});
 
 /// 集計(lib/summary.ts の Summary のうち、アプリで使うところ)。1人ずつの予算は入っていない
 class Summary {
   Summary({
     required this.answered,
-    required this.names,
     required this.must,
     required this.who,
     required this.ranking,
@@ -110,7 +111,6 @@ class Summary {
     required this.notes,
   });
   final int answered;
-  final List<String> names;
   final List<String> must;
 
   /// 誰がいつ行けるか(表に出す)
@@ -130,7 +130,6 @@ class Summary {
     List<Map<String, dynamic>> list(String k) => (j[k] as List? ?? []).cast<Map<String, dynamic>>();
     return Summary(
       answered: j['answered'] as int,
-      names: (j['names'] as List? ?? []).cast<String>(),
       must: (j['must'] as List? ?? []).cast<String>(),
       who: [
         for (final w in list('who'))
@@ -139,10 +138,7 @@ class Summary {
             dates: (w['dates'] as Map<String, dynamic>).map((d, v) => MapEntry(d, DateAnswer.values.asNameMap()[v] ?? DateAnswer.no)),
           ),
       ],
-      ranking: [
-        for (final r in list('ranking'))
-          (date: r['date'] as String, ok: r['ok'] as int, maybe: r['maybe'] as int, mustOk: r['mustOk'] == true),
-      ],
+      ranking: [for (final r in list('ranking')) (date: r['date'] as String, ok: r['ok'] as int, maybe: r['maybe'] as int)],
       bestDates: (j['bestDates'] as List? ?? []).cast<String>(),
       date: j['date'] as String?,
       attendees: [for (final a in list('attendees')) (name: a['name'] as String, soft: a['soft'] == true)],
@@ -258,7 +254,8 @@ class Answer {
     'dates': dates.map((d, v) => MapEntry(d, v.name)),
     'arrival': arrival,
     'stay': stay,
-    'budget': budget,
+    // 選んでいなければ「こだわらない」として送る(Web と同じ)
+    'budget': budget == 0 ? unlimitedBudget : budget,
     'areas': areas,
     'station': station?.toJson(),
     'memo': memo,

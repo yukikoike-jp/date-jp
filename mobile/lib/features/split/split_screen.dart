@@ -296,23 +296,17 @@ class _SplitScreenState extends State<SplitScreen> {
           const Text('顔のマークを押した人が幹事(端数を受け持ちます)。', style: TextStyle(fontSize: 11, color: Palette.muted)),
           const SizedBox(height: 16),
           if (result == null)
-            const Text('合計を入れると一人ずつの金額が出ます。', style: TextStyle(color: Palette.muted))
+            const Text('合計を入れると一人ずつの金額が出ます。', style: Styles.muted)
           else ...[
             if (result.surplus > 0)
-              Text(
-                '全員 ${yen(result.amounts.first)} で同じ額。${yen(result.surplus)} のお釣りが出ます(幹事が預かる)。',
-                style: const TextStyle(fontSize: 12, color: Palette.muted),
-              ),
+              Text('全員 ${yen(result.amounts.first)} で同じ額。${yen(result.surplus)} のお釣りが出ます(幹事が預かる)。', style: Styles.note),
             if (result.organizerDiff != 0)
-              Text(
-                '端数の${yen(result.organizerDiff.abs())}ぶん幹事が${result.organizerDiff > 0 ? '多め' : '少なめ'}です。',
-                style: const TextStyle(fontSize: 12, color: Palette.muted),
-              ),
+              Text('端数の${yen(result.organizerDiff.abs())}ぶん幹事が${result.organizerDiff > 0 ? '多め' : '少なめ'}です。', style: Styles.note),
             const SizedBox(height: 12),
             PrimaryButton(label: '共有して金額を送る', onPressed: () => shareText(message)),
             TextButton(
               onPressed: () => copyText(context, message, '金額をコピーしました'),
-              child: const Text('金額をコピー', style: TextStyle(color: Palette.muted)),
+              child: const Text('金額をコピー', style: Styles.muted),
             ),
           ],
         ],
@@ -341,10 +335,7 @@ class _SplitScreenState extends State<SplitScreen> {
               backgroundColor: organizer ? Palette.accent : (_tones[w.tone] ?? Palette.muted).withValues(alpha: 0.25),
               child: organizer
                   ? const Icon(Icons.emoji_events, size: 18, color: Colors.black)
-                  : Text(
-                      p.name.text.trim().isEmpty ? '?' : p.name.text.trim().characters.first,
-                      style: const TextStyle(fontWeight: FontWeight.w900),
-                    ),
+                  : Text(p.name.text.trim().isEmpty ? '?' : p.name.text.trim().characters.first, style: Styles.bold),
             ),
           ),
           Expanded(

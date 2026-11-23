@@ -109,8 +109,7 @@ class _CreateScreenState extends State<CreateScreen> {
               if (!_dates.remove(d) && _dates.length < maxDates) _dates.add(d);
             }),
           ),
-          if (_dates.isNotEmpty)
-            Text('選んだ日: ${(_dates.toList()..sort()).map(dateLabel).join('・')}', style: const TextStyle(fontSize: 12, color: Palette.muted)),
+          if (_dates.isNotEmpty) Text('選んだ日: ${(_dates.toList()..sort()).map(dateLabel).join('・')}', style: Styles.note),
         ],
       ),
       bottomNavigationBar: SafeArea(

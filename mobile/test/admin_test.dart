@@ -79,6 +79,7 @@ void main() {
   Api api() => Api(
     client: MockClient((r) async {
       sent.add(r);
+      if (r.url.path.endsWith('/statuses')) return jsonRes({'ok': true, 'statuses': {}});
       if (r.url.path.endsWith('/decision')) {
         final b = jsonDecode(r.body) as Map<String, dynamic>;
         party = answeredParty(
@@ -152,6 +153,28 @@ void main() {
     expect(find.text('これで決定する'), findsOneWidget);
   });
 
+  testWidgets('幹事の URL から開いたら「作った会」に残す。鍵が違えば残さない', (tester) async {
+    final app = await open(tester, '/p/abc123/admin?token=k');
+    final local = app.local;
+    expect(local.adminToken('abc123'), 'k');
+    expect(local.parties.single.title, '忘年会');
+  });
+
+  testWidgets('届いた URL から開いても、戻るとホーム', (tester) async {
+    tallScreen(tester);
+    final app = TsudoroApp(api: api(), local: await local({'nomi:audience': 'private'}));
+    await tester.pumpWidget(app);
+    app.router.go('/p/abc123/admin?token=k');
+    await tester.pumpAndSettle();
+    expect(find.text('幹事の画面'), findsOneWidget);
+    app.router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('飲み会をつくる'), findsOneWidget);
+    // 開いた会は、ホームの「作った会」に出ている
+    expect(find.text('作った会'), findsOneWidget);
+    expect(find.text('忘年会'), findsOneWidget);
+  });
+
   testWidgets('参加者には決めるところも幹事の画面も出さない', (tester) async {
     await open(tester, '/p/abc123');
     expect(find.text('幹事の画面'), findsNothing);
@@ -160,7 +183,8 @@ void main() {
   });
 
   testWidgets('鍵が違えば、幹事の URL でも参加者の画面', (tester) async {
-    await open(tester, '/p/abc123/admin?token=wrong');
+    final app = await open(tester, '/p/abc123/admin?token=wrong');
+    expect(app.local.parties, isEmpty);
     expect(find.text('幹事の画面'), findsNothing);
     expect(find.text('これで決定する'), findsNothing);
   });

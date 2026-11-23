@@ -72,7 +72,7 @@ class _StationPickerState extends State<StationPicker> {
             dense: true,
             contentPadding: EdgeInsets.zero,
             title: Text('${s.name}駅'),
-            subtitle: Text(s.pref, style: const TextStyle(color: Palette.muted)),
+            subtitle: Text(s.pref, style: Styles.muted),
             onTap: () {
               _q.clear();
               setState(() => _found = []);

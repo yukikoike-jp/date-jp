@@ -55,7 +55,7 @@ fvm flutter build appbundle --release
 ### 掲載の画像(`mobile/store/`。`node scripts/make-app-icons.mjs` で作り直せる)
 - アイコン 512×512: `icon-512.png`
 - フィーチャー グラフィック 1024×500: `feature-1024x500.png`
-- スマホのスクリーンショット: **まだない**(2枚以上。縦横の比は 2:1 まで。見本の会ではなく、日本語の会で撮る)
+- スマホのスクリーンショット: `screenshots/`(1080×2160。2026-11-23 にエミュレーターで、日本語の会で撮った)。お店はホットペッパーの鍵がない開発環境の見本なので、お店の一覧が写るものは、本番の API につないだ版で撮り直してから使う
 
 ### 掲載の文(案)
 
@@ -103,6 +103,6 @@ Tsudoro は、飲み会の日程とお店がすぐ決まるアプリです。登
 
 ## 5. まだアプリにないもの(最初の版で出すかを決める)
 
-- 届いた会の URL をタップしてアプリで開く(App Links)。`public/.well-known/assetlinks.json` を本番に置く必要がある。今は、URL を貼って開く
+- 届いた会の URL をタップしてアプリで開く(App Links)。アプリの側は対応済み(`AndroidManifest.xml`)。本番に `public/.well-known/assetlinks.json`(アップロード鍵ではなく、Play Console の「アプリの署名」の鍵の SHA-256)を置くと、確かめが通って直接開くようになる
 - 通知(FCM)
 - 「必ず来てほしい人」を選ぶ、二次会のお店、集金、Play / Support(Web では使える)

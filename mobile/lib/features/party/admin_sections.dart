@@ -7,51 +7,6 @@ import '../../ui/theme.dart';
 import '../../ui/widgets.dart';
 import '../../ui/share.dart';
 
-/// 枠(Web の panel)
-class Panel extends StatelessWidget {
-  const Panel({super.key, required this.children, this.highlight = false});
-  final List<Widget> children;
-  final bool highlight;
-
-  @override
-  Widget build(BuildContext context) {
-    // Material にして、中の ListTile の背景と押したときの波紋が見えるようにする
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Material(
-        color: highlight ? Palette.matchSoft : Palette.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: highlight ? Palette.accent : Palette.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-        ),
-      ),
-    );
-  }
-}
-
-class PanelTitle extends StatelessWidget {
-  const PanelTitle(this.title, this.note, {super.key});
-  final String title;
-  final String note;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 4),
-        Text(note, style: const TextStyle(fontSize: 13, color: Palette.muted)),
-        const SizedBox(height: 16),
-      ],
-    );
-  }
-}
-
 /// みんなに送る(招待)と、幹事用の URL を自分に送る
 class InviteBox extends StatelessWidget {
   const InviteBox({super.key, required this.party, required this.adminToken});
@@ -66,7 +21,7 @@ class InviteBox extends StatelessWidget {
         PrimaryButton(label: '共有してみんなに送る', onPressed: () => shareText(party.invite)),
         TextButton(
           onPressed: () => copyText(context, guestUrl(party.id), 'URLをコピーしました'),
-          child: const Text('URLをコピー', style: TextStyle(color: Palette.muted)),
+          child: const Text('URLをコピー', style: Styles.muted),
         ),
         const SizedBox(height: 8),
         // なくすと会を開けなくなるので、いつも出しておく
@@ -113,7 +68,7 @@ class DecideBox extends StatelessWidget {
         if (s.bestDates.length > 1)
           const Padding(
             padding: EdgeInsets.only(bottom: 8),
-            child: Text('★ のついた日は行ける人(○)もたぶん(△)も同じ数で、いちばん良い日です。どれを選んでもOK。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+            child: Text('★ のついた日は行ける人(○)もたぶん(△)も同じ数で、いちばん良い日です。どれを選んでもOK。', style: Styles.note),
           ),
         Wrap(
           spacing: 6,
@@ -135,7 +90,10 @@ class DecideBox extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w900, color: Palette.muted),
         ),
         const SizedBox(height: 8),
-        ChoiceChip(selected: shopId == null, onSelected: (_) => onLater(), label: const Text('お店はあとで決める(日にちだけ先に決定)')),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: ChoiceChip(selected: shopId == null, onSelected: (_) => onLater(), label: const Text('お店はあとで決める(日にちだけ先に決定)')),
+        ),
         if (shopName != null) ...[
           const SizedBox(height: 8),
           Text(
@@ -146,7 +104,7 @@ class DecideBox extends StatelessWidget {
         if (party.shops.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text('下の一覧からほかのお店も選べます(${party.shops.length}軒)', style: const TextStyle(fontSize: 12, color: Palette.muted)),
+            child: Text('下の一覧からほかのお店も選べます(${party.shops.length}軒)', style: Styles.note),
           ),
       ],
     );
@@ -198,15 +156,8 @@ class DecidedBox extends StatelessWidget {
             TextSpan(
               children: [
                 const TextSpan(text: '予約の人数: '),
-                TextSpan(
-                  text: '$going人',
-                  style: const TextStyle(fontWeight: FontWeight.w900),
-                ),
-                if (maybes > 0)
-                  TextSpan(
-                    text: '(たぶんの人を入れると${going + maybes}人)',
-                    style: const TextStyle(color: Palette.muted),
-                  ),
+                TextSpan(text: '$going人', style: Styles.bold),
+                if (maybes > 0) TextSpan(text: '(たぶんの人を入れると${going + maybes}人)', style: Styles.muted),
               ],
             ),
           ),
@@ -215,7 +166,7 @@ class DecidedBox extends StatelessWidget {
         PrimaryButton(label: '共有して「決まったよ」を送る', onPressed: () => shareText(text)),
         TextButton(
           onPressed: () => copyText(context, text, '送る文をコピーしました'),
-          child: const Text('送る文をコピー', style: TextStyle(color: Palette.muted)),
+          child: const Text('送る文をコピー', style: Styles.muted),
         ),
         const SizedBox(height: 8),
         // 会が決まったあとの次の一歩なので、金色の枠で目立たせる
@@ -225,8 +176,8 @@ class DecidedBox extends StatelessWidget {
             side: const BorderSide(color: Palette.accent),
           ),
           leading: const Icon(Icons.calculate, color: Palette.accent),
-          title: const Text('この会の会計をする', style: TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: Text('$going人の名前を入れた状態からスタート', style: const TextStyle(fontSize: 12, color: Palette.muted)),
+          title: const Text('この会の会計をする', style: Styles.bold),
+          subtitle: Text('$going人の名前を入れた状態からスタート', style: Styles.note),
           trailing: const Icon(Icons.chevron_right, color: Palette.accent),
           onTap: () => context.push('/split?from=${party.id}'),
         ),
@@ -253,9 +204,9 @@ class DecidedBox extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Text('決定を取り消しますか?', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+              const Text('決定を取り消しますか?', style: Styles.heading),
               const SizedBox(height: 8),
-              const Text('日にちとお店の決定を取り消して選び直せる状態に戻します。みんなの回答は消えません。', style: TextStyle(color: Palette.muted)),
+              const Text('日にちとお店の決定を取り消して選び直せる状態に戻します。みんなの回答は消えません。', style: Styles.muted),
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () => Navigator.pop(context, true),
@@ -264,7 +215,7 @@ class DecidedBox extends StatelessWidget {
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(48),
                 ),
-                child: const Text('取り消して選び直す', style: TextStyle(fontWeight: FontWeight.w900)),
+                child: const Text('取り消して選び直す', style: Styles.bold),
               ),
               const SizedBox(height: 8),
               OutlinedButton(
@@ -297,8 +248,8 @@ class WhoTable extends StatelessWidget {
     final s = party.summary;
     return ExpansionTile(
       tilePadding: EdgeInsets.zero,
-      title: Text('みんなの答え(${s.answered}人)', style: const TextStyle(fontWeight: FontWeight.w900)),
-      subtitle: const Text('誰がいつ行けるか・ひとこと', style: TextStyle(fontSize: 12, color: Palette.muted)),
+      title: Text('みんなの答え(${s.answered}人)', style: Styles.bold),
+      subtitle: const Text('誰がいつ行けるか・ひとこと', style: Styles.note),
       children: [
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -330,7 +281,7 @@ class WhoTable extends StatelessWidget {
             dense: true,
             contentPadding: EdgeInsets.zero,
             title: Text(n.memo),
-            subtitle: Text(n.name, style: const TextStyle(color: Palette.muted)),
+            subtitle: Text(n.name, style: Styles.muted),
           ),
       ],
     );

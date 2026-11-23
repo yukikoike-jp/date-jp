@@ -48,14 +48,7 @@ class _AnswerScreenState extends State<AnswerScreen> {
       builder: (context, snap) {
         final data = snap.data;
         if (data == null) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: Center(
-              child: snap.hasError
-                  ? Text('${snap.error}', style: const TextStyle(color: Palette.danger))
-                  : const CircularProgressIndicator(),
-            ),
-          );
+          return LoadingScaffold(error: snap.error);
         }
         return _AnswerForm(party: data.$1, previous: data.$2);
       },
@@ -134,7 +127,7 @@ class _AnswerFormState extends State<_AnswerForm> {
             stay: 1440,
             budget: unlimitedBudget,
           )
-        : (_a..budget = _a.budget == 0 ? unlimitedBudget : _a.budget);
+        : _a;
     setState(() {
       _pending = true;
       _error = null;
@@ -160,7 +153,7 @@ class _AnswerFormState extends State<_AnswerForm> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          Text(_party.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          Text(_party.title, style: Styles.heading),
           const SizedBox(height: 20),
           const FieldHead(title: '名前', sub: '必須'),
           const SizedBox(height: 8),
@@ -209,15 +202,15 @@ class _AnswerFormState extends State<_AnswerForm> {
             }),
           ),
           const SizedBox(height: 4),
-          const Text('みんなの駅から集まりやすい駅を自動で決定。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+          const Text('みんなの駅から集まりやすい駅を自動で決定。', style: Styles.note),
           const SizedBox(height: 12),
           ExpansionTile(
             initiallyExpanded: _more,
             tilePadding: EdgeInsets.zero,
             childrenPadding: EdgeInsets.zero,
             expandedCrossAxisAlignment: CrossAxisAlignment.start,
-            title: const Text('もっと答える', style: TextStyle(fontWeight: FontWeight.w900)),
-            subtitle: const Text('予算・お酒・苦手なもの・食べたいもの・ひとこと。なくてもOK', style: TextStyle(fontSize: 12, color: Palette.muted)),
+            title: const Text('もっと答える', style: Styles.bold),
+            subtitle: const Text('予算・お酒・苦手なもの・食べたいもの・ひとこと。なくてもOK', style: Styles.note),
             children: [_moreFields()],
           ),
         ],
@@ -256,7 +249,7 @@ class _AnswerFormState extends State<_AnswerForm> {
           onChanged: (b) => setState(() => _a.budget = b ?? 0),
         ),
         const SizedBox(height: 4),
-        const Text('誰が選んだかは幹事にも非公開 ・ お店はみんなの真ん中の額で探します。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+        const Text('誰が選んだかは幹事にも非公開 ・ お店はみんなの真ん中の額で探します。', style: Styles.note),
         const SizedBox(height: 20),
         const FieldHead(title: 'お酒は飲む?', sub: ''),
         const SizedBox(height: 8),
@@ -268,7 +261,7 @@ class _AnswerFormState extends State<_AnswerForm> {
           ],
         ),
         const SizedBox(height: 4),
-        const Text('「飲まない」なら会計で「飲まない」の区分に。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+        const Text('「飲まない」なら会計で「飲まない」の区分に。', style: Styles.note),
         // タバコは会社の会だけ聞く(プライベートには未成年の学生もいるため)
         if (_party.worker) ...[
           const SizedBox(height: 20),
@@ -282,15 +275,15 @@ class _AnswerFormState extends State<_AnswerForm> {
             ],
           ),
           const SizedBox(height: 4),
-          const Text('吸える店を優先・誰が吸うかは非公開。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+          const Text('吸える店を優先・誰が吸うかは非公開。', style: Styles.note),
         ],
         const SizedBox(height: 20),
         const FieldHead(title: '苦手なもの・アレルギー', sub: 'なければそのままでOK'),
         const SizedBox(height: 8),
-        const Text('アレルギー', style: TextStyle(fontSize: 12, color: Palette.muted)),
+        const Text('アレルギー', style: Styles.note),
         _Chips(options: allergies, selected: _a.avoids, onToggle: _toggle(_a.avoids)),
         const SizedBox(height: 8),
-        const Text('苦手なもの', style: TextStyle(fontSize: 12, color: Palette.muted)),
+        const Text('苦手なもの', style: Styles.note),
         _Chips(options: dislikes, selected: _a.avoids, onToggle: _toggle(_a.avoids)),
         const SizedBox(height: 8),
         TextFormField(
@@ -299,12 +292,12 @@ class _AnswerFormState extends State<_AnswerForm> {
           decoration: const InputDecoration(hintText: 'そのほか(例: パクチー、甲殻類すべて)', counterText: ''),
           onChanged: (v) => _a.avoidNote = v,
         ),
-        const Text('誰が選んだかは幹事にも非公開。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+        const Text('誰が選んだかは幹事にも非公開。', style: Styles.note),
         const SizedBox(height: 20),
         const FieldHead(title: '食べたいもの', sub: 'いくつでも・なくてもOK'),
         const SizedBox(height: 8),
         _Chips(options: genres, selected: _a.likes, onToggle: _toggle(_a.likes)),
-        const Text('多かったものからお店を自動で選定。', style: TextStyle(fontSize: 12, color: Palette.muted)),
+        const Text('多かったものからお店を自動で選定。', style: Styles.note),
         const SizedBox(height: 20),
         const FieldHead(title: 'ひとこと', sub: 'なくてもOK・みんなに見えます'),
         const SizedBox(height: 8),
@@ -414,7 +407,7 @@ class _StayGrid extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(s.label, style: const TextStyle(fontWeight: FontWeight.w900)),
+              Text(s.label, style: Styles.bold),
               Text(s.note, style: const TextStyle(fontSize: 10)),
             ],
           ),

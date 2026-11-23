@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../api/client.dart';
 import '../../app_scope.dart';
+import '../../storage/local.dart';
 import '../../ui/format.dart';
 import '../../ui/theme.dart';
 import '../../ui/widgets.dart';
@@ -36,7 +37,13 @@ class _PartyScreenState extends State<PartyScreen> {
 
   Future<void> _reload() async {
     try {
+      final local = AppScope.of(context).local;
       final p = await AppScope.of(context).api.party(widget.id, adminToken: widget.adminToken);
+      // 幹事の URL から開いたら、この端末の「作った会」に残す(Web の幹事の画面と同じ。次からはホームから開ける)
+      final token = widget.adminToken;
+      if (p.admin && token != null && local.adminToken(p.id) != token) {
+        await local.rememberParty(MyParty(id: p.id, title: p.title, token: token, createdAt: DateTime.now().millisecondsSinceEpoch));
+      }
       if (!mounted) return;
       setState(() {
         _p = p;
@@ -79,14 +86,7 @@ class _PartyScreenState extends State<PartyScreen> {
   Widget build(BuildContext context) {
     final p = _p;
     if (p == null) {
-      return Scaffold(
-        appBar: AppBar(),
-        body: Center(
-          child: _loadError != null
-              ? Text('$_loadError', style: const TextStyle(color: Palette.danger))
-              : const CircularProgressIndicator(),
-        ),
-      );
+      return LoadingScaffold(error: _loadError);
     }
     final admin = p.admin && widget.adminToken != null;
     final canDecide = admin && p.decision == null && p.summary.ranking.any((r) => r.ok > 0);
@@ -115,7 +115,7 @@ class _PartyScreenState extends State<PartyScreen> {
           const SizedBox(height: 4),
           Text(
             [if (p.start != null) '${clock(p.start!)}〜', p.answered == 0 ? 'まだ回答なし' : '${p.answered}人が回答'].join(' ・ '),
-            style: const TextStyle(color: Palette.muted),
+            style: Styles.muted,
           ),
         ],
       ),
@@ -173,8 +173,8 @@ class _PartyScreenState extends State<PartyScreen> {
       if (d != null || p.answered > 0)
         ExpansionTile(
           tilePadding: EdgeInsets.zero,
-          title: Text(d != null ? 'みんなに送る・幹事用のURL' : 'まだの人に送る', style: const TextStyle(fontWeight: FontWeight.w900)),
-          subtitle: const Text('招待のURL・幹事用のURL', style: TextStyle(fontSize: 12, color: Palette.muted)),
+          title: Text(d != null ? 'みんなに送る・幹事用のURL' : 'まだの人に送る', style: Styles.bold),
+          subtitle: const Text('招待のURL・幹事用のURL', style: Styles.note),
           children: [invite],
         ),
     ];
@@ -186,7 +186,7 @@ class _PartyScreenState extends State<PartyScreen> {
     return [
       Panel(
         children: [
-          const Text('合いそうなお店', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+          const Text('合いそうなお店', style: Styles.heading),
           // 提携リンクだと、一覧の上でも分かるようにする
           if (p.pr && !sample) const Padding(padding: EdgeInsets.only(top: 4), child: PrNote()),
           const SizedBox(height: 4),

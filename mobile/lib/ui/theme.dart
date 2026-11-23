@@ -9,10 +9,8 @@ abstract final class Palette {
   static const muted = Color(0x80FFFFFF);
   static const border = Color(0x14FFFFFF);
   static const accent = Color(0xFFF5B83D);
-  static const accentStrong = Color(0xFFFFC85C);
   static const matchSoft = Color(0xFF2A2112);
   static const matchText = Color(0xFFFFD47E);
-  static const line = Color(0xFF06C755);
   static const danger = Color(0xFFFF7A6B);
 
   // ○ △ × の色(globals.css の .tier-green / yellow / red の --tb と --tc)
@@ -30,6 +28,8 @@ abstract final class Palette {
 final ThemeData darkTheme = ThemeData(
   brightness: Brightness.dark,
   scaffoldBackgroundColor: Palette.bg,
+  // ドロップダウンのメニューの地。黒い画面の上で見分けられるよう、一段明るくする
+  canvasColor: Palette.surface2,
   colorScheme: const ColorScheme.dark(
     surface: Palette.bg,
     surfaceContainer: Palette.surface,
@@ -56,3 +56,18 @@ final ThemeData darkTheme = ThemeData(
 
 /// 名前「Tsudoro」の字(Poppins の太字)
 const logoStyle = TextStyle(fontFamily: 'Poppins', fontWeight: FontWeight.w700, color: Palette.text);
+
+/// よく使う文字の形
+abstract final class Styles {
+  /// 灰色の小さな説明(12)
+  static const note = TextStyle(fontSize: 12, color: Palette.muted);
+
+  /// 灰色の本文
+  static const muted = TextStyle(color: Palette.muted);
+
+  /// 太字(見出し・ボタン)
+  static const bold = TextStyle(fontWeight: FontWeight.w900);
+
+  /// 枠の見出し(18)
+  static const heading = TextStyle(fontSize: 18, fontWeight: FontWeight.w900);
+}
