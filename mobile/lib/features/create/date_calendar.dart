@@ -20,7 +20,9 @@ class DateCalendar extends StatelessWidget {
     for (var m = DateTime(today.year, today.month); !m.isAfter(last); m = DateTime(m.year, m.month + 1)) {
       months.add(m);
     }
-    return Column(children: [for (final m in months) _Month(month: m, first: today, last: last, selected: selected, onToggle: onToggle)]);
+    return Column(
+      children: [for (final m in months) _Month(month: m, first: today, last: last, selected: selected, onToggle: onToggle)],
+    );
   }
 }
 
@@ -43,26 +45,32 @@ class _Month extends StatelessWidget {
         children: [
           Text('${month.year}年${month.month}月', style: const TextStyle(fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),
-          Row(children: [
-            for (final (i, w) in ['日', '月', '火', '水', '木', '金', '土'].indexed)
-              Expanded(
-                child: Center(
-                  child: Text(w, style: TextStyle(fontSize: 11, color: i == 0 ? Palette.danger : Palette.muted)),
+          Row(
+            children: [
+              for (final (i, w) in ['日', '月', '火', '水', '木', '金', '土'].indexed)
+                Expanded(
+                  child: Center(
+                    child: Text(w, style: TextStyle(fontSize: 11, color: i == 0 ? Palette.danger : Palette.muted)),
+                  ),
                 ),
-              ),
-          ]),
+            ],
+          ),
           const SizedBox(height: 4),
           // GridView にすると自分でスクロールを持ち、外の ListView の中で扱いにくいので Table で並べる
-          Table(children: [
-            for (var row = 0; row * 7 < lead + days; row++)
-              TableRow(children: [
-                for (var col = 0; col < 7; col++)
-                  switch (row * 7 + col - lead + 1) {
-                    final d when d >= 1 && d <= days => AspectRatio(aspectRatio: 1, child: _day(DateTime(month.year, month.month, d))),
-                    _ => const SizedBox.shrink(),
-                  },
-              ]),
-          ]),
+          Table(
+            children: [
+              for (var row = 0; row * 7 < lead + days; row++)
+                TableRow(
+                  children: [
+                    for (var col = 0; col < 7; col++)
+                      switch (row * 7 + col - lead + 1) {
+                        final d when d >= 1 && d <= days => AspectRatio(aspectRatio: 1, child: _day(DateTime(month.year, month.month, d))),
+                        _ => const SizedBox.shrink(),
+                      },
+                  ],
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -86,7 +94,11 @@ class _Month extends StatelessWidget {
               semanticsLabel: '${dateLabel(key)}${on ? ' 選択中' : ''}',
               style: TextStyle(
                 fontWeight: on ? FontWeight.w700 : FontWeight.w400,
-                color: on ? Colors.black : enabled ? Palette.text : Palette.muted.withValues(alpha: 0.25),
+                color: on
+                    ? Colors.black
+                    : enabled
+                    ? Palette.text
+                    : Palette.muted.withValues(alpha: 0.25),
               ),
             ),
           ),

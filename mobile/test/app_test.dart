@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tsudoro/api/client.dart';
 import 'package:tsudoro/features/create/create_screen.dart';
 import 'package:tsudoro/features/home/home_screen.dart';
@@ -12,43 +11,18 @@ import 'package:tsudoro/main.dart';
 import 'package:tsudoro/storage/local.dart';
 import 'package:tsudoro/ui/format.dart';
 
-http.Response jsonRes(Object body, [int status = 200]) =>
-    http.Response.bytes(utf8.encode(jsonEncode(body)), status, headers: {'content-type': 'application/json'});
-
-final partyJson = {
-  'ok': true,
-  'party': {'id': 'abc123', 'title': '忘年会', 'dates': ['2026-12-04']},
-  'summary': {'answered': 2},
-  'admin': true,
-  'share': {'invite': '忘年会 https://www.tsudoro.com/p/abc123', 'decided': null},
-};
-
-Future<Local> local([Map<String, Object> values = const {}]) async {
-  SharedPreferences.setMockInitialValues(values);
-  return Local.open();
-}
-
-/// カレンダーで、今日から days 日後を押す
-Future<void> tapDay(WidgetTester tester, int days) async {
-  final day = find.bySemanticsLabel(dateLabel(ymd(jstToday().add(Duration(days: days)))));
-  await tester.tap(day);
-  await tester.pump();
-}
-
-/// カレンダーが1画面に入る縦長の画面(375 幅は崩れないかの確認も兼ねる)
-void tallScreen(WidgetTester tester) {
-  tester.view.physicalSize = const Size(375, 2400);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
-}
+import 'helpers.dart';
 
 void main() {
   test('幹事の鍵を Bearer で送り、会の中身を読む', () async {
     late http.Request sent;
-    final api = Api(base: 'https://x/api/v1', client: MockClient((r) async {
-      sent = r;
-      return jsonRes(partyJson);
-    }));
+    final api = Api(
+      base: 'https://x/api/v1',
+      client: MockClient((r) async {
+        sent = r;
+        return jsonRes(partyJson);
+      }),
+    );
     final p = await api.party('abc123', adminToken: 'k');
     expect(sent.url.toString(), 'https://x/api/v1/parties/abc123');
     expect(sent.headers['authorization'], 'Bearer k');
@@ -94,15 +68,17 @@ void main() {
 
   testWidgets('はじめはプライベート・仕事を選び、会を作ると、鍵を端末に残して幹事の画面へ', (tester) async {
     Map<String, dynamic>? created;
-    final api = Api(client: MockClient((r) async {
-      if (r.method == 'POST' && r.url.path.endsWith('/parties')) {
-        created = jsonDecode(r.body) as Map<String, dynamic>;
-        return jsonRes({'ok': true, 'id': 'abc123', 'adminToken': 'secret'}, 201);
-      }
-      if (r.url.path.endsWith('/statuses')) return jsonRes({'ok': true, 'statuses': {}});
-      expect(r.headers['authorization'], 'Bearer secret');
-      return jsonRes(partyJson);
-    }));
+    final api = Api(
+      client: MockClient((r) async {
+        if (r.method == 'POST' && r.url.path.endsWith('/parties')) {
+          created = jsonDecode(r.body) as Map<String, dynamic>;
+          return jsonRes({'ok': true, 'id': 'abc123', 'adminToken': 'secret'}, 201);
+        }
+        if (r.url.path.endsWith('/statuses')) return jsonRes({'ok': true, 'statuses': {}});
+        expect(r.headers['authorization'], 'Bearer secret');
+        return jsonRes(partyJson);
+      }),
+    );
     tallScreen(tester);
     final l = await local();
     final app = TsudoroApp(api: api, local: l);

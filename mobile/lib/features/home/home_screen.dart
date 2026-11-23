@@ -41,10 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final local = AppScope.of(context).local;
     final audience = local.audience;
     if (audience == null || _choosing) {
-      return _Choose(onChoose: (a) async {
-        await local.setAudience(a);
-        setState(() => _choosing = false);
-      });
+      return _Choose(
+        onChoose: (a) async {
+          await local.setAudience(a);
+          setState(() => _choosing = false);
+        },
+      );
     }
     final parties = local.parties;
     return Scaffold(
@@ -57,30 +59,47 @@ class _HomeScreenState extends State<HomeScreen> {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
             children: [
-              Row(children: [
-                const Expanded(child: Text('Tsudoro', style: logoStyle, textScaler: TextScaler.linear(1.6))),
-                OutlinedButton(
-                  onPressed: () => setState(() => _choosing = true),
-                  child: Text('${audiences[audience]?.label ?? 'プライベート'} ▾'),
-                ),
-              ]),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text('Tsudoro', style: logoStyle, textScaler: TextScaler.linear(1.6)),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => setState(() => _choosing = true),
+                    child: Text('${audiences[audience]?.label ?? 'プライベート'} ▾'),
+                  ),
+                ],
+              ),
               const SizedBox(height: 20),
-              _Hero(lead: audiences[audience]?.lead ?? '', onTap: () async {
-                await context.push('/new');
-                if (mounted) setState(_refresh);
-              }),
+              _Hero(
+                lead: audiences[audience]?.lead ?? '',
+                onTap: () async {
+                  await context.push('/new');
+                  if (mounted) setState(_refresh);
+                },
+              ),
               const SizedBox(height: 28),
               if (parties.isNotEmpty) ...[
-                const Text('作った会', style: TextStyle(fontWeight: FontWeight.w700, color: Palette.muted)),
+                const Text(
+                  '作った会',
+                  style: TextStyle(fontWeight: FontWeight.w700, color: Palette.muted),
+                ),
                 const SizedBox(height: 8),
                 FutureBuilder(
                   future: _statuses,
-                  builder: (context, snap) => Column(children: [
-                    for (final p in parties) _PartyRow(party: p, status: snap.data?[p.id], onForget: () async {
-                      await local.forgetParty(p.id);
-                      setState(() {});
-                    }),
-                  ]),
+                  builder: (context, snap) => Column(
+                    children: [
+                      for (final p in parties)
+                        _PartyRow(
+                          party: p,
+                          status: snap.data?[p.id],
+                          onForget: () async {
+                            await local.forgetParty(p.id);
+                            setState(() {});
+                          },
+                        ),
+                    ],
+                  ),
                 ),
               ],
               const SizedBox(height: 28),
@@ -118,7 +137,10 @@ class _Choose extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Material(
                     color: Palette.surface,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24), side: const BorderSide(color: Palette.border)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      side: const BorderSide(color: Palette.border),
+                    ),
                     child: ListTile(
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       title: Text(v.label, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900)),
@@ -180,14 +202,23 @@ class _PartyRow extends StatelessWidget {
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         color: Palette.danger,
-        child: const Text('一覧から外す', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700)),
+        child: const Text(
+          '一覧から外す',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w700),
+        ),
       ),
       onDismissed: (_) => onForget(),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(party.title, maxLines: 1, overflow: TextOverflow.ellipsis),
         subtitle: Text(
-          s == null ? '' : s.decided ? '決定済み' : s.answered == 0 ? 'まだ回答なし' : '${s.answered}人が回答',
+          s == null
+              ? ''
+              : s.decided
+              ? '決定済み'
+              : s.answered == 0
+              ? 'まだ回答なし'
+              : '${s.answered}人が回答',
           style: TextStyle(fontSize: 12, color: s?.decided == true ? Palette.accent : Palette.muted),
         ),
         trailing: const Icon(Icons.chevron_right, color: Palette.muted),

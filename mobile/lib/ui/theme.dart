@@ -14,6 +14,14 @@ abstract final class Palette {
   static const matchText = Color(0xFFFFD47E);
   static const line = Color(0xFF06C755);
   static const danger = Color(0xFFFF7A6B);
+
+  // ○ △ × の色(globals.css の .tier-green / yellow / red の --tb と --tc)
+  static const okFill = Color(0xFF4CC982);
+  static const okText = Color(0xFF93E3B2);
+  static const maybeFill = Color(0xFFF5B83D);
+  static const maybeText = Color(0xFFFFD47E);
+  static const noFill = Color(0xFFFF6B74);
+  static const noText = Color(0xFFFF9DA3);
 }
 
 final ThemeData darkTheme = ThemeData(

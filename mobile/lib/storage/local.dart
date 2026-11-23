@@ -46,8 +46,24 @@ class Local {
     return _prefs.setString(_parties, jsonEncode(list));
   }
 
-  Future<void> forgetParty(String id) =>
-      _prefs.setString(_parties, jsonEncode(parties.where((x) => x.id != id).toList()));
+  Future<void> forgetParty(String id) => _prefs.setString(_parties, jsonEncode(parties.where((x) => x.id != id).toList()));
 
   String? adminToken(String partyId) => parties.where((p) => p.id == partyId).firstOrNull?.token;
+
+  // この端末で答えた回答の鍵(Web の nomi:me:<会の id> と同じ)
+  static String _me(String partyId) => 'nomi:me:$partyId';
+
+  ({String answerId, String token, String name})? mine(String partyId) {
+    final raw = _prefs.getString(_me(partyId));
+    if (raw == null) return null;
+    try {
+      final j = jsonDecode(raw) as Map<String, dynamic>;
+      return (answerId: j['answerId'] as String, token: j['token'] as String, name: j['name'] as String);
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<void> setMine(String partyId, {required String answerId, required String token, required String name}) =>
+      _prefs.setString(_me(partyId), jsonEncode({'answerId': answerId, 'token': token, 'name': name}));
 }

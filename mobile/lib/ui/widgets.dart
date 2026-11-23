@@ -14,7 +14,12 @@ class FieldHead extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: [
-        Expanded(child: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Palette.muted))),
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Palette.muted),
+          ),
+        ),
         Text(sub, style: const TextStyle(fontSize: 11, color: Palette.muted)),
       ],
     );

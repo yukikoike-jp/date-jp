@@ -47,8 +47,8 @@ class _CreateScreenState extends State<CreateScreen> {
   String? get _missing => _title.text.trim().isEmpty
       ? '会の名前を入力してください'
       : _dates.isEmpty
-          ? '候補の日を選んでください'
-          : null;
+      ? '候補の日を選んでください'
+      : null;
 
   Future<void> _submit() async {
     final scope = AppScope.of(context);
@@ -64,7 +64,9 @@ class _CreateScreenState extends State<CreateScreen> {
         dates: _dates.toList()..sort(),
         start: _start,
       );
-      await scope.local.rememberParty(MyParty(id: r.id, title: title, token: r.adminToken, createdAt: DateTime.now().millisecondsSinceEpoch));
+      await scope.local.rememberParty(
+        MyParty(id: r.id, title: title, token: r.adminToken, createdAt: DateTime.now().millisecondsSinceEpoch),
+      );
       if (mounted) context.pushReplacement('/p/${r.id}/admin');
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -122,10 +124,7 @@ class _CreateScreenState extends State<CreateScreen> {
                 style: TextStyle(fontSize: 11, color: _error != null ? Palette.danger : Palette.muted),
               ),
               const SizedBox(height: 8),
-              PrimaryButton(
-                label: _pending ? '作成中…' : 'URLを作る',
-                onPressed: _pending || missing != null ? null : _submit,
-              ),
+              PrimaryButton(label: _pending ? '作成中…' : 'URLを作る', onPressed: _pending || missing != null ? null : _submit),
             ],
           ),
         ),
