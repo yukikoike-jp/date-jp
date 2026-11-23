@@ -4,4 +4,6 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 開発だけ: 実機で軽いプロファイル版から http://localhost:3000(adb reverse)の npm run dev を呼ぶ -->
+    <application android:usesCleartextTraffic="true"/>
 </manifest>

@@ -175,6 +175,18 @@ void main() {
     expect(find.text('忘年会'), findsOneWidget);
   });
 
+  testWidgets('答える画面の URL から開いても、戻ると会のページ', (tester) async {
+    tallScreen(tester);
+    final app = TsudoroApp(api: api(), local: await local({'nomi:audience': 'private'}));
+    await tester.pumpWidget(app);
+    app.router.go('/p/abc123/answer');
+    await tester.pumpAndSettle();
+    expect(find.text('30秒で答えられます'), findsOneWidget);
+    app.router.pop();
+    await tester.pumpAndSettle();
+    expect(find.text('答える'), findsOneWidget);
+  });
+
   testWidgets('参加者には決めるところも幹事の画面も出さない', (tester) async {
     await open(tester, '/p/abc123');
     expect(find.text('幹事の画面'), findsNothing);
