@@ -2,10 +2,12 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../api/client.dart';
+import '../../domain/calendar.dart';
 import '../../ui/format.dart';
 import '../../ui/theme.dart';
 import '../../ui/widgets.dart';
 import '../../ui/share.dart';
+import 'shop_card.dart' show PrNote;
 
 /// みんなに送る(招待)と、幹事用の URL を自分に送る
 class InviteBox extends StatelessWidget {
@@ -152,13 +154,31 @@ class DecideBox extends StatelessWidget {
   }
 }
 
-/// 決まったこと(みんなに見える)
+/// 決まったこと(みんなに見える)。決まったお店へはここから行く(決まったあとはお店の一覧を出さない)
 class DecisionCard extends StatelessWidget {
-  const DecisionCard({super.key, required this.decision});
-  final Decision decision;
+  const DecisionCard({super.key, required this.party});
+  final PartyData party;
+
+  /// 見本のお店(s1, s2…)は実在しないので、予約や地図のリンクを出さない(Web の DecisionCard と同じ)
+  static final _sample = RegExp(r'^s\d+$');
 
   @override
   Widget build(BuildContext context) {
+    final d = party.decision!;
+    final shopId = d.shopId;
+    final shopName = d.shopName;
+    final realShop = shopId != null && shopName != null && !_sample.hasMatch(shopId);
+    Widget button(IconData icon, String label, String url) => Expanded(
+      child: OutlinedButton.icon(
+        onPressed: () => openOutside(url),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(44),
+          side: const BorderSide(color: Palette.accent),
+        ),
+        icon: Icon(icon, size: 16),
+        label: Text(label),
+      ),
+    );
     return Panel(
       highlight: true,
       children: [
@@ -167,9 +187,31 @@ class DecisionCard extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.w900, color: Palette.matchText),
         ),
         const SizedBox(height: 8),
-        Text('${dateLabel(decision.date)} ${clock(decision.start)}〜', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
+        Text('${dateLabel(d.date)} ${clock(d.start)}〜', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900)),
         const SizedBox(height: 4),
-        Text(decision.shopName ?? 'お店はこれから決めます', style: const TextStyle(fontSize: 15)),
+        Text(shopName ?? 'お店はこれから決めます', style: const TextStyle(fontSize: 15)),
+        if (realShop) ...[
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              button(Icons.open_in_new, 'お店のページ', shopUrl(party.id, shopId)),
+              const SizedBox(width: 8),
+              button(Icons.place, '地図', mapsUrl(shopName)),
+            ],
+          ),
+          if (party.pr) const Padding(padding: EdgeInsets.only(top: 8), child: PrNote()),
+        ],
+        const SizedBox(height: 8),
+        // カレンダーに入れれば、前日のお知らせは各自のスマホが出す(Tsudoro は連絡先を持たない)
+        Row(
+          children: [
+            button(
+              Icons.event,
+              'カレンダーに入れる',
+              googleCalendarUrl(title: party.title, date: d.date, start: d.start, location: shopName, url: guestUrl(party.id)),
+            ),
+          ],
+        ),
       ],
     );
   }

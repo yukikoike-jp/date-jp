@@ -163,7 +163,7 @@ class _PartyScreenState extends State<PartyScreen> {
 
   List<Widget> _guestBody(PartyData p) => [
     _header(p, admin: false),
-    if (p.decision != null) DecisionCard(decision: p.decision!),
+    if (p.decision != null) DecisionCard(party: p),
     _answerButton(p, admin: false),
     if (p.answered > 0) WhoTable(party: p),
   ];
@@ -174,7 +174,7 @@ class _PartyScreenState extends State<PartyScreen> {
     final invite = InviteBox(party: p, adminToken: token);
     return [
       _header(p, admin: true),
-      if (d != null) DecisionCard(decision: d),
+      if (d != null) DecisionCard(party: p),
       if (d == null && p.answered == 0) invite,
       if (d != null)
         DecidedBox(party: p, pending: _pending, onUndo: () => _decide(date: null, clear: true))

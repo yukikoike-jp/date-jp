@@ -74,10 +74,10 @@ enum StayStep {
   final String note;
 }
 
-/// 一次会の長さ(飲み放題の2時間)
-const _firstPartyMinutes = 120;
+/// 一次会の長さ(飲み放題の2時間。lib/sendai.ts の FIRST_PARTY_MINUTES)
+const firstPartyMinutes = 120;
 
-int _firstEnd(int? start) => start != null ? start + _firstPartyMinutes : 1260;
+int _firstEnd(int? start) => start != null ? start + firstPartyMinutes : 1260;
 
 /// 4つのうちの1つを、残れる時刻(分)にする(lib/sendai.ts の stayFromStep)
 int stayFromStep(StayStep step, int? start) {

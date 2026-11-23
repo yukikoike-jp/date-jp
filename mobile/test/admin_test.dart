@@ -199,6 +199,20 @@ void main() {
     expect(tester.widget<FilterChip>(chip).selected, isFalse);
   });
 
+  testWidgets('決まった会には、お店のページ・地図・カレンダーのボタンを出す。見本のお店にはカレンダーだけ', (tester) async {
+    party = answeredParty(decision: {'date': d1, 'start': 1140, 'shopId': 'J1', 'shopName': 'お店J1'});
+    await open(tester, '/p/abc123');
+    expect(find.text('お店のページ'), findsOneWidget);
+    expect(find.text('地図'), findsOneWidget);
+    expect(find.text('カレンダーに入れる'), findsOneWidget);
+    expect(find.text('#アフィリエイト広告'), findsOneWidget);
+
+    party = answeredParty(decision: {'date': d1, 'start': 1140, 'shopId': 's1', 'shopName': '見本 串焼き'});
+    await open(tester, '/p/abc123');
+    expect(find.text('お店のページ'), findsNothing);
+    expect(find.text('カレンダーに入れる'), findsOneWidget);
+  });
+
   testWidgets('答える画面の URL から開いても、戻ると会のページ', (tester) async {
     tallScreen(tester);
     final app = TsudoroApp(api: api(), local: await local({'nomi:audience': 'private'}));
