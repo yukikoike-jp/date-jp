@@ -64,6 +64,21 @@ class Local {
     }
   }
 
+  // 最後の会計(続きから使えるよう、この端末にだけ残す。サーバーには送らない)
+  static const _split = 'nomi:split';
+
+  Map<String, dynamic>? get split {
+    final raw = _prefs.getString(_split);
+    if (raw == null) return null;
+    try {
+      return jsonDecode(raw) as Map<String, dynamic>;
+    } on Object {
+      return null;
+    }
+  }
+
+  Future<void> setSplit(Map<String, Object?> v) => _prefs.setString(_split, jsonEncode(v));
+
   Future<void> setMine(String partyId, {required String answerId, required String token, required String name}) =>
       _prefs.setString(_me(partyId), jsonEncode({'answerId': answerId, 'token': token, 'name': name}));
 }

@@ -78,6 +78,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (mounted) setState(_refresh);
                 },
               ),
+              const SizedBox(height: 12),
+              Material(
+                color: Palette.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: const BorderSide(color: Palette.border),
+                ),
+                child: ListTile(
+                  leading: const Icon(Icons.calculate, color: Palette.accent),
+                  title: const Text('会計', style: TextStyle(fontWeight: FontWeight.w900)),
+                  subtitle: Text(
+                    audience == 'worker' ? '補助や上司多めの計算' : '割り勘と先輩多めの計算',
+                    style: const TextStyle(fontSize: 12, color: Palette.muted),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, color: Palette.muted),
+                  onTap: () => context.push('/split'),
+                ),
+              ),
               const SizedBox(height: 28),
               if (parties.isNotEmpty) ...[
                 const Text(

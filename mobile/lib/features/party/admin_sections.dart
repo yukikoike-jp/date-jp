@@ -1,3 +1,4 @@
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../api/client.dart';
@@ -14,15 +15,20 @@ class Panel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-      decoration: BoxDecoration(
+    // Material にして、中の ListTile の背景と押したときの波紋が見えるようにする
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Material(
         color: highlight ? Palette.matchSoft : Palette.surface,
-        border: Border.all(color: highlight ? Palette.accent : Palette.border),
-        borderRadius: BorderRadius.circular(24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: BorderSide(color: highlight ? Palette.accent : Palette.border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+        ),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
     );
   }
 }
@@ -210,6 +216,19 @@ class DecidedBox extends StatelessWidget {
         TextButton(
           onPressed: () => copyText(context, text, '送る文をコピーしました'),
           child: const Text('送る文をコピー', style: TextStyle(color: Palette.muted)),
+        ),
+        const SizedBox(height: 8),
+        // 会が決まったあとの次の一歩なので、金色の枠で目立たせる
+        ListTile(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Palette.accent),
+          ),
+          leading: const Icon(Icons.calculate, color: Palette.accent),
+          title: const Text('この会の会計をする', style: TextStyle(fontWeight: FontWeight.w900)),
+          subtitle: Text('$going人の名前を入れた状態からスタート', style: const TextStyle(fontSize: 12, color: Palette.muted)),
+          trailing: const Icon(Icons.chevron_right, color: Palette.accent),
+          onTap: () => context.push('/split?from=${party.id}'),
         ),
         // 取り消しはめったに使わないので、小さな文字のボタンにする
         TextButton(

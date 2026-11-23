@@ -22,6 +22,9 @@ abstract final class Palette {
   static const maybeText = Color(0xFFFFD47E);
   static const noFill = Color(0xFFFF6B74);
   static const noText = Color(0xFFFF9DA3);
+  // 傾斜の区分の色(.tier-blue / purple の --tb)
+  static const blue = Color(0xFF6F9BFF);
+  static const purple = Color(0xFF9D7BFF);
 }
 
 final ThemeData darkTheme = ThemeData(

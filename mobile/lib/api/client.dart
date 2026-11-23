@@ -101,6 +101,20 @@ class Api {
     ),
   );
 
+  /// 決まった日に行く人(幹事)。会計に名前を読み込む。soft = お酒を飲まない
+  Future<({String title, String date, List<({String name, bool soft})> attendees})> attendees(String partyId, String adminToken) async {
+    final j = await _send(
+      _http.get(_uri('/parties/${Uri.encodeComponent(partyId)}/attendees'), headers: {'authorization': 'Bearer $adminToken'}),
+    );
+    return (
+      title: j['title'] as String,
+      date: j['date'] as String,
+      attendees: [
+        for (final a in (j['attendees'] as List).cast<Map<String, dynamic>>()) (name: a['name'] as String, soft: a['soft'] == true),
+      ],
+    );
+  }
+
   Future<List<Station>> stations(String q) async {
     final j = await _send(_http.get(_uri('/stations', {'q': q})));
     return (j['stations'] as List).map((s) => Station.fromJson(s as Map<String, dynamic>)).toList();
