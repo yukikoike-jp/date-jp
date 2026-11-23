@@ -46,12 +46,25 @@ class InviteBox extends StatelessWidget {
 
 /// 幹事が決める: 日にちとお店(お店は下の一覧から選ぶ)
 class DecideBox extends StatelessWidget {
-  const DecideBox({super.key, required this.party, required this.date, required this.shopId, required this.onDate, required this.onLater});
+  const DecideBox({
+    super.key,
+    required this.party,
+    required this.date,
+    required this.shopId,
+    required this.onDate,
+    required this.onLater,
+    required this.onMust,
+    required this.pending,
+  });
   final PartyData party;
   final String? date;
   final String? shopId;
   final ValueChanged<String> onDate;
   final VoidCallback onLater;
+
+  /// 必ず来てほしい人を、付けたり外したりする
+  final ValueChanged<String> onMust;
+  final bool pending;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +73,34 @@ class DecideBox extends StatelessWidget {
     return Panel(
       children: [
         PanelTitle('幹事が決める', '${s.answered}人が答えました。いちばん良さそうな日とお店を先に選んであります。'),
+        // 部長や主役が行ける日を、日にちの候補の先頭に出す(Web の MustPicker)
+        const Row(
+          children: [
+            Icon(Icons.workspace_premium, size: 18, color: Palette.purple),
+            SizedBox(width: 6),
+            Text(
+              '必ず来てほしい人',
+              style: TextStyle(fontWeight: FontWeight.w900, color: Palette.purple),
+            ),
+          ],
+        ),
+        const Text('部長や主役が行ける日を優先。', style: Styles.note),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final w in s.who)
+              FilterChip(
+                selected: s.must.contains(w.name),
+                onSelected: pending ? null : (_) => onMust(w.name),
+                selectedColor: Palette.purple,
+                checkmarkColor: Colors.black,
+                label: Text(w.name, style: TextStyle(color: s.must.contains(w.name) ? Colors.black : Palette.purple)),
+              ),
+          ],
+        ),
+        const SizedBox(height: 20),
         const Text(
           '日にち',
           style: TextStyle(fontWeight: FontWeight.w900, color: Palette.muted),

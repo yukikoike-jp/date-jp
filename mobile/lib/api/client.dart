@@ -96,6 +96,15 @@ class Api {
     ),
   );
 
+  /// 必ず来てほしい人を置き換える(幹事)。答えた人の名前だけ
+  Future<void> setMust(String partyId, String adminToken, List<String> names) => _send(
+    _http.put(
+      _uri('/parties/${Uri.encodeComponent(partyId)}/must'),
+      headers: {..._json, 'authorization': 'Bearer $adminToken'},
+      body: jsonEncode({'names': names}),
+    ),
+  );
+
   /// 決定を取り消す(幹事)。みんなの回答は消えない
   Future<void> undecide(String partyId, String adminToken) => _send(
     _http.post(

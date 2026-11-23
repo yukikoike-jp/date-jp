@@ -82,6 +82,22 @@ class _PartyScreenState extends State<PartyScreen> {
     }
   }
 
+  /// 必ず来てほしい人を付けたり外したりする。いちばん良い日が変わるので、選んでいる日も選び直す
+  Future<void> _toggleMust(PartyData p, String name) async {
+    final api = AppScope.of(context).api;
+    final messenger = ScaffoldMessenger.of(context);
+    final must = p.summary.must;
+    setState(() => _pending = true);
+    try {
+      await api.setMust(widget.id, widget.adminToken!, must.contains(name) ? must.where((n) => n != name).toList() : [...must, name]);
+      await _reload();
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _pending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = _p;
@@ -164,6 +180,8 @@ class _PartyScreenState extends State<PartyScreen> {
           shopId: _shopId,
           onDate: (v) => setState(() => _date = v),
           onLater: () => setState(() => _shopId = null),
+          onMust: (name) => _toggleMust(p, name),
+          pending: _pending,
         ),
       // お店がまだ決まっていなければ、一覧から選ぶ(日にちだけ決めたあとは、押したお店でそのまま決める)
       if (d?.shopId == null) ..._shopList(p, decided: d),

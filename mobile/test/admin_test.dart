@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:material_ui/material_ui.dart' show FilterChip;
 import 'package:tsudoro/api/client.dart';
 import 'package:tsudoro/features/party/shop_card.dart';
 import 'package:tsudoro/main.dart';
@@ -85,6 +86,10 @@ void main() {
         party = answeredParty(
           decision: b['clear'] == true ? null : {'date': b['date'], 'start': 1140, 'shopId': b['shopId'], 'shopName': 'お店J1'},
         );
+        return jsonRes({'ok': true});
+      }
+      if (r.url.path.endsWith('/must')) {
+        (party['summary'] as Map<String, Object?>)['must'] = (jsonDecode(r.body) as Map<String, dynamic>)['names'];
         return jsonRes({'ok': true});
       }
       final p = jsonDecode(jsonEncode(party)) as Map<String, dynamic>;
@@ -173,6 +178,25 @@ void main() {
     // 開いた会は、ホームの「作った会」に出ている
     expect(find.text('作った会'), findsOneWidget);
     expect(find.text('忘年会'), findsOneWidget);
+  });
+
+  testWidgets('必ず来てほしい人を押すと選ばれ、もう一度押すと外れる', (tester) async {
+    await open(tester, '/p/abc123/admin?token=k');
+    final chip = find.widgetWithText(FilterChip, '佐藤');
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    final put = sent.where((r) => r.url.path.endsWith('/must')).single;
+    expect(put.method, 'PUT');
+    expect(put.headers['authorization'], 'Bearer k');
+    expect(jsonDecode(put.body), {
+      'names': ['佐藤'],
+    });
+    expect(tester.widget<FilterChip>(chip).selected, isTrue);
+
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    expect(jsonDecode(sent.where((r) => r.url.path.endsWith('/must')).last.body), {'names': []});
+    expect(tester.widget<FilterChip>(chip).selected, isFalse);
   });
 
   testWidgets('答える画面の URL から開いても、戻ると会のページ', (tester) async {

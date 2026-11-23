@@ -152,7 +152,7 @@ mobile/
 
 1. **API を作る**(Next.js 側): `/api/v1` を作り、`app/actions.ts` の関数を呼ぶ。Vitest で API のテスト。Web の動きは変えない → 済み(2026-11-22。通知の登録だけ残り)
 2. **Flutter の土台**: `mobile/` を作り、色・フォント・`go_router`・API の呼び出しまで。仮DB の `npm run dev` につないで動かす → 済み(2026-11-23。会の中身を読む画面とテストまで。アプリの id は仮に `com.tsudoro.tsudoro`。ストアに出す前に決める)
-3. **MVP の画面**: ホーム(作った会の一覧)→ 会を作る → 答える → 回答の集計 → 日にちとお店を決める → 共有。会計(`split`) → 済み(2026-11-23。「必ず来てほしい人」・二次会・お気に入りは Web だけ)
+3. **MVP の画面**: ホーム(作った会の一覧)→ 会を作る → 答える → 回答の集計 → 日にちとお店を決める → 共有。会計(`split`) → 済み(2026-11-23。「必ず来てほしい人」もアプリにある。二次会・お気に入りは Web だけ)
 4. **Universal Links / App Links と通知**: `/p/:id` と `/p/:id/admin` をアプリで開く。FCM の通知
 5. **テスト配信**: 先に Android(Google Play の内部テスト)、Mac が届いたら iOS(TestFlight) → Android の準備は済み(2026-11-23。アイコン・署名の設定・AAB。人がやることは `docs/android-release.md`)
 6. **2段目**: 集金、Play / Support、購入(iOS は Web へのリンク、Android は Google Play の課金)

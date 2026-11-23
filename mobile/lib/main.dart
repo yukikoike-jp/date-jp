@@ -34,7 +34,12 @@ GoRouter buildRouter(Local local) => GoRouter(
           path: 'p/:id',
           builder: (_, s) => PartyScreen(id: s.pathParameters['id']!),
           // 答える画面の URL から直接来ても、答えたあと・戻ったあとは会のページ
-          routes: [GoRoute(path: 'answer', builder: (_, s) => AnswerScreen(id: s.pathParameters['id']!))],
+          routes: [
+            GoRoute(
+              path: 'answer',
+              builder: (_, s) => AnswerScreen(id: s.pathParameters['id']!),
+            ),
+          ],
         ),
         GoRoute(
           path: 'p/:id/admin',
