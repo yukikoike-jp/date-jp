@@ -96,11 +96,12 @@ lib/store (Supabase / 仮DB)   lib/summary.ts   lib/shops.ts …
 
 ## Flutter 側
 
-### パッケージ(候補)
+### パッケージ
+- Flutter 3.50.1(`mobile/.fvmrc`。FVM で固定)。この版から Material は `material_ui` パッケージに分かれた(`import 'package:material_ui/material_ui.dart'`)
 - 画面の移り変わり: `go_router`(Universal Links の `/p/:id` などをそのまま道に使える)
-- 状態: `riverpod`
-- 通信: `dio` か `http`。JSON のモデルは `freezed` + `json_serializable`
-- 保存: 幹事の鍵は `flutter_secure_storage`、ほかは `shared_preferences`
+- 状態: 今は `StatefulWidget` と `FutureBuilder` だけ。画面が増えて受け渡しがつらくなったら `riverpod` を入れる
+- 通信: `http`。JSON は使うところだけを小さなクラスに読む(`freezed` などのコード生成は、モデルが増えてから)
+- 保存: `shared_preferences`(作った会と幹事の鍵、プライベート・仕事)。Web の localStorage と同じ扱い。端末を盗まれる心配が要る機能が来たら `flutter_secure_storage` に移す
 - 共有: `share_plus`。LINE は `https://line.me/R/share?text=` を `url_launcher` で開く
 - 外のリンク: `url_launcher` で**外のブラウザ**で開く。お店へは今と同じく `/go/...` を通す(紹介料と数えるため。アプリ内の WebView で開くと計測や報酬がずれやすい)
 - 課金: iOS は Web へのリンクなので、追加のパッケージは要らない(`url_launcher` で開く)。Android は `in_app_purchase`(Google Play の課金)
@@ -150,7 +151,7 @@ mobile/
 ## 進め方
 
 1. **API を作る**(Next.js 側): `/api/v1` を作り、`app/actions.ts` の関数を呼ぶ。Vitest で API のテスト。Web の動きは変えない → 済み(2026-11-22。通知の登録だけ残り)
-2. **Flutter の土台**: `mobile/` を作り、色・フォント・`go_router`・API の呼び出しまで。仮DB の `npm run dev` につないで動かす
+2. **Flutter の土台**: `mobile/` を作り、色・フォント・`go_router`・API の呼び出しまで。仮DB の `npm run dev` につないで動かす → 済み(2026-11-23。会の中身を読む画面とテストまで。アプリの id は仮に `com.tsudoro.tsudoro`。ストアに出す前に決める)
 3. **MVP の画面**: ホーム(作った会の一覧)→ 会を作る → 答える → 回答の集計 → 日にちとお店を決める → 共有。会計(`split`)
 4. **Universal Links / App Links と通知**: `/p/:id` と `/p/:id/admin` をアプリで開く。FCM の通知
 5. **テスト配信**: 先に Android(Google Play の内部テスト)、Mac が届いたら iOS(TestFlight)
