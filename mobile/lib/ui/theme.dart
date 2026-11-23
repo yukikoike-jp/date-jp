@@ -39,6 +39,11 @@ final ThemeData darkTheme = ThemeData(
     outlineVariant: Palette.border,
   ),
   appBarTheme: const AppBarTheme(backgroundColor: Palette.bg, foregroundColor: Palette.text, elevation: 0),
+  snackBarTheme: const SnackBarThemeData(
+    backgroundColor: Palette.surface2,
+    contentTextStyle: TextStyle(color: Palette.text),
+    behavior: SnackBarBehavior.floating,
+  ),
 );
 
 /// 名前「Tsudoro」の字(Poppins の太字)

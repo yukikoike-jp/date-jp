@@ -114,6 +114,20 @@ void main() {
       expect((lastBody()['answer'] as Map)['budget'], 4000);
     });
 
+    testWidgets('幹事が自分の予定を入れるときは「今回は行けない」を出さない', (tester) async {
+      tallScreen(tester);
+      final parties = jsonEncode([
+        {'id': 'abc123', 'title': '忘年会', 'token': 'k', 'createdAt': 0},
+      ]);
+      final app = TsudoroApp(api: api, local: await local({'nomi:audience': 'private', 'nomi:parties': parties}));
+      await tester.pumpWidget(app);
+      app.router.push('/p/abc123/answer');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '幹事');
+      await tester.pump();
+      expect(find.textContaining('今回は行けない'), findsNothing);
+    });
+
     testWidgets('「今回は行けない」は、全部の日を × にして送る', (tester) async {
       tallScreen(tester);
       final app = TsudoroApp(api: api, local: await local({'nomi:audience': 'private'}));

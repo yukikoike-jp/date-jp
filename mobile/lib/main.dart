@@ -52,7 +52,16 @@ class TsudoroApp extends StatelessWidget {
     return AppScope(
       api: api,
       local: local,
-      child: MaterialApp.router(title: 'Tsudoro', theme: darkTheme, routerConfig: router, debugShowCheckedModeBanner: false),
+      child: MaterialApp.router(
+        title: 'Tsudoro',
+        theme: darkTheme,
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+        // 端末の言語によらず日本語(漢字を日本の字の形で出し、部品の文言も日本語にする)
+        locale: const Locale('ja', 'JP'),
+        supportedLocales: const [Locale('ja', 'JP')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      ),
     );
   }
 }

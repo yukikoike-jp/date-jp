@@ -80,6 +80,9 @@ class _AnswerFormState extends State<_AnswerForm> {
   String? _error;
 
   bool get _editing => widget.previous != null;
+
+  /// この端末で作った会(幹事が自分の予定を入れる)
+  bool get _host => AppScope.of(context).local.adminToken(_party.id) != null;
   PartyData get _party => widget.party;
 
   @override
@@ -92,9 +95,10 @@ class _AnswerFormState extends State<_AnswerForm> {
       _a.dates.putIfAbsent(d, () => DateAnswer.no);
     }
     _name = TextEditingController(text: _a.name)..addListener(() => setState(() => _a.name = _name.text));
+    // 「もっと答える」は、そこに入れたものがあるときだけ開いておく(予算の「こだわらない」は入れていないのと同じ)
     _more =
         prev != null &&
-        (prev.budget != 0 ||
+        ((prev.budget != 0 && prev.budget != unlimitedBudget) ||
             prev.likes.isNotEmpty ||
             prev.avoids.isNotEmpty ||
             prev.memo.isNotEmpty ||
@@ -165,7 +169,8 @@ class _AnswerFormState extends State<_AnswerForm> {
             maxLength: maxName,
             decoration: const InputDecoration(hintText: 'みんなが分かる名前で', counterText: ''),
           ),
-          if (!_editing)
+          // 幹事には出さない(Web と同じ)
+          if (!_editing && !_host)
             TextButton(
               onPressed: _pending || _a.name.trim().isEmpty ? null : () => _submit(pass: true),
               child: Text(
