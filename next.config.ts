@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
   // 紹介料の付くリンクを使っているかどうかだけを、画面(components/PrNote.tsx)に渡す。リンクの中身は渡さない
   // 応援(OFUSE)のページの URL。空なら応援のリンクを出さない
   env: {
-    AFFILIATE_ON: process.env.AFFILIATE_URL_TEMPLATE?.includes("{url}") ? "1" : "",
+    // 2026-11-22 から、ホットペッパーの提携リンクは常に使う(lib/shops.ts の VC_HOTPEPPER_TEMPLATE)ので、広告の表示も常に出す
+    AFFILIATE_ON: "1",
     // ほかの予約サイト(一休・オズモール)のボタンを出すか。バリューコマースのサイト審査が済むまでは、
     // リンクも画像もバリューコマースの仮のページ・画像になるので出さない。審査が済んだら Vercel で OTHER_SITES_ON=1 にする
     OTHER_SITES_ON: process.env.OTHER_SITES_ON === "1" ? "1" : "",
