@@ -5,7 +5,7 @@ import '../../api/client.dart';
 import '../../ui/format.dart';
 import '../../ui/theme.dart';
 import '../../ui/widgets.dart';
-import 'share.dart';
+import '../../ui/share.dart';
 
 /// 枠(Web の panel)
 class Panel extends StatelessWidget {

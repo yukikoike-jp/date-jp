@@ -6,6 +6,7 @@ import '../../app_scope.dart';
 import '../../storage/local.dart';
 import '../../ui/theme.dart';
 import '../../ui/widgets.dart';
+import '../../ui/share.dart';
 
 const audiences = {
   'private': (label: 'プライベート', note: '学生・友達・サークル・同期', lead: 'サークル・友達の飲み会をURLひとつで'),
@@ -122,6 +123,17 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
               const SizedBox(height: 28),
               const _OpenByUrl(),
+              const SizedBox(height: 32),
+              // 方針は Web のページを外のブラウザで開く(アプリの中に同じ文を持たない)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: () => openOutside('$siteOrigin/privacy'),
+                    child: const Text('プライバシーポリシー', style: TextStyle(fontSize: 12, color: Palette.muted)),
+                  ),
+                ],
+              ),
             ],
           ),
         ),

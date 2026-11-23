@@ -2,7 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../api/client.dart';
 import '../../ui/theme.dart';
-import 'share.dart';
+import '../../ui/share.dart';
 
 const _smokingLabel = {'ok': '喫煙可', 'partial': '分煙', 'no': '全面禁煙'};
 

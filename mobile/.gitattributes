@@ -1,0 +1,5 @@
+# Windows で作っても LF にそろえる(リポジトリの決まり)
+* text=auto eol=lf
+*.png binary
+*.ttf binary
+*.jar binary

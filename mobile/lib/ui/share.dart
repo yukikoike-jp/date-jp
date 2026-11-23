@@ -3,7 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../api/client.dart';
+import '../api/client.dart';
 
 /// Web のページの場所(API の場所から /api/v1 を除いたもの)。開発では npm run dev を指す
 final siteOrigin = Uri.parse(apiBase).replace(path: '').toString();

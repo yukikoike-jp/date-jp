@@ -7,7 +7,7 @@ import '../../domain/split.dart';
 import '../../ui/format.dart';
 import '../../ui/theme.dart';
 import '../../ui/widgets.dart';
-import '../party/share.dart';
+import '../../ui/share.dart';
 
 const _tones = {
   'red': Palette.noFill,

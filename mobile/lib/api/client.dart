@@ -1,13 +1,17 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
 
 export 'models.dart';
 
-// 開発は --dart-define=API_BASE=... で変える。既定は Android エミュレーターから見た npm run dev
-const apiBase = String.fromEnvironment('API_BASE', defaultValue: 'http://10.0.2.2:3000/api/v1');
+// release は本番。debug は Android エミュレーターから見た npm run dev。--dart-define=API_BASE=... で変えられる
+const apiBase = String.fromEnvironment(
+  'API_BASE',
+  defaultValue: kReleaseMode ? 'https://www.tsudoro.com/api/v1' : 'http://10.0.2.2:3000/api/v1',
+);
 
 /// API の失敗。message は画面にそのまま出せる日本語(docs/api.md)
 class ApiException implements Exception {
