@@ -29,10 +29,17 @@ class _PartyScreenState extends State<PartyScreen> {
   String? _shopId;
   var _pending = false;
 
+  /// この画面がいちばん上にあるか(上に重ねた画面から戻ったら読み直す)
+  var _onTop = true;
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (_p == null && _loadError == null) _reload();
+    // ModalRoute.of に頼ると、上の画面(答える・会計)が閉じたときにもここが呼ばれる。
+    // 答える画面を URL から直接開いたときも、戻れば新しい人数が出る
+    final onTop = ModalRoute.of(context)?.isCurrent ?? true;
+    if ((_p == null && _loadError == null) || (onTop && !_onTop)) _reload();
+    _onTop = onTop;
   }
 
   Future<void> _reload() async {
@@ -57,10 +64,8 @@ class _PartyScreenState extends State<PartyScreen> {
     }
   }
 
-  Future<void> _answer() async {
-    final saved = await context.push<bool>('/p/${widget.id}/answer');
-    if (saved == true && mounted) await _reload();
-  }
+  // 答えたあとの読み直しは、戻ってきたときの didChangeDependencies がする
+  void _answer() => context.push('/p/${widget.id}/answer');
 
   Future<void> _decide({required String? date, String? shopId, bool clear = false}) async {
     final api = AppScope.of(context).api;

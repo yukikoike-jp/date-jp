@@ -47,13 +47,18 @@ void main() {
   group('答える', () {
     late List<http.Request> sent;
     late Api api;
+    late int answered;
 
     setUp(() {
       sent = [];
+      answered = 2;
       api = Api(
         client: MockClient((r) async {
           sent.add(r);
-          if (r.method == 'POST' && r.url.path.endsWith('/answers')) return jsonRes({'ok': true, 'answerId': 'a1', 'token': 't1'});
+          if (r.method == 'POST' && r.url.path.endsWith('/answers')) {
+            answered++;
+            return jsonRes({'ok': true, 'answerId': 'a1', 'token': 't1'});
+          }
           if (r.url.path.endsWith('/answers/a1')) {
             if (r.headers['x-answer-token'] != 't1') return jsonRes({'ok': false, 'error': '見つかりません'}, 404);
             return jsonRes({
@@ -68,7 +73,11 @@ void main() {
               },
             });
           }
-          return jsonRes({...partyJson, 'admin': false});
+          return jsonRes({
+            ...partyJson,
+            'summary': {'answered': answered},
+            'admin': false,
+          });
         }),
       );
     });
@@ -112,6 +121,20 @@ void main() {
       expect(lastBody()['answerId'], 'a1');
       expect(lastBody()['token'], 't1');
       expect((lastBody()['answer'] as Map)['budget'], 4000);
+    });
+
+    testWidgets('答える画面の URL から答えても、戻った会のページの人数は新しい', (tester) async {
+      tallScreen(tester);
+      final app = TsudoroApp(api: api, local: await local({'nomi:audience': 'private'}));
+      await tester.pumpWidget(app);
+      app.router.go('/p/abc123/answer');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '山田');
+      await tester.tap(find.text('二次会まで'));
+      await tester.pump();
+      await tester.tap(find.text('この内容で答える'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('3人が回答'), findsOneWidget);
     });
 
     testWidgets('幹事が自分の予定を入れるときは「今回は行けない」を出さない', (tester) async {
