@@ -6,7 +6,6 @@ import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
 import { useRouter } from "next/navigation";
 import { Wallet } from "lucide-react";
 import { rememberCollection } from "@/lib/myCollections";
-import { loadLicense, useFunAccess } from "./ProGate";
 import { isFormal, loadAudience, type Audience } from "@/lib/audience";
 import { loadMyParties, type MyParty } from "@/lib/myParties";
 import { dateLabel, yen } from "@/lib/sendai";
@@ -198,30 +197,21 @@ export function SplitClient() {
   const router = useRouter();
   const [collecting, startCollecting] = useTransition();
   const [collectError, setCollectError] = useState<string | null>(null);
-  const access = useFunAccess();
   function toCollection() {
     setCollectError(null);
-    // 集金チェックは Tsudoro+。買う前は、もやのかかった集金チェックへ
-    if (!access.unlocked) {
-      router.push("/fun?tab=collect");
-      return;
-    }
     startCollecting(async () => {
-      const r = await startCollection(
-        {
-          title,
-          audience,
-          total: totalYen,
-          subsidy: isFormal(audience) && subsidyYen ? { kind: subsidyKind, yen: Number(subsidyYen) } : null,
-          unit,
-          organizer,
-          people: people.map((p, i) => {
-            const w = weightOf(p);
-            return { name: nameOf(p, i), tenths: w.tenths, label: w.label, mark: w.mark, tone: w.tone };
-          }),
-        },
-        loadLicense(),
-      );
+      const r = await startCollection({
+        title,
+        audience,
+        total: totalYen,
+        subsidy: isFormal(audience) && subsidyYen ? { kind: subsidyKind, yen: Number(subsidyYen) } : null,
+        unit,
+        organizer,
+        people: people.map((p, i) => {
+          const w = weightOf(p);
+          return { name: nameOf(p, i), tenths: w.tenths, label: w.label, mark: w.mark, tone: w.tone };
+        }),
+      });
       if (!r.ok) {
         setCollectError(r.error);
         return;

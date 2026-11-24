@@ -47,7 +47,7 @@ const TOOL_TONE: Record<Tool, Tone> = {
 };
 
 /** 買わなくても使える道具(幹事メモと、Play のルーレット。ワードウルフは 11-21 に有料へ戻した。2026-11-21。集金チェックは Tsudoro+ の主役にした) */
-const FREE_TOOLS: Tool[] = ["memo", "wheel"];
+const FREE_TOOLS: Tool[] = ["memo", "wheel", "collect"];
 
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
 const NEEDS_NAMES: Tool[] = ["wolf", "lie", "wheel", "seat"];

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { accessHint, mapsUrl } from "@/lib/maps";
 import type { Shop } from "@/lib/shops";
 import { areaLabel } from "@/lib/sendai";
+import { AdSlot } from "./AdSlot";
 import { PrNote } from "./PrNote";
 import { OtherSiteCandidate } from "./OtherSites";
 import { placeOtherSites, stationFromAccess, type Scene } from "@/lib/otherSites";
@@ -221,6 +222,8 @@ export function ShopList({
           <ChevronDown className="size-4" aria-hidden />
         </button>
       )}
+      {/* 広告の枠(お店の候補とは分けて1つ。広告がなければ何も出ない)。二次会の一覧(others なし)と見本には出さない */}
+      {others && !isSample && shops.length > 0 && <AdSlot slotKey={id ?? partyId} className="mt-4" />}
       {!isSample && <PrNote className="mt-3" />}
       {/* ホットペッパーの規約で、クレジットと、写真を使うときの「画像提供」の表示が必要 */}
       {!isSample && (

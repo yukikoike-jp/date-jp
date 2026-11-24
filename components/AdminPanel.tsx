@@ -3,7 +3,7 @@
 import type { Scene } from "@/lib/otherSites";
 import { BottomSheet } from "./BottomSheet";
 import { toast } from "./Toast";
-import { CalendarClock, Calculator, Check, ChevronRight, KeyRound, PartyPopper, Users } from "lucide-react";
+import { CalendarClock, Check, ChevronRight, KeyRound, PartyPopper, Users, Wallet } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { decide } from "@/app/actions";
@@ -192,20 +192,20 @@ export function AdminPanel({ partyId, title, token, created, ranking, answered, 
               // 名前は URL に載せず、このタブの中だけで渡す
               try {
                 sessionStorage.setItem(SPLIT_NAMES_KEY, JSON.stringify(attendees));
-                // 会計の「何の会計?」にも、会の名前と日付を最初から入れておく
+                // 集金の「何の集金?」にも、会の名前と日付を最初から入れておく
                 if (decision) sessionStorage.setItem(SPLIT_TITLE_KEY, `${title} ${dateLabel(decision.date).split("(")[0]}`.slice(0, 30));
               } catch {}
-              router.push(`/split?from=${partyId}`);
+              router.push(`/collect/new?from=${partyId}`);
             }}
             // 会が決まったあとの次の一歩なので、ほかのボタンより目立つ金色の枠のカードにする
             className="flex w-full items-center gap-3 rounded-2xl border border-accent/60 bg-accent/10 px-4 py-3.5 text-left transition-colors hover:bg-accent/15 active:scale-[0.99]"
           >
             <span className="grid size-12 shrink-0 place-items-center rounded-xl bg-accent text-accent-text">
-              <Calculator className="size-6" aria-hidden />
+              <Wallet className="size-6" aria-hidden />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block text-base font-black">この会の会計をする</span>
-              <span className="mt-0.5 block text-xs text-muted">行く{attendees.length}人の名前が入った状態で開きます。</span>
+              <span className="block text-base font-black">この会の集金をする</span>
+              <span className="mt-0.5 block text-xs text-muted">行く{attendees.length}人の名前が入った状態で開きます。誰が払ったかを確かめられます。</span>
             </span>
             <ChevronRight className="size-5 shrink-0 text-accent" aria-hidden />
           </button>

@@ -2,14 +2,15 @@
 
 import { ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { startCollection } from "@/app/actions";
 import { loadAudience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
-import { loadLicense, useFunAccess } from "./ProGate";
+import { SPLIT_NAMES_KEY, SPLIT_TITLE_KEY } from "./SplitClient";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
-// 集金をすぐはじめる。割り勘の計算の画面を通らず、合計と名前を入れるだけで集金のページ(幹事の画面)に進む。全員同じ額で割る
+// 集金をすぐはじめる(無料)。合計と名前を入れるだけで集金のページ(幹事の画面)に進む。全員同じ額で割る。
+// 会の画面から来たときは、決まった会の行く人の名前と会の名前が、最初から入っている
 
 /** 名前の一覧にする。改行・カンマ・読点で区切り、空は捨てて、20文字・30人まで */
 function parseNames(text: string): string[] {
@@ -25,20 +26,39 @@ export function QuickCollect() {
   const [title, setTitle] = useState("");
   const [total, setTotal] = useState("");
   const [names, setNames] = useState("");
+  // 立て替えた人(払う人に数えない)。名前の一覧の何番目か
+  const [organizer, setOrganizer] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const access = useFunAccess();
+
+  // 会の画面から渡された名前と会の名前を受け取る(URL には載せず、このタブの中だけで渡す)
+  useEffect(() => {
+    try {
+      const handed: (string | { name: string })[] = JSON.parse(sessionStorage.getItem(SPLIT_NAMES_KEY) ?? "[]");
+      const handedTitle = sessionStorage.getItem(SPLIT_TITLE_KEY) ?? "";
+      if (Array.isArray(handed) && handed.length > 0) {
+        /* eslint-disable react-hooks/set-state-in-effect */
+        setNames(handed.map((n) => (typeof n === "string" ? n : String(n.name))).join("\n"));
+        if (handedTitle) setTitle(handedTitle.slice(0, 30));
+        /* eslint-enable react-hooks/set-state-in-effect */
+      }
+      // 開発中は準備が2回走るので、すぐには消さない
+      setTimeout(() => {
+        try {
+          sessionStorage.removeItem(SPLIT_NAMES_KEY);
+          sessionStorage.removeItem(SPLIT_TITLE_KEY);
+        } catch {}
+      }, 0);
+    } catch {}
+  }, []);
 
   const list = parseNames(names);
   const totalYen = Number(total);
   const ready = Number.isInteger(totalYen) && totalYen > 0 && list.length >= 2;
+  const organizerAt = Math.min(organizer, Math.max(0, list.length - 1));
 
   function submit() {
     setError(null);
-    if (!access.unlocked) {
-      router.push("/fun?tab=collect");
-      return;
-    }
     start(async () => {
       const r = await startCollection({
         title,
@@ -46,10 +66,9 @@ export function QuickCollect() {
         total: totalYen,
         subsidy: null,
         unit: 100,
-        // いちばん上の名前が幹事(立て替えた人)。払う人に数えない
-        organizer: 0,
+        organizer: organizerAt,
         people: list.map((name) => ({ name, tenths: 10, label: "", mark: "", tone: "yellow" })),
-      }, loadLicense());
+      });
       if (!r.ok) {
         setError(r.error);
         return;
@@ -62,7 +81,7 @@ export function QuickCollect() {
   return (
     <div className="mx-4 space-y-4">
       <label className="block">
-        <span className="text-sm font-bold text-white/70">何の会計?(なくてもOK)</span>
+        <span className="text-sm font-bold text-white/70">何の集金?(なくてもOK)</span>
         <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 30))} placeholder="例: ゼミの打ち上げ 11/30" className={`${INPUT} mt-1.5`} />
       </label>
       <label className="block">
@@ -76,7 +95,7 @@ export function QuickCollect() {
         />
       </label>
       <label className="block">
-        <span className="text-sm font-bold text-white/70">割る人の名前(1行に1人。いちばん上が立て替えたあなた)</span>
+        <span className="text-sm font-bold text-white/70">集める人の名前(1行に1人)</span>
         <textarea
           value={names}
           onChange={(e) => setNames(e.target.value)}
@@ -86,6 +105,18 @@ export function QuickCollect() {
         />
         <span className="mt-1 block text-xs text-muted">{list.length}人 ・ 全員同じ額で割ります</span>
       </label>
+      {list.length >= 2 && (
+        <label className="block">
+          <span className="text-sm font-bold text-white/70">立て替えた人(払う人に数えません)</span>
+          <select value={organizerAt} onChange={(e) => setOrganizer(Number(e.target.value))} className={`${INPUT} mt-1.5`}>
+            {list.map((n, i) => (
+              <option key={`${i}-${n}`} value={i}>
+                {n}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       {error && (
         <p role="alert" className="text-sm font-bold text-danger">
           {error}

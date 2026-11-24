@@ -1,10 +1,10 @@
-import { CalendarDays, Calculator, Check, Store } from "lucide-react";
+import { CalendarDays, Wallet, Check, Store } from "lucide-react";
 
 // 飲み会のどの段階にいるか。もとにした KANJI と同じく、上のバーの下に3つの段階を細い線で並べる
 const STEPS = [
   { Icon: CalendarDays, label: "日程調整" },
   { Icon: Store, label: "お店探し" },
-  { Icon: Calculator, label: "会計精算" },
+  { Icon: Wallet, label: "集金" },
 ] as const;
 
 export function StepBar({ current }: { current: 0 | 1 | 2 }) {

@@ -1,11 +1,10 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, Calculator, CalendarDays, ChevronDown, ChevronRight, GraduationCap, Lock, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, CalendarDays, ChevronDown, ChevronRight, GraduationCap, Lock, Store, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PartiesMenu } from "./PartiesMenu";
 import { AUDIENCES, AUDIENCE_ORDER, loadAudience, saveAudience, type Audience } from "@/lib/audience";
-import { WEIGHTS } from "@/lib/split";
 import { Wordmark } from "./Logo";
 import { InstallHint } from "./InstallHint";
 import { SplashIntro } from "./SplashIntro";
@@ -38,28 +37,28 @@ function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { 
 }
 
 /**
- * 学生・プライベート・会社で変えるところ。見出しの一言と、2つの道具(お店・会計)の説明
+ * 学生・プライベート・会社で変えるところ。見出しの一言と、2つの道具(お店・集金)の説明
  */
 const HOME_BY_AUDIENCE: Record<
   Audience,
-  { lead: string; shops: string; split: string; play: string }
+  { lead: string; shops: string; collect: string; play: string }
 > = {
   student: {
     lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
-    split: "割り勘と先輩多めの計算",
+    collect: "誰が払ったかを確かめる",
     play: "幹事はラクに、会はもっと楽しく",
   },
   private: {
     lead: "サークル・友達の飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
-    split: "割り勘と先輩多めの計算",
+    collect: "誰が払ったかを確かめる",
     play: "幹事はラクに、会はもっと楽しく",
   },
   worker: {
     lead: "歓送迎会・忘年会をURLひとつで",
     shops: "個室・喫煙可で探す",
-    split: "補助や上司多めの計算",
+    collect: "誰が払ったかを確かめる",
     // 会社の会では、ゲームではなく、会話・あいさつ・準備(話題ガチャ・ひとこと・幹事メモ)
     play: "幹事はラクに、会はもっと楽しく",
   },
@@ -161,21 +160,8 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
     );
   }
 
-  const tiers = WEIGHTS[audience];
   // 学生・プライベート・会社で、会の一覧を分ける(いま選んでいるものの会だけを出す)
   const home = HOME_BY_AUDIENCE[audience];
-  const tierIcon = (
-    // 傾斜の区分の色を、高さの違う棒で並べる(多めの人ほど高い)
-    <span aria-hidden className="flex h-6 items-end gap-[3px]">
-      {tiers.map((w) => (
-        <span
-          key={w.key}
-          className={`tier-${w.tone} w-[5px] rounded-full bg-[var(--tb)]`}
-          style={{ height: `${Math.round((w.tenths / 15) * 100)}%` }}
-        />
-      ))}
-    </span>
-  );
 
   return (
     <div className="anim-rise pwa-top mx-auto flex min-h-dvh max-w-xl flex-col gap-5 px-4 pb-8">
@@ -205,7 +191,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
             {[
               { Icon: CalendarDays, label: "日程調整" },
               { Icon: Store, label: "お店探し" },
-              { Icon: Calculator, label: "会計精算" },
+              { Icon: Wallet, label: "集金" },
             ].map(({ Icon, label }, i) => (
               <li key={label} className="flex flex-1 items-start">
                 <span className="anim-stagger flex flex-1 flex-col items-center gap-1.5" style={{ "--i": i + 2 } as React.CSSProperties}>
@@ -226,19 +212,10 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
       </Link>
 
       <section>
-        {/* ツールは「お店」と「会計」の2つだけ。集金は会計の中から開く */}
+        {/* ツールは「お店」と「集金」の2つだけ(2026-11-25)。Tsudoro+ の入口(/fun)は、お金を取らない方針なので、ホームから隠した */}
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店探し" sub={home.shops} />
-          <ToolTile href="/split" icon={tierIcon} title="会計" sub={home.split} />
-          {/* 有料プレミアムの入口。何が有料かが、ホームですぐ分かるようにする(鍵のマークだけ) */}
-          <ToolTile
-            href="/fun"
-            icon={<Sparkles className="size-6" aria-hidden />}
-            title="Tsudoro+"
-            sub={home.play}
-            lockOnly
-            wide
-          />
+          <ToolTile href="/collect" icon={<Wallet className="size-6" aria-hidden />} title="集金" sub={home.collect} />
         </div>
       </section>
 
