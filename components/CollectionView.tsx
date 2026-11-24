@@ -13,7 +13,7 @@ import { SendButtons, useCanShare } from "./SendButtons";
 
 // 集金のページ。払った人は自分で「払った」を押し(申告)、幹事が受け取りを確かめて記録する(2段階)。
 // 払ったと数えるのは幹事が記録したものだけ。色だけでなく ✓ と文字でも分かるようにする。
-// 大人数でも、まだの人が上に来る。払い方(PayPay・現金)ごとの人数も出す。集金のページを作るのは Tsudoro+(2026-11-21)。前に作ったページはそのまま使える
+// 大人数でも、まだの人が上に来る。払い方(PayPay・現金)ごとの人数も出す。集金は無料(2026-11-25)
 
 /** 幹事の鍵。集金のページを作った端末に残し、鍵なしの URL で開いても幹事として使えるようにする */
 const hostKey = (id: string) => `nomi:collect:${id}`;
@@ -121,40 +121,56 @@ export function CollectionView({
 
 
       <section className="mx-4 rounded-3xl border panel px-5 py-5" aria-live="polite">
-        <p className="flex items-center gap-2 font-black">
-          <Wallet className="size-5" aria-hidden />
-          {payers.length}人中{payers.length - unpaid.length}人が支払い済み
-        </p>
-        <div className="tier-green mt-3 h-2.5 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+        {/* いちばん大きく: あといくら集まっていないか */}
+        {unpaid.length === 0 ? (
+          <p className="tier-green anim-pop relative inline-flex items-center gap-2 text-2xl font-black text-[var(--tc)]">
+            <Burst />
+            <Check className="size-7" aria-hidden />
+            全員の支払い完了
+          </p>
+        ) : (
+          <>
+            <p className="text-xs font-bold text-muted">まだ集まっていない金額</p>
+            <p className="mt-0.5 flex items-baseline gap-2">
+              <span className="text-4xl font-black tracking-tight tabular-nums">{yen(unpaidYen)}</span>
+              <span className="text-sm font-bold text-muted">あと{unpaid.length}人</span>
+            </p>
+          </>
+        )}
+        <div className="tier-green mt-4 h-3 overflow-hidden rounded-full bg-surface-2" aria-hidden>
           <div
             className="anim-grow h-full rounded-full bg-[var(--tb)]"
             style={{ width: `${payers.length ? ((payers.length - unpaid.length) / payers.length) * 100 : 0}%` }}
           />
         </div>
-        <p className="mt-2 text-sm">
-          {unpaid.length === 0 ? (
-            <span className="tier-green anim-pop relative inline-flex items-center gap-1 font-bold text-[var(--tc)]">
-              <Burst />
-              <Check className="size-4" aria-hidden />
-              全員の支払い完了
-            </span>
-          ) : (
-            <span className="font-bold">
-              まだ{unpaid.length}人・あと{yen(unpaidYen)}
-              {isHost && claimedCount > 0 && <span className="ml-2 text-accent">払ったと申告 {claimedCount}人</span>}
-            </span>
-          )}
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-bold text-muted">
+          <Wallet className="size-3.5" aria-hidden />
+          {payers.length}人中{payers.length - unpaid.length}人が支払い済み
         </p>
+        {/* 人数の内訳。幹事には、確かめが要る人(申告)も別に出す */}
+        <div className={`mt-4 grid gap-2 text-center ${isHost ? "grid-cols-3" : "grid-cols-2"}`}>
+          <div className="tier-green rounded-2xl bg-[var(--ts)] px-2 py-2.5">
+            <p className="text-xl font-black tabular-nums text-[var(--tc)]">{payers.length - unpaid.length}</p>
+            <p className="text-[11px] font-bold text-[var(--tc)]">受け取り済み</p>
+          </div>
+          {isHost && (
+            <div className={`rounded-2xl px-2 py-2.5 ${claimedCount > 0 ? "bg-accent/18 ring-1 ring-accent/50" : "bg-surface-2"}`}>
+              <p className={`text-xl font-black tabular-nums ${claimedCount > 0 ? "text-accent" : "text-white/40"}`}>{claimedCount}</p>
+              <p className={`text-[11px] font-bold ${claimedCount > 0 ? "text-accent" : "text-muted"}`}>払ったと申告</p>
+            </div>
+          )}
+          <div className="rounded-2xl bg-surface-2 px-2 py-2.5">
+            <p className={`text-xl font-black tabular-nums ${unpaid.length - claimedCount > 0 ? "text-danger" : "text-white/40"}`}>{unpaid.length - claimedCount}</p>
+            <p className="text-[11px] font-bold text-muted">まだ</p>
+          </div>
+        </div>
         {isHost && byMethod.length > 0 && (
-          <p className="mt-2 flex flex-wrap gap-1.5 text-xs font-bold" aria-label="払い方ごとの人数">
+          <p className="mt-3 flex flex-wrap gap-1.5 text-xs font-bold" aria-label="払い方ごとの人数">
             {byMethod.map((m) => (
               <span key={m.key} className="rounded-full bg-surface-2 px-2.5 py-1 ring-1 ring-white/10">
                 {m.label} {m.count}人
               </span>
             ))}
-            {unpaid.length - claimedCount > 0 && (
-              <span className="rounded-full bg-surface-2 px-2.5 py-1 text-danger ring-1 ring-white/10">まだ {unpaid.length - claimedCount}人</span>
-            )}
           </p>
         )}
         {!isHost && unpaid.length > 0 && (
@@ -291,7 +307,21 @@ export function CollectionView({
         return (
           <>
             <ul className="mx-4 mt-3 divide-y divide-border overflow-hidden rounded-3xl border panel">
-              {(fold ? open : ordered).map(renderRow)}
+              {(fold ? open : ordered).flatMap((p, i, list) => {
+                const g = rank(p);
+                const first = i === 0 || rank(list[i - 1]) !== g;
+                const label = g === 0 ? "払ったと申告(確かめてください)" : g === 1 ? "まだの人" : g === 2 ? "立て替えた人" : "受け取り済み";
+                return [
+                  ...(first
+                    ? [
+                        <li key={`h${g}`} className="bg-surface-2/60 px-4 py-1.5 text-[11px] font-black text-muted">
+                          {label}
+                        </li>,
+                      ]
+                    : []),
+                  renderRow(p, i),
+                ];
+              })}
             </ul>
             {fold && (
               <details className="group mx-4 mt-2 overflow-hidden rounded-3xl border panel">
