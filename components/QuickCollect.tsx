@@ -1,11 +1,13 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
-import { startCollection } from "@/app/actions";
+import { partyAttendees, partyStatuses, startCollection } from "@/app/actions";
 import { loadAudience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
+import { loadMyParties, type MyParty } from "@/lib/myParties";
+import { dateLabel } from "@/lib/sendai";
 import { SPLIT_NAMES_KEY, SPLIT_TITLE_KEY } from "./SplitClient";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
@@ -30,6 +32,41 @@ export function QuickCollect() {
   const [organizer, setOrganizer] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  // この端末で作った、決まった会(新しい順)。押すと、行く人の名前と会の名前を引き継ぐ
+  const [decided, setDecided] = useState<{ party: MyParty; date: string }[]>([]);
+  const [importing, startImporting] = useTransition();
+  const [importedId, setImportedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const mine = loadMyParties();
+    if (mine.length === 0) return;
+    partyStatuses(mine.map((p) => p.id))
+      .then((st) =>
+        setDecided(
+          mine
+            .filter((p) => st[p.id]?.decision)
+            .map((p) => ({ party: p, date: st[p.id].decision!.date }))
+            .sort((a, b) => b.date.localeCompare(a.date))
+            .slice(0, 8),
+        ),
+      )
+      .catch(() => {});
+  }, []);
+
+  function importParty(p: MyParty) {
+    if (names.trim() && importedId !== p.id && !window.confirm(`いまの名前を消して、「${p.title}」の行く人を引き継ぎますか?`)) return;
+    startImporting(async () => {
+      const r = await partyAttendees(p.id, p.token);
+      if (!r || r.attendees.length === 0) {
+        window.alert("この会の行く人を読み込めませんでした");
+        return;
+      }
+      setNames(r.attendees.slice(0, 30).map((a) => a.name.slice(0, 20)).join("\n"));
+      setTitle(`${r.title} ${dateLabel(r.date).split("(")[0]}`.slice(0, 30));
+      setOrganizer(0);
+      setImportedId(p.id);
+    });
+  }
 
   // 会の画面から渡された名前と会の名前を受け取る(URL には載せず、このタブの中だけで渡す)
   useEffect(() => {
@@ -80,6 +117,30 @@ export function QuickCollect() {
 
   return (
     <div className="mx-4 space-y-4">
+      {/* 過去の会から引き継ぐ。名前と会の名前が入るので、合計だけ入れれば集金を始められる */}
+      {decided.length > 0 && (
+        <section>
+          <p className="mb-1.5 px-1 text-xs font-black text-accent">決まった会から引き継ぐ</p>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {decided.map(({ party: p, date }) => (
+              <button
+                key={p.id}
+                type="button"
+                disabled={importing}
+                aria-pressed={importedId === p.id}
+                onClick={() => importParty(p)}
+                className={`flex min-h-11 shrink-0 items-center gap-1.5 rounded-full px-4 text-left ring-1 transition active:scale-95 disabled:opacity-50 ${
+                  importedId === p.id ? "bg-accent/18 ring-accent/60" : "bg-surface ring-white/12 hover:bg-stone-800"
+                }`}
+              >
+                <Users className="size-3.5 shrink-0 text-accent" aria-hidden />
+                <span className="max-w-[9rem] truncate text-sm font-black">{p.title}</span>
+                <span className="text-xs text-white/40">{dateLabel(date)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
       <label className="block">
         <span className="text-sm font-bold text-white/70">何の集金?(なくてもOK)</span>
         <input value={title} onChange={(e) => setTitle(e.target.value.slice(0, 30))} placeholder="例: ゼミの打ち上げ 11/30" className={`${INPUT} mt-1.5`} />

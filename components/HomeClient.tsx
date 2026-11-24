@@ -13,11 +13,11 @@ import { SplashIntro } from "./SplashIntro";
 type Phase = "loading" | "splash" | "choose" | "home";
 
 /** ツールの四角。もとにした KANJI の「お店を探す」「会計を試算する」と同じ、2つ並べる大きめの四角。wide = 2つぶんの幅で横長に(有料プレミアムの入口) */
-function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false }: { href: string; icon: React.ReactNode; title: string; sub: string; lockOnly?: boolean; wide?: boolean }) {
+function ToolTile({ href, icon, title, sub, lockOnly = false, wide = false, tone = "" }: { tone?: string; href: string; icon: React.ReactNode; title: string; sub: string; lockOnly?: boolean; wide?: boolean }) {
   return (
     <Link
       href={href}
-      className={`relative flex items-center rounded-2xl bg-surface text-center ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-95 ${
+      className={`${tone} relative flex items-center rounded-2xl bg-surface text-center ring-1 ring-white/8 transition hover:bg-stone-800 active:scale-95 ${
         wide ? "col-span-2 gap-4 px-4 py-4 text-left" : "flex-col gap-3 px-3 py-5"
       }`}
     >
@@ -193,7 +193,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
               { Icon: Store, label: "お店探し" },
               { Icon: Wallet, label: "集金" },
             ].map(({ Icon, label }, i) => (
-              <li key={label} className="flex flex-1 items-start">
+              <li key={label} className={`${label === "集金" ? "tone-green " : ""}flex flex-1 items-start`}>
                 <span className="anim-stagger flex flex-1 flex-col items-center gap-1.5" style={{ "--i": i + 2 } as React.CSSProperties}>
                   <span className="grid size-11 place-items-center rounded-2xl bg-accent/12 text-accent ring-1 ring-accent/30">
                     <Icon className="size-5" aria-hidden />
@@ -215,7 +215,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         {/* ツールは「お店」と「集金」の2つだけ(2026-11-25)。Tsudoro+ の入口(/fun)は、お金を取らない方針なので、ホームから隠した */}
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店探し" sub={home.shops} />
-          <ToolTile href="/collect" icon={<Wallet className="size-6" aria-hidden />} title="集金" sub={home.collect} />
+          <ToolTile href="/collect" icon={<Wallet className="size-6" aria-hidden />} title="集金" sub={home.collect} tone="tone-green" />
         </div>
       </section>
 
