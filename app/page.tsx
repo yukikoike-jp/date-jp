@@ -57,6 +57,9 @@ export default function Home() {
                 <p className="mt-2.5 text-xs leading-[1.5]">
                   学生やサークルの飲み会から会社の忘年会・新年会・歓送迎会まで使えます。アカウント登録とアプリのインストールは不要です。
                 </p>
+                <p className="mt-2.5 text-xs leading-[1.5]">
+                  ご利用は無料で、ユーザーにお金はかかりません。お店の予約が成立したときに提携先から受け取る紹介料と、広告で運営しています。
+                </p>
               </div>
             </details>
             <details className="group px-3 [&_summary::-webkit-details-marker]:hidden">

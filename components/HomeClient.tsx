@@ -223,14 +223,12 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
 
       {/* いちばん下。方針へのリンクと説明は小さくまとめ、ホームの上にだけ出す(起動の演出や選ぶ画面には出さない) */}
       <div className="mt-auto space-y-1.5 pt-4">
-        {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く(プライバシーポリシーは、下の説明の行の中) */}
-        {process.env.BILLING_ON === "1" && (
-          <p className="flex justify-center text-[11px]">
-            <Link href="/legal" className="inline-flex min-h-9 items-center text-white/55 underline underline-offset-2 hover:text-white/80">
-              特定商取引法に基づく表記
-            </Link>
-          </p>
-        )}
+        {/* 無料で使えること・収益の仕組みを書いた、特定商取引法の表記(プライバシーポリシーは、下の説明の行の中) */}
+        <p className="flex justify-center text-[11px]">
+          <Link href="/legal" className="inline-flex min-h-9 items-center text-white/55 underline underline-offset-2 hover:text-white/80">
+            特定商取引法に基づく表記
+          </Link>
+        </p>
         {about}
       </div>
     </div>
