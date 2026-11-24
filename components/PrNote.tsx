@@ -1,7 +1,7 @@
 // お店のページへのリンクが、紹介料の付くリンク(ホットペッパーのアフィリエイト)になっていることを書く。
 // 広告だと分かるように書く決まり(ステルスマーケティングの規制)と、ホットペッパーの決まり
 // (「#アフィリエイト広告」などと、目立たない表示にしない)に合わせ、本文と同じくらいの大きさ・明るさで出す。
-// AFFILIATE_ON は next.config.ts で、AFFILIATE_URL_TEMPLATE が入っているときだけ "1" になる
+// AFFILIATE_ON は next.config.ts で、いつも "1"(提携リンクを常に使うため。2026-11-22)
 
 export function PrNote({ className = "" }: { className?: string }) {
   if (process.env.AFFILIATE_ON !== "1") return null;

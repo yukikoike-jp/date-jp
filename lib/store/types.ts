@@ -56,7 +56,10 @@ export type CollectionPerson = {
 };
 
 /** 払ったかどうか。self = 本人が押した、host = 幹事が受け取りを記録した */
-export type Payment = { by: "self" | "host" };
+/** 払い方。PayPay・現金・振込 */
+export type PayMethod = "paypay" | "cash" | "bank";
+/** by = 誰が記録したか(self = 本人の申告、host = 幹事の受け取り)。method = 払い方(前の記録にはない) */
+export type Payment = { by: "self" | "host"; method?: PayMethod };
 
 /** 傾斜会計の集金。参加した人は URL から自分の「払った」を押し、幹事は鍵の入った URL で受け取りを記録する */
 export type Collection = {
@@ -73,18 +76,6 @@ export type Collection = {
   payLink?: string;
   /** 「自動でお知らせ」(有料プレミアム)をオンにした時刻(ミリ秒)。この日から数えて、翌日・3日後・7日後に通知する。オフなら入っていない */
   autoRemindAt?: number;
-};
-
-/** 払うまでお知らせを受け取る端末(ブラウザの通知の宛先)。名前や連絡先は持たない */
-export type PushSub = {
-  collectionId: string;
-  personId: number;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-  /** これまでに通知した回数と、最後に通知した時刻(ミリ秒) */
-  sentCount: number;
-  lastSentAt: number | null;
 };
 
 export type AdEventKind = "view" | "click";
@@ -114,15 +105,4 @@ export interface Store {
   getCollection(id: string): Promise<Collection | null>;
   /** null なら「まだ」に戻す */
   setPayment(collectionId: string, personId: number, payment: Payment | null): Promise<void>;
-  /** 集金の設定を変える。null でその設定を消す(自動でお知らせをやめる、など) */
-  setCollectionSettings(collectionId: string, patch: { payLink?: string | null; autoRemindAt?: number | null }): Promise<void>;
-  /** 「自動でお知らせ」がオンの集金 */
-  listAutoRemind(): Promise<Collection[]>;
-  /** 通知の宛先を足す(同じ端末なら置き換える) */
-  addPushSub(sub: Omit<PushSub, "sentCount" | "lastSentAt">): Promise<void>;
-  listPushSubs(collectionId: string): Promise<PushSub[]>;
-  /** 通知を送ったことを記録する */
-  markPushSent(collectionId: string, personId: number, endpoint: string, at: number): Promise<void>;
-  /** 届かなくなった(解除された)宛先を消す */
-  removePushSub(collectionId: string, personId: number, endpoint: string): Promise<void>;
 }

@@ -1,6 +1,6 @@
 import { isAudience, normalizeAudience, type Audience } from "./audience";
 import { ROUND_UNITS, splitBill, subsidyTotal, CUSTOM_MAX, CUSTOM_MIN } from "./split";
-import type { CollectionPerson, Payment } from "./store/types";
+import type { CollectionPerson, PayMethod, Payment } from "./store/types";
 
 // 傾斜会計から集金のページを作るときの、入力の確かめと金額の計算し直し。純粋関数
 
@@ -69,12 +69,44 @@ export function parseCollection(input: CollectionInput): Result<ParsedCollection
 }
 
 /**
- * 払ったかどうかを変えてよいか。幹事だけ(2026-10-29 から)。
- * 参加した人が自分で「払った」を押せると、払っていなくても押せてしまうので、幹事が受け取りを確かめたものだけを数える
+ * 払ったかどうかを変えてよいか。幹事は何でも変えられる。
  */
 export function canSetPayment(isHost: boolean): boolean {
   return isHost;
 }
+
+/**
+ * 「払った」を押したときの、次の記録(2026-11-20 から2段階)。
+ * 参加した人は自分で「払った」を押せる(by: "self" = 申告。幹事が確かめるまで、払ったとは数えない)。
+ * 幹事が受け取ったもの(by: "host")は、参加した人からは変えられない。参加した人が消せるのは、自分の申告だけ。
+ * forbidden = 変えてはいけない
+ */
+export function nextPayment(isHost: boolean, current: Payment | undefined, paid: boolean, method?: PayMethod | null): Payment | null | "forbidden" {
+  // 払い方は、選んだものを使う。幹事が申告を確かめるときは、本人が選んだ払い方を引き継ぐ
+  const m = method ?? current?.method;
+  const withMethod = (by: Payment["by"]): Payment => (m ? { by, method: m } : { by });
+  if (isHost) return paid ? withMethod("host") : null;
+  if (paid) return isConfirmed(current) ? "forbidden" : withMethod("self");
+  return current?.by === "self" ? null : "forbidden";
+}
+
+/** 選べる払い方(集金で振込はまず使わないので、PayPay と現金だけ。2026-11-20) */
+export const PAY_METHODS: { key: PayMethod; label: string }[] = [
+  { key: "paypay", label: "PayPay" },
+  { key: "cash", label: "現金" },
+];
+
+/** 払い方の名前(前に「振込」で記録したものも読めるようにしておく) */
+const PAY_LABELS: Record<PayMethod, string> = { paypay: "PayPay", cash: "現金", bank: "振込" };
+
+export function isPayMethod(v: unknown): v is PayMethod {
+  return v === "paypay" || v === "cash" || v === "bank";
+}
+
+export function payMethodLabel(m: PayMethod | undefined): string | null {
+  return m ? PAY_LABELS[m] : null;
+}
+
 
 /** 払ったと数えるか。幹事が受け取りを記録したものだけ(前に本人が押した「払った」は、幹事が確かめるまで数えない) */
 export function isConfirmed(payment: Payment | undefined): boolean {

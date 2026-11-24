@@ -1,38 +1,35 @@
 "use client";
 
-import { Armchair, Ban, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Flame, Lock, LockOpen, MessageCircleQuestionMark, PartyPopper, Plus, Send, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
+import { Armchair, CalendarClock, ClipboardList, Crown, Dices, Eye, EyeOff, Lock, LockOpen, Megaphone, MessageCircleQuestion, PartyPopper, Plus, Shuffle, Timer, Users, VenetianMask, Wallet } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { DEMO_NAMES, KING_ORDERS, SEAT_LAYOUTS, kingGame, parseNames, pickIndex, seatExitIndex, seatPlan, splitTeams, type KingDraw, type SeatLayout } from "@/lib/fun";
-import { DARES, LEVELS, TRUTHS, drawCard, nextPlayer, ngWords, wordWolf, type CardKind, type Level } from "@/lib/games";
+import { DEMO_NAMES, LIE_THEMES, SEAT_LAYOUTS, maxTables, parseNames, pickIndex, seatExitIndex, seatTables, shuffle, type SeatLayout } from "@/lib/fun";
+import { SYNC_THEMES, wordWolf } from "@/lib/games";
 import { PILL, PILL_OFF, PILL_ON } from "./ui";
-import { loadAudience } from "@/lib/audience";
-import { CHECKLIST, THANKS, THANKS_KINDS, TOPICS, TOPIC_KINDS, drawIndex, timeline, type ThanksKind, type TopicKind } from "@/lib/work";
+import { CHECKLIST, timeline } from "@/lib/work";
 import { CollectList } from "./CollectList";
 import { ProPaywall, useFunAccess } from "./ProGate";
 import { clock, yen } from "@/lib/sendai";
 
-// 有料プレミアムの「Play」(ワードウルフ・NGワード・真実か挑戦・王様ゲーム・ルーレット・チーム分け)。
+// 有料プレミアムの「Play」(ワードウルフ・NGワード・ウソはどれ?・ルーレット。ワードウルフは無料)。会社の会でも遊べるものだけにする(2026-11-21)
 // 買う前は、遊びの名前(タブ)だけ見られる。遊び方や中身は出さない(2026-11-17。中身を見せると、お金を払う理由がなくなるため)。
 // 鍵のかかり方は lib/billing.ts の hasFun(支払いの準備ができていなくても、買うまでは鍵をかけたまま)
 
 const NAMES_KEY = "date:fun-names";
-type Tool = "wolf" | "ng" | "truth" | "king" | "wheel" | "team" | "topic" | "memo" | "thanks" | "seat" | "schedule" | "collect";
+type Tool = "wolf" | "sync" | "lie" | "wheel" | "memo" | "seat" | "schedule" | "collect";
 const PLAY_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
-  { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
-  { key: "ng", label: "NGワード", icon: Ban },
-  { key: "truth", label: "真実か挑戦", icon: MessageCircleQuestionMark },
-  { key: "king", label: "王様ゲーム", icon: Crown },
+  // 無料で使えるルーレットを左上に(2026-11-21)
   { key: "wheel", label: "ルーレット", icon: Dices },
-  { key: "team", label: "チーム分け", icon: Users },
+  { key: "wolf", label: "ワードウルフ", icon: VenetianMask },
+  { key: "sync", label: "せーの!", icon: Megaphone },
+  { key: "lie", label: "ウソはどれ?", icon: MessageCircleQuestion },
 ];
 
-/** 仕事の会: 幹事のサポート(会話のきっかけ・あいさつ・メモ・お礼・席替え・進行表)。ゲームは入れない。文言はすべて敬語 */
+/** Support: 幹事の道具。集金チェックが主役で、席決め・幹事メモ・進行表だけに絞る(2026-11-20。お礼・ご連絡と話題ガチャは外した) */
 const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
-  { key: "collect", label: "集金チェック", icon: Wallet },
-  { key: "thanks", label: "お礼・ご連絡", icon: Send },
+  // 無料で使える幹事メモを左上に(2026-11-21)
   { key: "memo", label: "幹事メモ", icon: ClipboardList },
-  { key: "topic", label: "話題ガチャ", icon: MessageCircleQuestionMark },
-  { key: "seat", label: "席替え", icon: Armchair },
+  { key: "collect", label: "集金チェック", icon: Wallet },
+  { key: "seat", label: "席決め", icon: Armchair },
   { key: "schedule", label: "進行表", icon: CalendarClock },
 ];
 
@@ -40,21 +37,20 @@ const WORK_TOOLS: { key: Tool; label: string; icon: typeof Crown }[] = [
 type Tone = "gold" | "red" | "blue" | "green" | "purple" | "orange" | "cyan";
 const TOOL_TONE: Record<Tool, Tone> = {
   wolf: "purple",
-  ng: "red",
-  truth: "blue",
-  king: "gold",
-  wheel: "orange",
-  team: "green",
-  topic: "cyan",
+  sync: "red",
+  lie: "gold",
+  wheel: "cyan",
   memo: "purple",
-  thanks: "blue",
   seat: "orange",
   schedule: "red",
   collect: "green",
 };
 
+/** 買わなくても使える道具(幹事メモと、Play のルーレット。ワードウルフは 11-21 に有料へ戻した。2026-11-21。集金チェックは Tsudoro+ の主役にした) */
+const FREE_TOOLS: Tool[] = ["memo", "wheel"];
+
 /** 名前を入れる道具(話題・ひとこと・メモには要らない) */
-const NEEDS_NAMES: Tool[] = ["wolf", "ng", "truth", "king", "wheel", "team", "seat"];
+const NEEDS_NAMES: Tool[] = ["wolf", "lie", "wheel", "seat"];
 
 /** Tsudoro+(有料・買い切り)の印。鍵のマークだけ(買う前かどうかは、上の案内に書く) */
 function PackBadge({ locked }: { locked: boolean }) {
@@ -75,22 +71,20 @@ export function FunClient() {
   const locked = !access.unlocked;
   // 会社の会は、会社向けの道具。学生とプライベートは同じ遊び。会の種類は、この端末に残っている選んだ値から読む
   // Play か Support か。最初は会の種類(仕事なら Support)。買えばどちらも使えるので、上のボタンか左右のスワイプで切り替える
-  const [side, setSide] = useState<"play" | "support">("play");
+  const [side, setSide] = useState<"play" | "support">("support");
   const company = side === "support";
-  const [tool, setTool] = useState<Tool>("wolf");
+  const [tool, setTool] = useState<Tool>("memo");
+  // 最初はどの会の種類でも Support の幹事メモ(無料。2026-11-21)。会計から(?tab=collect)来たときだけ集金チェック
   useEffect(() => {
-    const isWork = loadAudience() === "worker";
-    // 会計から来たとき(?tab=collect)は、Support の集金チェックを開く
-    const toCollect = new URLSearchParams(location.search).get("tab") === "collect";
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setSide(isWork || toCollect ? "support" : "play");
-    if (toCollect) setTool("collect");
-    else if (isWork) setTool("collect");
+    if (new URLSearchParams(window.location.search).get("tab") === "collect") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTool("collect");
+    }
   }, []);
   function chooseSide(next: "play" | "support") {
     if (next === side) return;
     setSide(next);
-    setTool(next === "support" ? "collect" : "wolf");
+    setTool(next === "support" ? "memo" : "wheel");
     setShowBuy(false);
   }
   // 左右にスワイプ(入力欄・選ぶ欄の上から始めたときは、切り替えない)
@@ -106,23 +100,25 @@ export function FunClient() {
     const t = e.changedTouches[0];
     const dx = t.clientX - s0.x;
     const dy = t.clientY - s0.y;
-    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) chooseSide(dx < 0 ? "support" : "play");
+    if (Math.abs(dx) > 70 && Math.abs(dy) < 45) chooseSide(dx < 0 ? "play" : "support");
   }
   const TOOLS = company ? WORK_TOOLS : PLAY_TOOLS;
   const [text, setText] = useState(DEMO_NAMES.join("\n"));
   const [showBuy, setShowBuy] = useState(false);
+  // 無料で自由に使える道具。買う前でも、もやをかけず、名前も入れられる
+  const toolLocked = locked && !FREE_TOOLS.includes(tool);
 
   // 買ったあと(鍵が開いたあと)は、前に入れた名前を思い出す
   useEffect(() => {
-    if (access.loading || locked) return;
+    if (access.loading) return;
     try {
       const saved = localStorage.getItem(NAMES_KEY);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       if (saved) setText(saved);
     } catch {}
-  }, [access.loading, locked]);
+  }, [access.loading]);
 
-  const names = useMemo(() => (locked ? DEMO_NAMES : parseNames(text)), [locked, text]);
+  const names = useMemo(() => (toolLocked ? DEMO_NAMES : parseNames(text)), [toolLocked, text]);
 
   function edit(v: string) {
     setText(v);
@@ -137,20 +133,21 @@ export function FunClient() {
         <h1 className="sr-only">Play と Support</h1>
         {/* Play と Support。どちらも Tsudoro+ で使える。左右にスワイプしても切り替わる */}
         <div role="tablist" aria-label="Play と Support" className="grid grid-cols-2 gap-1 rounded-2xl bg-surface-2 p-1">
-          {(["play", "support"] as const).map((k) => (
+          {(["support", "play"] as const).map((k) => (
             <button
               key={k}
               type="button"
               role="tab"
               aria-selected={side === k}
               onClick={() => chooseSide(k)}
-              className={`font-logo min-h-11 rounded-xl text-xl font-black tracking-tight transition-colors ${side === k ? "bg-surface text-text shadow" : "text-muted hover:text-text"}`}
+              className={`font-logo min-h-11 rounded-xl text-xl font-black tracking-tight transition-all active:scale-[0.98] ${side === k ? "bg-accent text-accent-text shadow" : "text-muted hover:text-text"}`}
             >
               {k === "play" ? "Play" : "Support"}
             </button>
           ))}
         </div>
         <p className="mt-2 flex items-center gap-2 text-sm text-muted">
+          {/* Support は幹事の仕事、Play は会を楽しく(2026-11-22) */}
           {company ? "幹事の仕事を徹底的にサポート" : "幹事がいる会をもっと楽しく"}
           {/* 買う前は、もやの上のボタンだけにする(黄色いものを2つ出さない)。買ったあとは開いた鍵の印 */}
           {!access.loading && !locked && <PackBadge locked={locked} />}
@@ -169,7 +166,8 @@ export function FunClient() {
             onClick={() => setTool(key)}
             className={`${
               // 3つずつ並べる。余りが2つのときは最後の2つを半分ずつ、1つのときは最後の1つを横いっぱいに
-              TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : TOOLS.length % 3 === 1 && i === TOOLS.length - 1 ? "col-span-6" : "col-span-2"
+              // 4つのとき(Support)は2つずつ2段
+              TOOLS.length === 4 ? "col-span-3" : TOOLS.length % 3 === 2 && i >= TOOLS.length - 2 ? "col-span-3" : TOOLS.length % 3 === 1 && i === TOOLS.length - 1 ? "col-span-6" : "col-span-2"
             } tone-${TOOL_TONE[key]} flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-[11px] font-bold transition-colors ${
               tool === key ? "bg-accent/18 text-text shadow ring-1 ring-accent/60" : "text-muted hover:text-text"
             }`}
@@ -181,21 +179,21 @@ export function FunClient() {
       </div>
 
       {/* 名前。デモ版では見本の名前に固定して、入力に鍵をかける(話題・ひとこと・メモでは出さない) */}
-      {!locked && NEEDS_NAMES.includes(tool) && (
+      {!toolLocked && NEEDS_NAMES.includes(tool) && (
       <section className="mx-4 mt-4 rounded-3xl border panel px-4 py-4">
         <label className="flex flex-wrap items-center justify-between gap-x-2 text-sm font-bold text-white/70" htmlFor="fun-names">
           <span className="flex items-center gap-2">
             <Users className="size-4" aria-hidden />
             参加する人({names.length}人)
           </span>
-          {locked && (
+          {toolLocked && (
             <span className="inline-flex items-center gap-1 text-[11px] font-black text-accent">
               <Lock className="size-3" aria-hidden />
               見本の名前(Tsudoro+ で入力できます)
             </span>
           )}
         </label>
-        {locked ? (
+        {toolLocked ? (
           // デモ版は見本の名前を並べるだけ(入力はできない)。場所をとらないよう、小さな札にする
           <ul id="fun-names" className="mt-2.5 grid grid-cols-3 gap-1.5 opacity-70" aria-label="見本の名前">
             {DEMO_NAMES.map((n) => (
@@ -214,30 +212,30 @@ export function FunClient() {
             className="mt-2 w-full resize-none rounded-2xl bg-white/8 px-4 py-3 text-base text-white outline-none ring-1 ring-white/12 placeholder:text-white/25 focus:ring-accent/50"
           />
         )}
-        {!locked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
+        {!toolLocked && names.length < 2 && <p className="mt-2 text-xs text-muted">2人から使えます(30人まで)</p>}
       </section>
       )}
 
       <div className="mt-4">
-        {locked && showBuy ? (
+        {toolLocked && showBuy ? (
           // 購入の案内。黄色い枠は、いつも1つだけ(もやのボタンと、案内を同時に出さない)
           <ProPaywall feature="Tsudoro+" work={company} price={access.price} purchasable={access.purchasable} onClose={() => setShowBuy(false)} />
-        ) : locked ? (
+        ) : toolLocked ? (
           // 買う前は、本物の画面に「もや」をかける。ぎりぎり読めるけれど、さわれない。真ん中のボタンから Plus の案内へ
           <div className="relative min-h-[26rem]">
             <div aria-hidden inert className="pointer-events-none select-none opacity-90 blur-[1.5px] saturate-[.85]">
-              {tool === "truth" && <TruthDare names={names} locked={locked} />}
-              {tool === "wolf" && <Wolf names={names} locked={locked} />}
-              {tool === "king" && <King names={names} locked={locked} />}
-              {tool === "ng" && <NgWord names={names} locked={locked} />}
-              {tool === "wheel" && <Wheel names={names} locked={locked} />}
-              {tool === "team" && <Teams names={names} locked={locked} />}
-              {tool === "topic" && <Topic locked={locked} />}
-              {tool === "memo" && <Memo locked={locked} />}
-              {tool === "thanks" && <Thanks locked={locked} />}
+              {tool === "wolf" && <Wolf names={names} locked={toolLocked} />}
+              {tool === "lie" && <Lie names={names} locked={locked} />}
+              {tool === "collect" && (
+                <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
+                  <CollectList demo />
+                </Box>
+              )}
+              {tool === "sync" && <Sync locked={locked} />}
+              {tool === "wheel" && <Wheel names={names} locked={toolLocked} />}
+              {tool === "memo" && <Memo locked={toolLocked} />}
               {tool === "seat" && <Seats names={names} locked={locked} />}
               {tool === "schedule" && <Schedule locked={locked} />}
-              {tool === "collect" && <CollectList demo />}
             </div>
             {/* もや(下にいくほど濃い) */}
             <div className="pointer-events-none absolute inset-x-4 inset-y-0 rounded-3xl bg-gradient-to-b from-bg/5 via-bg/25 to-bg/60" aria-hidden />
@@ -245,7 +243,7 @@ export function FunClient() {
               <button
                 type="button"
                 onClick={() => setShowBuy(true)}
-                className="flex min-h-14 items-center gap-3 rounded-2xl bg-bg/90 px-5 py-3 text-left ring-1 ring-accent/60 shadow-[0_0_32px_-12px_var(--accent)] active:scale-95"
+                className="flex min-h-14 items-center gap-3 rounded-2xl bg-bg/90 px-5 py-3 text-left ring-1 ring-accent/60 active:scale-95"
               >
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-text">
                   <Lock className="size-5" aria-hidden />
@@ -259,18 +257,18 @@ export function FunClient() {
           </div>
         ) : (
           <>
-            {tool === "truth" && <TruthDare names={names} locked={locked} />}
-            {tool === "wolf" && <Wolf names={names} locked={locked} />}
-            {tool === "king" && <King names={names} locked={locked} />}
-            {tool === "ng" && <NgWord names={names} locked={locked} />}
-            {tool === "wheel" && <Wheel names={names} locked={locked} />}
-            {tool === "team" && <Teams names={names} locked={locked} />}
-            {tool === "topic" && <Topic locked={locked} />}
-            {tool === "memo" && <Memo locked={locked} />}
-            {tool === "thanks" && <Thanks locked={locked} />}
+            {tool === "wolf" && <Wolf names={names} locked={toolLocked} />}
+            {tool === "lie" && <Lie names={names} locked={locked} />}
+            {tool === "sync" && <Sync locked={locked} />}
+            {tool === "wheel" && <Wheel names={names} locked={toolLocked} />}
+            {tool === "memo" && <Memo locked={toolLocked} />}
             {tool === "seat" && <Seats names={names} locked={locked} />}
             {tool === "schedule" && <Schedule locked={locked} />}
-            {tool === "collect" && <CollectList />}
+            {tool === "collect" && (
+              <Box title="集金チェック" tone={TOOL_TONE.collect} locked={locked}>
+                <CollectList />
+              </Box>
+            )}
           </>
         )}
       </div>
@@ -287,15 +285,20 @@ function sliceColor(i: number, n: number): string {
 }
 
 /** 道具の箱。デモ版のときは右上に印を付ける */
-function Box({ title, tone, locked, children }: { title: string; tone: Tone; locked: boolean; children: React.ReactNode }) {
+/** free = 買わなくても使える道具。鍵の印の代わりに「無料」と出す */
+function Box({ title, tone, locked, free = false, children }: { title: string; tone: Tone; locked: boolean; free?: boolean; children: React.ReactNode }) {
   return (
-    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5 shadow-[0_0_28px_-18px_var(--accent)]`}>
+    <section className={`tone-${tone} mx-4 rounded-3xl border border-accent/35 panel px-4 py-5`}>
       <h2 className="mb-3 flex items-center justify-between text-lg font-black">
         <span className="flex items-center gap-2">
           <span className="h-5 w-1.5 rounded-full bg-accent" aria-hidden />
           {title}
         </span>
-        {!locked && <PackBadge locked={locked} />}
+        {free ? (
+          <span className="rounded-full bg-accent/15 px-2.5 py-1 text-xs font-black text-accent ring-1 ring-accent/40">無料</span>
+        ) : (
+          !locked && <PackBadge locked={locked} />
+        )}
       </h2>
       {children}
     </section>
@@ -315,218 +318,92 @@ function RerollButton({ onClick, disabled, children }: { onClick: () => void; di
   );
 }
 
-// ───── チーム分け ─────
-function Teams({ names, locked }: { names: string[]; locked: boolean }) {
-  const [count, setCount] = useState(2);
-  const [teams, setTeams] = useState<string[][] | null>(null);
-  const [round, setRound] = useState(0);
-  const max = Math.max(2, Math.min(6, names.length));
-  const n = Math.min(count, max);
-  return (
-    <Box title="チーム分け" tone={TOOL_TONE.team} locked={locked}>
-      <div className="flex items-center gap-2" role="group" aria-label="チームの数">
-        {[2, 3, 4, 5, 6].map((c) => (
-          <button
-            key={c}
-            type="button"
-            disabled={c > max}
-            aria-pressed={n === c}
-            onClick={() => setCount(c)}
-            className={`${PILL} flex-1 px-0 disabled:opacity-30 ${n === c ? PILL_ON : PILL_OFF}`}
-          >
-            {c}
-          </button>
-        ))}
-        <span className="shrink-0 text-xs font-bold text-muted">チーム</span>
-      </div>
-      {teams && (
-        <div key={round} className="anim-rise mt-4 grid grid-cols-2 gap-2">
-          {teams.map((t, i) => (
-            <div key={i} className="rounded-2xl bg-surface-2 p-3 ring-1 ring-white/10">
-              <p className="text-xs font-black text-accent">
-                チーム {i + 1}({t.length}人)
-              </p>
-              <ul className="mt-1.5 space-y-1">
-                {t.map((m) => (
-                  <li key={m} className="truncate text-sm font-bold">
-                    {m}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      )}
-      <div className="mt-4">
-        <RerollButton
-          disabled={names.length < 2}
-          onClick={() => {
-            setTeams(splitTeams(names, n));
-            setRound((r) => r + 1);
-          }}
-        >
-          <Shuffle className="size-4" aria-hidden />
-          {teams ? "分け直す" : "チームに分ける"}
-        </RerollButton>
-      </div>
-    </Box>
-  );
-}
 
-// ───── 王様ゲーム ─────
-function King({ names, locked }: { names: string[]; locked: boolean }) {
-  const [draw, setDraw] = useState<KingDraw[] | null>(null);
-  const [open, setOpen] = useState<number | null>(null);
-  const [order, setOrder] = useState<string | null>(null);
-  return (
-    <Box title="王様ゲーム" tone={TOOL_TONE.king} locked={locked}>
-      <p className="text-sm text-white/70">くじを引いたら自分の名前を押してこっそりカードを見ます。見たらもう一度押して隠します。</p>
-      {draw && (
-        <ul className="mt-4 grid grid-cols-2 gap-2">
-          {draw.map((d, i) => {
-            const shown = open === i;
-            return (
-              <li key={d.name}>
-                <button
-                  type="button"
-                  onClick={() => setOpen(shown ? null : i)}
-                  aria-pressed={shown}
-                  className="flex min-h-16 w-full flex-col items-center justify-center rounded-2xl bg-surface-2 px-2 py-2 ring-1 ring-white/10 transition active:scale-95"
-                >
-                  <span className="max-w-full truncate text-sm font-bold">{d.name}</span>
-                  <span className={`mt-0.5 inline-flex items-center gap-1 text-xs font-black ${shown ? "text-accent" : "text-muted"}`}>
-                    {shown ? (
-                      <>
-                        <Eye className="size-3.5" aria-hidden />
-                        {d.card === "王様" ? "王様" : `${d.card}番`}
-                      </>
-                    ) : (
-                      <>
-                        <EyeOff className="size-3.5" aria-hidden />
-                        カードを見る
-                      </>
-                    )}
-                  </span>
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {draw && (
-        <div className="mt-4 rounded-2xl border border-border px-4 py-3">
-          <p className="text-xs font-bold text-muted">王様の命令のヒント</p>
-          <p className="mt-1 min-h-6 text-sm font-bold">{order ?? "「命令をひとつ出す」を押すと例が出ます"}</p>
-          <button
-            type="button"
-            onClick={() => setOrder(KING_ORDERS[pickIndex(KING_ORDERS.length)])}
-            className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95"
-          >
-            <PartyPopper className="size-4" aria-hidden />
-            命令をひとつ出す
-          </button>
-        </div>
-      )}
-      <div className="mt-4">
-        <RerollButton
-          disabled={names.length < 3}
-          onClick={() => {
-            setDraw(kingGame(names));
-            setOpen(null);
-            setOrder(null);
-          }}
-        >
-          <Crown className="size-4" aria-hidden />
-          {draw ? "くじを引き直す" : "くじを引く"}
-        </RerollButton>
-        {names.length < 3 && <p className="mt-2 text-center text-xs text-muted">3人から遊べます</p>}
-      </div>
-    </Box>
-  );
-}
+// ───── ウソはどれ? ─────
+// アプリがランダムで1人を選び、お題を3つ出す。そのうち1つを「ウソの話」にするよう、話す人だけにこっそり伝える。
+// 30秒で3つ話し、ほかの人はどれがウソか当てる(2026-11-21)
+const LIE_SECONDS = 30;
+function Lie({ names, locked }: { names: string[]; locked: boolean }) {
+  const [round, setRound] = useState<{ who: string; themes: string[]; lie: number } | null>(null);
+  const [peek, setPeek] = useState(false);
+  const [answer, setAnswer] = useState(false);
+  const [left, setLeft] = useState<number | null>(null);
 
-// ───── 真実か挑戦 ─────
-function TruthDare({ names, locked }: { names: string[]; locked: boolean }) {
-  const [level, setLevel] = useState<Level>("soft");
-  const [player, setPlayer] = useState<number | null>(null);
-  const [done, setDone] = useState<Set<number>>(new Set());
-  const [card, setCard] = useState<{ kind: CardKind; text: string } | null>(null);
-  const [used, setUsed] = useState<{ truth: Set<number>; dare: Set<number> }>({ truth: new Set(), dare: new Set() });
-  const ok = names.length >= 2;
+  useEffect(() => {
+    if (left === null || left <= 0) return;
+    const t = window.setTimeout(() => setLeft((v) => (v === null ? v : v - 1)), 1000);
+    return () => window.clearTimeout(t);
+  }, [left]);
 
-  function pick() {
-    const r = nextPlayer(names.length, done);
-    setPlayer(r.index);
-    setDone(r.reset ? new Set([r.index]) : new Set([...done, r.index]));
-    setCard(null);
+  function start() {
+    // 前と同じ人が続かないようにする
+    const pool = round && names.length > 1 ? names.filter((n) => n !== round.who) : names;
+    setRound({ who: pool[pickIndex(pool.length)], themes: shuffle(LIE_THEMES).slice(0, 3), lie: pickIndex(3) });
+    setPeek(false);
+    setAnswer(false);
+    setLeft(null);
   }
 
-  function draw(kind: CardKind) {
-    const c = drawCard(kind, level, used[kind]);
-    setUsed({ ...used, [kind]: c.reset ? new Set([c.index]) : new Set([...used[kind], c.index]) });
-    setCard({ kind, text: c.text });
-  }
-
-  const total = TRUTHS[level].length + DARES[level].length;
-
   return (
-    <Box title="真実か挑戦" tone={TOOL_TONE.truth} locked={locked}>
-      <p className="text-sm text-white/70">当たった人が「真実」か「挑戦」を選びます。真実は質問に正直に答え、挑戦はお題をやりきります。できなければパスしても大丈夫です。</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="盛り上がり度">
-        {LEVELS.map((l) => (
-          <button
-            key={l.key}
-            type="button"
-            aria-pressed={level === l.key}
-            onClick={() => {
-              setLevel(l.key);
-              setCard(null);
-            }}
-            className={`${PILL} ${level === l.key ? PILL_ON : PILL_OFF}`}
-          >
-            {level === l.key && "✓ "}
-            {l.key === "spicy" && <Flame className="size-4" aria-hidden />}
-            {l.label}
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-xs text-muted">{LEVELS.find((l) => l.key === level)!.note}(お題は{total}個)</p>
-
-      {player !== null && (
-        <div className="anim-rise mt-4 rounded-2xl border border-accent/40 px-4 py-4 text-center" aria-live="polite">
-          <p className="text-xs font-bold text-muted">次は</p>
-          <p className="mt-1 text-3xl font-black text-accent">{names[player]}</p>
-          <p className="mt-1 text-sm font-bold">さんの番です</p>
+    <Box title="ウソはどれ?" tone={TOOL_TONE.lie} locked={locked}>
+      <p className="text-sm text-white/70">アプリが話す人とお題を3つ決めます。話す人はアプリが選んだ1つだけウソを話し、30秒で3つ話します。ほかの人はどれがウソか当てます。</p>
+      {round && (
+        <div className="mt-4 rounded-2xl bg-surface-2 px-4 py-4 ring-1 ring-white/10">
+          <p className="text-center text-xs font-bold text-muted">話す人</p>
+          <p className="mt-0.5 text-center text-2xl font-black">{round.who}さん</p>
+          <ol className="mt-3 space-y-2">
+            {round.themes.map((t, i) => {
+              const isLie = i === round.lie;
+              const mark = (peek || answer) && isLie;
+              return (
+                <li key={t} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ring-1 ${mark ? "bg-accent/15 ring-accent/60" : "bg-white/5 ring-white/10"}`}>
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent text-sm font-black text-accent-text">{i + 1}</span>
+                  <span className="flex-1 text-base font-bold">{t}</span>
+                  {mark && <span className="shrink-0 text-xs font-black text-accent">ウソ</span>}
+                </li>
+              );
+            })}
+          </ol>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {(["truth", "dare"] as const).map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => draw(k)}
-                className="min-h-12 rounded-xl bg-white/8 text-base font-black ring-1 ring-white/12 transition active:scale-95 hover:bg-white/12"
-              >
-                {k === "truth" ? "真実" : "挑戦"}
-              </button>
-            ))}
+            <button
+              type="button"
+              onClick={() => setPeek(!peek)}
+              aria-pressed={peek}
+              className="inline-flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-white/8 px-2 text-sm font-bold ring-1 ring-white/12 active:scale-95"
+            >
+              {peek ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+              {peek ? "隠す" : "話す人だけ見る"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPeek(false);
+                setLeft(LIE_SECONDS);
+              }}
+              className="inline-flex min-h-12 items-center justify-center gap-1.5 rounded-xl bg-white/8 px-2 text-sm font-black tabular-nums ring-1 ring-white/12 active:scale-95"
+            >
+              <Timer className="size-4" aria-hidden />
+              {left === null ? "30秒スタート" : left > 0 ? `のこり ${left}秒` : "時間です"}
+            </button>
           </div>
-          {card && (
-            <div className="anim-rise mt-3 rounded-xl bg-surface-2 px-4 py-4 text-left ring-1 ring-white/10">
-              <p className="text-xs font-black text-accent">{card.kind === "truth" ? "真実: 正直に答える" : "挑戦: やりきる"}</p>
-              <p className="mt-1.5 text-lg font-black leading-snug">{card.text}</p>
-              <button type="button" onClick={() => draw(card.kind)} className="mt-3 inline-flex min-h-10 items-center gap-1 text-xs font-bold text-muted underline underline-offset-2">
-                <Shuffle className="size-3.5" aria-hidden />
-                別のお題にする(パス)
-              </button>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              setPeek(false);
+              setAnswer(true);
+            }}
+            disabled={answer}
+            className="mt-2 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-white/8 text-sm font-bold ring-1 ring-white/12 active:scale-95 disabled:opacity-50"
+          >
+            {answer ? `ウソは ${round.lie + 1}番「${round.themes[round.lie]}」` : "答え合わせ(ウソを見せる)"}
+          </button>
         </div>
       )}
       <div className="mt-4">
-        <RerollButton onClick={pick} disabled={!ok}>
-          <MessageCircleQuestionMark className="size-4" aria-hidden />
-          {player === null ? "最初の人を選ぶ" : "次の人を選ぶ"}
+        <RerollButton disabled={names.length < 2} onClick={start}>
+          <MessageCircleQuestion className="size-4" aria-hidden />
+          {round ? "次の人を選ぶ" : "話す人を選んではじめる"}
         </RerollButton>
-        {!ok && <p className="mt-2 text-center text-xs text-muted">2人から遊べます</p>}
       </div>
     </Box>
   );
@@ -677,7 +554,7 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   });
 
   return (
-    <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked}>
+    <Box title="ルーレット" tone={TOOL_TONE.wheel} locked={locked} free>
       <p className="text-sm text-white/70">乾杯の音頭・おごり・罰ゲームの係を運で決めます。</p>
       <div className="relative mx-auto mt-3 w-full max-w-[230px]">
         <svg viewBox="-160 -168 320 330" className="block h-auto w-full" role="img" aria-label={`ルーレット(${n}人)`}>
@@ -744,165 +621,66 @@ function Wheel({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-// ───── NGワード ─────
-function NgWord({ names, locked }: { names: string[]; locked: boolean }) {
-  const [deals, setDeals] = useState<{ name: string; word: string }[] | null>(null);
-  const [open, setOpen] = useState<number | null>(null);
-  const [outs, setOuts] = useState<number[]>([]);
-  const [left, setLeft] = useState<number | null>(null);
+// ───── せーの! ─────
+// お題に、全員が「せーの!」で同時に答える。同じ答えの人が多いほど成功。覚えることがないので大人数でも遊べる(2026-11-21。NGワードの代わり)
+function Sync({ locked }: { locked: boolean }) {
+  const [theme, setTheme] = useState<string | null>(null);
+  const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
-    if (left === null || left <= 0) return;
-    const t = window.setTimeout(() => setLeft((v) => (v === null ? v : v - 1)), 1000);
+    if (count === null || count <= 0) return;
+    const t = window.setTimeout(() => setCount((v) => (v === null ? v : v - 1)), 900);
     return () => window.clearTimeout(t);
-  }, [left]);
+  }, [count]);
 
-  function start() {
-    const d = ngWords(names);
-    setDeals(d);
-    setOpen(null);
-    setOuts(d.map(() => 0));
-    setLeft(null);
+  function next() {
+    const pool = SYNC_THEMES.filter((t) => t !== theme);
+    setTheme(pool[pickIndex(pool.length)]);
+    setCount(null);
   }
 
   return (
-    <Box title="NGワード" tone={TOOL_TONE.ng} locked={locked}>
-      <p className="text-sm text-white/70">
-        1人に1つNGワードが決まります<b className="text-white">その人以外の</b>みんなだけがその言葉を見ます。会話の中で自分のNGワードを言ってしまったらアウトです。
-      </p>
-      {deals && (
-        <>
-          <ul className="mt-4 grid grid-cols-2 gap-2">
-            {deals.map((d, i) => {
-              const shown = open === i;
-              return (
-                <li key={d.name} className="rounded-2xl bg-surface-2 p-2 ring-1 ring-white/10">
-                  <button
-                    type="button"
-                    onClick={() => setOpen(shown ? null : i)}
-                    aria-pressed={shown}
-                    className="flex min-h-14 w-full flex-col items-center justify-center rounded-xl px-1 py-1 transition active:scale-95"
-                  >
-                    <span className="max-w-full truncate text-sm font-bold">{d.name}さん</span>
-                    <span className={`mt-0.5 inline-flex items-center gap-1 text-xs font-black ${shown ? "text-accent" : "text-muted"}`}>
-                      {shown ? (
-                        <>
-                          <Eye className="size-3.5" aria-hidden />
-                          {d.word}
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="size-3.5" aria-hidden />
-                          NGワードを見る
-                        </>
-                      )}
-                    </span>
-                  </button>
-                  <div className="mt-1 flex items-center justify-between gap-1 border-t border-border pt-1.5">
-                    <span className="text-[11px] font-bold text-muted tabular-nums">アウト {outs[i] ?? 0}回</span>
-                    <button
-                      type="button"
-                      aria-label={`${d.name}さんがNGワードを言った(アウトを1回足す)`}
-                      onClick={() => setOuts(outs.map((n, k) => (k === i ? n + 1 : n)))}
-                      className="grid size-9 place-items-center rounded-lg bg-white/8 ring-1 ring-white/12 active:scale-90"
-                    >
-                      <Plus className="size-4" aria-hidden />
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="mt-2 text-xs text-muted">言葉を見るときはその人に画面を見られないように。言ってしまったら「＋」を押します。</p>
-          <div className="mt-3 flex items-center gap-2">
-            <button type="button" onClick={() => setLeft(300)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
-              <Timer className="size-4" aria-hidden />
-              5分でスタート
-            </button>
-            {left !== null && (
-              <span className="text-lg font-black tabular-nums">
-                {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
-                {left === 0 && <span className="ml-2 text-sm text-accent">時間です。アウトの数をくらべましょう</span>}
-              </span>
-            )}
-          </div>
-        </>
-      )}
-      <div className="mt-4">
-        <RerollButton onClick={start} disabled={names.length < 2}>
-          <Ban className="size-4" aria-hidden />
-          {deals ? "NGワードを配り直す" : "NGワードを配る"}
-        </RerollButton>
-        {names.length < 2 && <p className="mt-2 text-center text-xs text-muted">2人から遊べます</p>}
-      </div>
-    </Box>
-  );
-}
-
-// ───── 話題ガチャ(会社の会)─────
-function Topic({ locked }: { locked: boolean }) {
-  const [kind, setKind] = useState<TopicKind>("chat");
-  const [card, setCard] = useState<string | null>(null);
-  const [used, setUsed] = useState<Record<TopicKind, Set<number>>>({ chat: new Set(), work: new Set(), future: new Set() });
-
-  function draw() {
-    const r = drawIndex(TOPICS[kind].length, used[kind]);
-    setUsed({ ...used, [kind]: r.reset ? new Set([r.index]) : new Set([...used[kind], r.index]) });
-    setCard(TOPICS[kind][r.index]);
-  }
-
-  return (
-    <Box title="話題ガチャ" tone={TOOL_TONE.topic} locked={locked}>
-      <p className="text-sm text-white/70">会話に困ったら引いてみてください。みんなに順番に聞いても盛り上がります。</p>
-      <div className="mt-3 flex flex-wrap gap-2" role="group" aria-label="話題の種類">
-        {TOPIC_KINDS.map((k, i) => {
-          // デモ版は最初の種類だけ。ほかは鍵つき
-          const closed = locked && i > 0;
-          return (
-            <button
-              key={k.key}
-              type="button"
-              disabled={closed}
-              aria-pressed={kind === k.key}
-              onClick={() => {
-                setKind(k.key);
-                setCard(null);
-              }}
-              className={`${PILL} disabled:opacity-50 ${kind === k.key ? PILL_ON : PILL_OFF}`}
-            >
-              {closed ? <Lock className="size-3.5" aria-hidden /> : kind === k.key && "✓ "}
-              {k.label}
-            </button>
-          );
-        })}
-      </div>
-      <p className="mt-2 text-xs text-muted">{TOPIC_KINDS.find((k) => k.key === kind)!.note}</p>
-      {card && (
-        <div className="anim-rise mt-4 rounded-2xl border border-accent/40 px-4 py-5 text-center" aria-live="polite">
-          <p className="text-xl leading-snug font-black">{card}</p>
+    <Box title="せーの!" tone={TOOL_TONE.sync} locked={locked}>
+      <p className="text-sm text-white/70">お題に全員が「せーの!」で同時に答えます。みんなの答えがそろうほど成功。覚えることがないので大人数でも遊べます。</p>
+      {theme && (
+        <div className="mt-4 rounded-2xl bg-surface-2 px-4 py-5 text-center ring-1 ring-white/10">
+          <p className="text-xs font-bold text-muted">お題</p>
+          <p className="mt-1 text-2xl font-black">{theme}</p>
+          <button
+            type="button"
+            onClick={() => setCount(3)}
+            className="mt-4 inline-flex min-h-14 min-w-40 items-center justify-center rounded-2xl bg-white/8 px-5 text-xl font-black tabular-nums ring-1 ring-white/12 active:scale-95"
+            aria-live="polite"
+          >
+            {count === null ? "カウントする" : count > 0 ? count : "せーの!"}
+          </button>
         </div>
       )}
       <div className="mt-4">
-        <RerollButton onClick={draw}>
-          <MessageCircleQuestionMark className="size-4" aria-hidden />
-          {card ? "次の話題を引く" : "話題を引く"}
+        <RerollButton onClick={next}>
+          <Megaphone className="size-4" aria-hidden />
+          {theme ? "次のお題" : "お題を出す"}
         </RerollButton>
       </div>
     </Box>
   );
 }
 
-// ───── 席替え(仕事の会)─────
+// ───── 席決め ─────
 function Seats({ names, locked }: { names: string[]; locked: boolean }) {
   const [layout, setLayout] = useState<SeatLayout>("table");
-  const [plan, setPlan] = useState<{ rows: string[][] } | null>(null);
+  // 机(卓)の数。人数に合わせて上限を変える(1卓に2人はいる)
+  const [tables, setTables] = useState(1);
+  const tableMax = maxTables(names.length);
+  const tableCount = Math.min(tables, tableMax);
+  const [plan, setPlan] = useState<{ rows: string[][] }[] | null>(null);
   const [round, setRound] = useState(0);
   // 上座に座る人・出口に近い席に座る人(幹事など)。空はおまかせ
   const [top, setTop] = useState("");
   const [exit, setExit] = useState("");
   const ok = names.length >= 2;
   // 名前や並べ方を変えたら、いったん結果を消す
-  const key = `${layout}|${top}|${exit}|${names.join("\u0000")}`;
+  const key = `${layout}|${tableCount}|${top}|${exit}|${names.join("\u0000")}`;
   const last = useRef(key);
   useEffect(() => {
     if (last.current !== key) {
@@ -912,13 +690,13 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
   }, [key]);
 
   function run() {
-    setPlan(seatPlan(names, layout, Math.random, { top: top || null, exit: exit || null }));
+    setPlan(seatTables(names, layout, tableCount, Math.random, { top: top || null, exit: exit || null }));
     setRound((r) => r + 1);
   }
 
   return (
-    <Box title="席替え" tone={TOOL_TONE.seat} locked={locked}>
-      <p className="mb-3 text-sm text-white/70">席の並べ方をお選びください。お名前をシャッフルして席順をご提案します。</p>
+    <Box title="席決め" tone={TOOL_TONE.seat} locked={locked}>
+      <p className="mb-3 text-sm text-white/70">机の形と数をお選びください。お名前をシャッフルして席順をご提案します。</p>
       <div className="flex flex-wrap gap-2" role="group" aria-label="席の並べ方">
         {SEAT_LAYOUTS.map((l) => (
           <button key={l.key} type="button" aria-pressed={layout === l.key} onClick={() => setLayout(l.key)} className={`${PILL} ${layout === l.key ? PILL_ON : PILL_OFF}`}>
@@ -926,6 +704,33 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
             {l.label}
           </button>
         ))}
+      </div>
+      {/* 机の数(卓) */}
+      <div className="mt-3 flex items-center gap-3 rounded-xl bg-surface-2 px-3 py-2 ring-1 ring-white/10">
+        <span className="text-sm font-bold text-muted">机の数</span>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setTables(Math.max(1, tableCount - 1))}
+            disabled={tableCount <= 1}
+            aria-label="机を1つ減らす"
+            className="grid size-10 place-items-center rounded-full bg-white/8 text-xl font-black ring-1 ring-white/12 active:scale-95 disabled:opacity-30"
+          >
+            −
+          </button>
+          <span className="w-12 text-center text-lg font-black tabular-nums" aria-live="polite">
+            {tableCount}卓
+          </span>
+          <button
+            type="button"
+            onClick={() => setTables(Math.min(tableMax, tableCount + 1))}
+            disabled={tableCount >= tableMax}
+            aria-label="机を1つ増やす"
+            className="grid size-10 place-items-center rounded-full bg-white/8 text-xl font-black ring-1 ring-white/12 active:scale-95 disabled:opacity-30"
+          >
+            <Plus className="size-5" aria-hidden />
+          </button>
+        </div>
       </div>
       {/* 上座・下座の指定。席1が上座(奥)、出口に近い席が下座 */}
       <div className="mt-3 grid grid-cols-2 gap-2">
@@ -949,31 +754,43 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
         ))}
       </div>
       {plan && (
-        <div key={round} className="anim-rise mt-4">
-          {layout === "round" ? (
-            <RoundTable names={plan.rows[0]} />
-          ) : (
-            <div className="space-y-2">
-              {plan.rows.map((row, ri) => (
-                <div key={ri}>
-                  {layout === "table" && ri === 1 && (
-                    <div className="mb-2 rounded-lg bg-white/8 py-1.5 text-center text-[11px] font-bold tracking-widest text-white/50">テーブル</div>
-                  )}
-                  <ul className="flex flex-wrap justify-center gap-2">
-                    {row.map((n, i) => (
-                      <SeatChip key={n} n={n} no={ri === 0 ? i + 1 : plan.rows[0].length + i + 1} total={names.length} layout={layout} />
+        <div key={round} className="anim-rise mt-4 space-y-4">
+          {plan.map((t, ti) => {
+            const size = t.rows.flat().length;
+            const first = ti === 0;
+            const last = ti === plan.length - 1;
+            return (
+              <div key={ti}>
+                {plan.length > 1 && <p className="mb-2 text-sm font-black text-accent">{ti + 1}卓目({size}人)</p>}
+                {layout === "round" ? (
+                  <RoundTable names={t.rows[0]} top={first} exit={last} />
+                ) : (
+                  <div className="space-y-2">
+                    {t.rows.map((row, ri) => (
+                      <div key={ri}>
+                        {layout === "table" && ri === 1 && (
+                          <div className="mb-2 rounded-lg bg-white/8 py-1.5 text-center text-[11px] font-bold text-white/50">テーブル</div>
+                        )}
+                        <ul className="flex flex-wrap justify-center gap-2">
+                          {row.map((n, i) => {
+                            const no = ri === 0 ? i + 1 : t.rows[0].length + i + 1;
+                            const tag = first && no === 1 ? "上座" : last && no - 1 === seatExitIndex(layout, size) ? "出口ちかく" : null;
+                            return <SeatChip key={n} n={n} no={no} tag={tag} />;
+                          })}
+                        </ul>
+                      </div>
                     ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
       <div className="mt-4">
         <RerollButton onClick={run} disabled={!ok}>
           <Shuffle className="size-4" aria-hidden />
-          {plan ? "席替えをやり直す" : "席替えをする"}
+          {plan ? "席決めをやり直す" : "席を決める"}
         </RerollButton>
         {!ok && <p className="mt-2 text-center text-xs text-muted">2名からご利用いただけます</p>}
       </div>
@@ -981,15 +798,8 @@ function Seats({ names, locked }: { names: string[]; locked: boolean }) {
   );
 }
 
-/** 席の目印。席1は上座、出口にいちばん近い席は下座 */
-function seatTag(no: number, total: number, layout: SeatLayout): string | null {
-  if (no === 1) return "上座";
-  if (no - 1 === seatExitIndex(layout, total)) return "出口ちかく";
-  return null;
-}
-
-function SeatChip({ n, no, total, layout }: { n: string; no: number; total: number; layout: SeatLayout }) {
-  const tag = seatTag(no, total, layout);
+/** 席の札。tag = 上座・出口ちかく の目印 */
+function SeatChip({ n, no, tag }: { n: string; no: number; tag: string | null }) {
   return (
     <li className="flex min-h-12 min-w-[5.5rem] flex-col items-center justify-center rounded-xl bg-surface-2 px-3 py-1 ring-1 ring-white/10">
       {tag && <span className="text-[10px] font-black text-accent">{tag}</span>}
@@ -1001,7 +811,7 @@ function SeatChip({ n, no, total, layout }: { n: string; no: number; total: numb
   );
 }
 
-function RoundTable({ names }: { names: string[] }) {
+function RoundTable({ names, top = true, exit = true }: { names: string[]; top?: boolean; exit?: boolean }) {
   const exitAt = seatExitIndex("round", names.length);
   const n = names.length;
   const size = 300;
@@ -1009,7 +819,7 @@ function RoundTable({ names }: { names: string[] }) {
   return (
     <div className="mx-auto" style={{ width: size, height: size, maxWidth: "100%" }}>
       <div className="relative h-full w-full">
-        <div className="absolute inset-[22%] grid place-items-center rounded-full bg-white/8 text-[11px] font-bold tracking-widest text-white/50 ring-1 ring-white/10">
+        <div className="absolute inset-[22%] grid place-items-center rounded-full bg-white/8 text-[11px] font-bold text-white/50 ring-1 ring-white/10">
           テーブル
         </div>
         {names.map((name, i) => {
@@ -1022,7 +832,7 @@ function RoundTable({ names }: { names: string[] }) {
                 <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent text-[10px] font-black text-accent-text">{i + 1}</span>
                 <span className="truncate">{name}</span>
               </span>
-              {(i === 0 || i === exitAt) && <span className="mt-0.5 block text-center text-[10px] font-black text-accent">{i === 0 ? "上座" : "出口ちかく"}</span>}
+              {((top && i === 0) || (exit && i === exitAt)) && <span className="mt-0.5 block text-center text-[10px] font-black text-accent">{top && i === 0 ? "上座" : "出口ちかく"}</span>}
             </div>
           );
         })}
@@ -1097,71 +907,6 @@ function Schedule({ locked }: { locked: boolean }) {
   );
 }
 
-// ───── お礼の連絡(会社の会)─────
-function Thanks({ locked }: { locked: boolean }) {
-  const [kind, setKind] = useState<ThanksKind>("all");
-  const [n, setN] = useState(0);
-  const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState("");
-  const list = THANKS[kind];
-  const yenText = /^\d{1,6}$/.test(amount) ? `${Number(amount).toLocaleString("ja-JP")}円` : "○○円";
-  const text = list[n % list.length].replace("○○円", yenText);
-
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {}
-  }
-
-  return (
-    <Box title="お礼・ご連絡" tone={TOOL_TONE.thanks} locked={locked}>
-      <p className="text-sm text-white/70">会の翌日にお送りするお礼やご連絡の文の例です。キャンセル料のお願いもやわらかい言い方でお伝えできます。コピーしてそのままお使いいただけます。</p>
-      <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="送る相手">
-        {THANKS_KINDS.map((k) => (
-          <button
-            key={k.key}
-            type="button"
-            aria-pressed={kind === k.key}
-            onClick={() => {
-              setKind(k.key);
-              setN(0);
-            }}
-            className={`${PILL} w-full px-2 text-[13px] ${kind === k.key ? PILL_ON : PILL_OFF}`}
-          >
-            {kind === k.key && "✓ "}
-            {k.label}
-          </button>
-        ))}
-      </div>
-      {kind === "cancel" && (
-        <label className="mt-3 block">
-          <span className="text-xs font-bold text-muted">キャンセル料(1名さま・円)</span>
-          <input
-            inputMode="numeric"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, "").slice(0, 6))}
-            placeholder="例 3000"
-            className="mt-1 w-full rounded-2xl bg-white/8 px-4 py-3 text-base text-white ring-1 ring-white/12 outline-none placeholder:text-white/25 focus:ring-accent/50"
-          />
-        </label>
-      )}
-      <p className="anim-rise mt-4 rounded-2xl bg-surface-2 px-4 py-4 text-base leading-relaxed font-bold ring-1 ring-white/10" key={`${kind}${n}${yenText}`}>
-        {text}
-      </p>
-      <div className="mt-3 flex gap-2">
-        <button type="button" onClick={copy} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-accent px-3 text-sm font-black text-accent-text active:scale-95">
-          {copied ? "コピーしました" : "コピーする"}
-        </button>
-        <button type="button" onClick={() => setN((v) => v + 1)} className="inline-flex min-h-11 items-center gap-1.5 rounded-xl bg-white/8 px-3 text-sm font-bold ring-1 ring-white/12 active:scale-95">
-          <Shuffle className="size-4" aria-hidden />
-          別の例を見る
-        </button>
-      </div>
-    </Box>
-  );
-}
 
 // ───── 幹事メモ(会社の会)─────
 const MEMO_KEY = "nomi:work-memo";
@@ -1195,7 +940,7 @@ function Memo({ locked }: { locked: boolean }) {
   const done = checked.filter(Boolean).length;
 
   return (
-    <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked}>
+    <Box title="幹事メモ" tone={TOOL_TONE.memo} locked={locked} free>
       <div className="flex items-center gap-3">
         <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10" aria-hidden>
           <span className="block h-full rounded-full bg-accent transition-[width]" style={{ width: `${(done / CHECKLIST.length) * 100}%` }} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Beer, Briefcase, ChevronDown, ChevronRight, GraduationCap, Lock, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Beer, Briefcase, Calculator, CalendarDays, ChevronDown, ChevronRight, GraduationCap, Lock, Sparkles, Store } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { PartiesMenu } from "./PartiesMenu";
@@ -48,20 +48,20 @@ const HOME_BY_AUDIENCE: Record<
     lead: "サークル・ゼミの飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "幹事がいる会をもっと楽しく",
+    play: "幹事はラクに、会はもっと楽しく",
   },
   private: {
     lead: "サークル・友達の飲み会をURLひとつで",
     shops: "飲み放題・個室で探す",
     split: "割り勘と先輩多めの計算",
-    play: "幹事がいる会をもっと楽しく",
+    play: "幹事はラクに、会はもっと楽しく",
   },
   worker: {
     lead: "歓送迎会・忘年会をURLひとつで",
     shops: "個室・喫煙可で探す",
     split: "補助や上司多めの計算",
     // 会社の会では、ゲームではなく、会話・あいさつ・準備(話題ガチャ・ひとこと・幹事メモ)
-    play: "幹事の仕事を徹底的にサポート",
+    play: "幹事はラクに、会はもっと楽しく",
   },
 };
 
@@ -178,7 +178,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
   );
 
   return (
-    <div className="anim-rise mx-auto max-w-xl space-y-5 px-4 pt-6 pb-16">
+    <div className="anim-rise pwa-top mx-auto flex min-h-dvh max-w-xl flex-col gap-5 px-4 pb-8">
       {/* いちばん上: 名前と、学生・プライベート・会社。隅に小さく置き、押すと選び直す画面を開く */}
       <div className="flex items-center justify-between pt-2">
         <Wordmark size={26} />
@@ -201,7 +201,24 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         <div className="flex flex-col px-6 pt-7 pb-6">
           <p className="text-[22px] font-black tracking-tight text-white">飲み会をつくる</p>
           <p className="mt-1 text-[13px] font-medium text-white/60">{home.lead}</p>
-          <span className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 text-[14px] font-black tracking-tight text-black">
+          <ol className="mt-6 flex items-start" aria-label="URLひとつで進むこと">
+            {[
+              { Icon: CalendarDays, label: "日程調整" },
+              { Icon: Store, label: "お店探し" },
+              { Icon: Calculator, label: "会計精算" },
+            ].map(({ Icon, label }, i) => (
+              <li key={label} className="flex flex-1 items-start">
+                <span className="anim-stagger flex flex-1 flex-col items-center gap-1.5" style={{ "--i": i + 2 } as React.CSSProperties}>
+                  <span className="grid size-11 place-items-center rounded-2xl bg-accent/12 text-accent ring-1 ring-accent/30">
+                    <Icon className="size-5" aria-hidden />
+                  </span>
+                  <span className="text-[11px] font-black tracking-[0.08em] text-white/70">{label}</span>
+                </span>
+                {i < 2 && <span aria-hidden className="mt-[22px] h-px w-4 shrink-0 bg-gradient-to-r from-accent/50 to-accent/10" />}
+              </li>
+            ))}
+          </ol>
+          <span className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 text-[14px] font-black tracking-tight text-black">
             URLをつくる
             <ArrowRight className="size-4" aria-hidden />
           </span>
@@ -228,7 +245,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
       <InstallHint />
 
       {/* いちばん下。方針へのリンクと説明は小さくまとめ、ホームの上にだけ出す(起動の演出や選ぶ画面には出さない) */}
-      <div className="space-y-1.5 pt-1">
+      <div className="mt-auto space-y-1.5 pt-4">
         {/* 有料の機能を売っているときだけ、特定商取引法の表記を置く(プライバシーポリシーは、下の説明の行の中) */}
         {process.env.BILLING_ON === "1" && (
           <p className="flex justify-center text-[11px]">

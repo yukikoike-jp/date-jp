@@ -85,8 +85,8 @@ describe("searchShopsAlways(お店が必ず出る)", () => {
 
 describe("browserShopUrl(アプリが開かない形のお店の URL)", () => {
   it("お店のページの最後の / を外す。後ろの ?… はそのまま", () => {
-    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/?vos=nhppalsa000016")).toBe("https://www.hotpepper.jp/strJ001155193?vos=nhppalsa000016");
-    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/")).toBe("https://www.hotpepper.jp/strJ001155193");
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/?vos=nhppalsa000016")).toBe("https://www.hotpepper.jp/strJ001155193/tel/?vos=nhppalsa000016");
+    expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/")).toBe("https://www.hotpepper.jp/strJ001155193/tel/");
   });
   it("お店のページ以外や、ほかのサイトは変えない", () => {
     expect(browserShopUrl("https://www.hotpepper.jp/strJ001155193/yoyaku/")).toBe("https://www.hotpepper.jp/strJ001155193/yoyaku/");
@@ -133,4 +133,35 @@ describe("たこ焼き・インド料理(言葉で探す料理)", () => {
 
 it("インドネシア料理は、インド料理に入れない", () => {
   expect(genreKeyOf({ name: "アジアン料理 Makan", genre: { code: "G009", catch: "エスニック" }, catch: "タイ・インドネシア料理" })).toBe("ethnic");
+});
+
+describe("referralUrl(バリューコマースの提携リンク)", () => {
+  it("テンプレートがあれば、ホットペッパーの印を差し替えて提携リンクにする", async () => {
+    const { referralUrl } = await import("./shops");
+    const before = process.env.AFFILIATE_URL_TEMPLATE;
+    process.env.AFFILIATE_URL_TEMPLATE = "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3788519&pid=892753048&vc_url={url}";
+    try {
+      expect(referralUrl("https://www.hotpepper.jp/strJ001155193?vos=nhppalsa000016")).toBe(
+        "https://ck.jp.ap.valuecommerce.com/servlet/referral?sid=3788519&pid=892753048&vc_url=" +
+          encodeURIComponent("https://www.hotpepper.jp/strJ001155193?vos=nhppvccp99002"),
+      );
+    } finally {
+      if (before === undefined) delete process.env.AFFILIATE_URL_TEMPLATE;
+      else process.env.AFFILIATE_URL_TEMPLATE = before;
+    }
+  });
+  it("テンプレートに {url} がなければ、そのまま", async () => {
+    const { referralUrl } = await import("./shops");
+    expect(referralUrl("https://www.hotpepper.jp/strJ001155193", "https://example.com/")).toBe("https://www.hotpepper.jp/strJ001155193");
+  });
+  it("環境変数がなくても、ホットペッパーの提携リンクにする", async () => {
+    const { referralUrl } = await import("./shops");
+    const before = process.env.AFFILIATE_URL_TEMPLATE;
+    delete process.env.AFFILIATE_URL_TEMPLATE;
+    try {
+      expect(referralUrl("https://www.hotpepper.jp/strJ001155193")).toContain("pid=892753048&vc_url=");
+    } finally {
+      if (before !== undefined) process.env.AFFILIATE_URL_TEMPLATE = before;
+    }
+  });
 });

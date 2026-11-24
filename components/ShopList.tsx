@@ -192,6 +192,7 @@ export function ShopList({
             >
               {s.sample ? "見本のためお店のページなし" : "お店のページで予約する"}
               {!s.sample && <ExternalLink className="size-4" aria-hidden />}
+              {!s.sample && <span className="ml-1 rounded border border-white/30 px-1 text-[10px] leading-4 font-normal text-white/60">PR</span>}
             </a>
             {/* 場所や口コミは Google マップで見てもらう(見本のお店は実在しないので出さない) */}
             {!s.sample && (

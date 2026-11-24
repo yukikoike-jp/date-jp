@@ -7,7 +7,7 @@ import { PartiesMenu } from "./PartiesMenu";
 // 上のバー。もとにした KANJI と同じく、名前を真ん中に置き、左に戻る・右にあなたの会とホーム。
 export function SiteHeader({ children }: { children?: React.ReactNode }) {
   return (
-    <header className="sticky top-0 z-10 border-b border-white/8 bg-black/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-10 border-b border-border bg-black/80 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
       <div className="mx-auto max-w-xl px-4 pt-2 pb-2">
         <div className="grid h-11 grid-cols-[5.5rem_1fr_5.5rem] items-center">
           <BackButton />

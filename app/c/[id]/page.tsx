@@ -4,7 +4,6 @@ import { connection } from "next/server";
 import { CollectionView } from "@/components/CollectionView";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getStore } from "@/lib/store";
-import { pushReady, vapidPublicKey } from "@/lib/webpush";
 import { verifyToken } from "@/lib/tokens";
 import { PageMotion } from "@/components/PageMotion";
 
@@ -26,7 +25,6 @@ export default async function CollectionPage(props: PageProps<"/c/[id]">) {
   if (!collection) notFound();
   const { adminHash, ...view } = collection;
   const hostToken = typeof token === "string" && verifyToken(token, adminHash) ? token : null;
-  const pushKey = pushReady() ? vapidPublicKey() : null;
 
   return (
     <PageMotion>
@@ -35,7 +33,6 @@ export default async function CollectionPage(props: PageProps<"/c/[id]">) {
         <CollectionView
           collection={view}
           hostToken={hostToken}
-          pushKey={pushKey}
         />
       </div>
     </PageMotion>

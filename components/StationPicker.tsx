@@ -1,25 +1,75 @@
 "use client";
 
-import { Check, Search, TrainFront } from "lucide-react";
+import { Check, Search, TrainFront, X } from "lucide-react";
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import { searchStations } from "@/app/actions";
-import type { Station } from "@/lib/stations";
+import { isStation, type Station } from "@/lib/stations";
 import { SkeletonBlock } from "./Skeleton";
 import { INPUT, PILL, PILL_OFF, PILL_ON } from "./ui";
 
 // 行きやすい駅を1つ選ぶ。駅名を打つと、少し待ってから候補が出る(入力補完)。出てきた駅から選ぶ(全国)。
 // 選ばなければ「どこでもいい」(場所はほかの人の駅で決まる)
 
-/** anyLabel = 「選ばない」の選択肢の名前。null なら出さない(お店を探すでは駅が要る) */
+// 打たずに1回で選べる駅。この端末で最近選んだ駅だけを出す(全国で使うので、決まった駅は置かない)
+const RECENT_KEY = "nomi:recent-stations";
+const same = (a: Station, b: Station) => a.name === b.name && a.pref === b.pref;
+
+function loadRecent(): Station[] {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(RECENT_KEY) ?? "[]");
+    return Array.isArray(v) ? v.filter(isStation).slice(0, 4) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(s: Station) {
+  try {
+    localStorage.setItem(RECENT_KEY, JSON.stringify([s, ...loadRecent().filter((x) => !same(x, s))].slice(0, 4)));
+  } catch {}
+}
+
+/** いくつまで駅を選べるか(multi のとき) */
+export const MAX_STATIONS = 3;
+
+/** anyLabel = 「選ばない」の選択肢の名前。null なら出さない(お店を探すでは駅が要る)。quick = 打たずに選べる駅を並べる。
+ *  multi を渡すと、駅をいくつでも(MAX_STATIONS まで)選べる。選んだ駅を押すと外れる(2026-11-21) */
 export function StationPicker({
   value,
-  onChange,
+  onChange: change,
   anyLabel = "どこでもいい",
+  quick = false,
+  multi,
+  onMultiChange,
 }: {
   value: Station | null;
   onChange: (s: Station | null) => void;
   anyLabel?: string | null;
+  quick?: boolean;
+  multi?: Station[];
+  onMultiChange?: (s: Station[]) => void;
 }) {
+  const many = multi !== undefined && onMultiChange !== undefined;
+  const selected = many ? multi : value ? [value] : [];
+  const full = many && selected.length >= MAX_STATIONS;
+  // 選んだ駅は、次に開いたときのために覚えておく
+  const onChange = (s: Station | null) => {
+    if (s) saveRecent(s);
+    if (many) {
+      if (!s) return onMultiChange([]);
+      if (selected.some((x) => same(x, s))) return onMultiChange(selected.filter((x) => !same(x, s)));
+      if (full) return;
+      return onMultiChange([...selected, s]);
+    }
+    change(s);
+  };
+  const [quickList, setQuickList] = useState<Station[]>([]);
+  useEffect(() => {
+    if (!quick) return;
+    const recent = loadRecent();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setQuickList(recent);
+  }, [quick, value]);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Station[] | null>(null);
   const [pending, start] = useTransition();
@@ -53,13 +103,38 @@ export function StationPicker({
             {anyLabel}
           </button>
         )}
-        {value && (
-          <span className={`${PILL} px-3 ${PILL_ON}`}>
+        {!many && value && (
+          <span className={`${PILL} anim-pop px-3 ${PILL_ON}`}>
             <Check className="size-3.5 shrink-0" aria-hidden />
             {value.name}駅
-            <span className="text-xs font-bold opacity-70">({value.pref})</span>
+            <span className="text-xs font-bold opacity-70">{value.pref}</span>
           </span>
         )}
+        {/* いくつでも選べるとき: 選んだ駅を押すと外れる */}
+        {many &&
+          selected.map((s) => (
+            <button
+              key={`${s.name}-${s.pref}`}
+              type="button"
+              onClick={() => onChange(s)}
+              aria-label={`${s.name}駅を外す`}
+              className={`${PILL} anim-pop px-3 ${PILL_ON}`}
+            >
+              {s.name}駅
+              <X className="size-3.5 shrink-0" aria-hidden />
+            </button>
+          ))}
+        {quick &&
+          !query.trim() &&
+          quickList
+            .filter((s) => !selected.some((x) => same(x, s)))
+            .slice(0, many ? (full ? 0 : 4) : value ? 3 : 4)
+            .map((s) => (
+              <button key={`${s.name}-${s.pref}`} type="button" onClick={() => onChange(s)} className={`${PILL} px-3 ${PILL_OFF}`}>
+                <TrainFront className="size-3.5 shrink-0 opacity-60" aria-hidden />
+                {s.name}
+              </button>
+            ))}
       </div>
       <div className="flex gap-2">
         <label className="min-w-0 flex-1">
@@ -76,7 +151,8 @@ export function StationPicker({
                 find();
               }
             }}
-            placeholder="駅名(例: 仙台、渋谷)"
+            placeholder={full ? `駅は${MAX_STATIONS}つまで` : many && selected.length > 0 ? "ほかの駅も足す" : "駅名 例: 仙台、渋谷"}
+            disabled={full}
             autoComplete="off"
             role="combobox"
             aria-autocomplete="list"
@@ -108,14 +184,15 @@ export function StationPicker({
       {!pending && results && results.length > 0 && (
         <ul id={listId} className="space-y-1.5" aria-label="見つかった駅">
           {results.map((s) => {
-            const on = value?.name === s.name && value.pref === s.pref;
+            const on = selected.some((x) => same(x, s));
             return (
               <li key={`${s.name}-${s.pref}`}>
                 <button
                   type="button"
                   aria-pressed={on}
                   onClick={() => {
-                    onChange(s);
+                    // いくつでも選べるときは、選んである駅を押しても外さない(外すのは上の札から)
+                    if (!(many && on)) onChange(s);
                     setResults(null);
                     setQuery("");
                   }}

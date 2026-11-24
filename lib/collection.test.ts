@@ -41,3 +41,29 @@ describe("canSetPayment", () => {
     expect(isConfirmed(undefined)).toBe(false);
   });
 });
+
+describe("nextPayment(払ったの2段階)", () => {
+  it("幹事は受け取りを記録・取り消しできる", async () => {
+    const { nextPayment } = await import("./collection");
+    expect(nextPayment(true, undefined, true)).toEqual({ by: "host" });
+    expect(nextPayment(true, { by: "host" }, false)).toBeNull();
+  });
+  it("参加した人は申告だけ。幹事の記録は変えられない", async () => {
+    const { nextPayment } = await import("./collection");
+    expect(nextPayment(false, undefined, true)).toEqual({ by: "self" });
+    expect(nextPayment(false, { by: "self" }, false)).toBeNull();
+    expect(nextPayment(false, { by: "host" }, true)).toBe("forbidden");
+    expect(nextPayment(false, { by: "host" }, false)).toBe("forbidden");
+    expect(nextPayment(false, undefined, false)).toBe("forbidden");
+  });
+});
+
+describe("nextPayment(払い方)", () => {
+  it("選んだ払い方を記録し、幹事が確かめるときは本人の払い方を引き継ぐ", async () => {
+    const { nextPayment } = await import("./collection");
+    expect(nextPayment(false, undefined, true, "paypay")).toEqual({ by: "self", method: "paypay" });
+    expect(nextPayment(true, { by: "self", method: "paypay" }, true)).toEqual({ by: "host", method: "paypay" });
+    expect(nextPayment(true, undefined, true, "cash")).toEqual({ by: "host", method: "cash" });
+    expect(nextPayment(true, undefined, true)).toEqual({ by: "host" });
+  });
+});

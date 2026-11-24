@@ -23,7 +23,7 @@ export function WhoCanGo({ summary }: { summary: Summary }) {
         <table className="w-max min-w-full border-collapse text-center text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="sticky left-0 z-10 bg-surface px-3 py-2 text-left text-xs font-bold text-muted">日にち</th>
+              <th className="sticky left-0 z-[1] bg-surface px-3 py-2 text-left text-xs font-bold text-muted">日にち</th>
               {who.map((p) => (
                 <th key={p.name} scope="col" className="max-w-[4.5rem] px-1.5 py-2 text-xs font-bold">
                   <span className="flex items-center justify-center gap-0.5">
@@ -40,7 +40,7 @@ export function WhoCanGo({ summary }: { summary: Summary }) {
               const best = summary.bestDates.includes(d);
               return (
                 <tr key={d} className={`border-b border-border last:border-b-0 ${best ? "bg-accent/10" : ""}`}>
-                  <th scope="row" className={`sticky left-0 z-10 px-3 py-2 text-left whitespace-nowrap ${best ? "bg-[#2a2310]" : "bg-surface"}`}>
+                  <th scope="row" className={`sticky left-0 z-[1] px-3 py-2 text-left whitespace-nowrap ${best ? "bg-[#2a2310]" : "bg-surface"}`}>
                     <span className="block text-sm font-black">
                       {dateLabel(d)}
                       {best && <span className="ml-1 text-xs text-accent">★</span>}

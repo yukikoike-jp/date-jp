@@ -1,0 +1,45 @@
+# Firebase App Hosting の設定(2026-11-21 に Vercel から移す)
+# 値はすべて Cloud Secret Manager に置く。ここには名前だけを書く(値は scripts/firebase-secrets.mjs で入れる)
+
+runConfig:
+  # 東京に置く(Supabase とホットペッパーに近い)
+  region: asia-northeast1
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  # next.config.ts が組み立てのときにも読むもの(BUILD と RUNTIME の両方)
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY
+  - variable: LICENSE_SECRET
+    secret: LICENSE_SECRET
+  - variable: SUPPORT_URL
+    secret: SUPPORT_URL
+  # 動いているときに読むもの
+  - variable: SUPABASE_URL
+    secret: SUPABASE_URL
+    availability: [RUNTIME]
+  - variable: SUPABASE_SERVICE_ROLE_KEY
+    secret: SUPABASE_SERVICE_ROLE_KEY
+    availability: [RUNTIME]
+  - variable: HOTPEPPER_API_KEY
+    secret: HOTPEPPER_API_KEY
+    availability: [RUNTIME]
+  - variable: STATS_TOKEN
+    secret: STATS_TOKEN
+    availability: [RUNTIME]
+  - variable: SELLER_NAME
+    secret: SELLER_NAME
+    availability: [RUNTIME]
+  - variable: OPERATOR_NAME
+    secret: OPERATOR_NAME
+    availability: [RUNTIME]
+  - variable: SELLER_EMAIL
+    secret: SELLER_EMAIL
+    availability: [RUNTIME]
+  - variable: CONTACT_EMAIL
+    secret: CONTACT_EMAIL
+    availability: [RUNTIME]

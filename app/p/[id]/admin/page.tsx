@@ -14,6 +14,7 @@ import { dietNotice } from "@/lib/diet";
 import { findShop } from "@/lib/shops";
 import { loadParty } from "@/lib/view";
 import { PageMotion } from "@/components/PageMotion";
+import { StartTime } from "@/components/StartTime";
 import { PullToRefresh } from "@/components/PullToRefresh";
 
 export const metadata: Metadata = { title: "幹事の画面", robots: { index: false } };
@@ -48,16 +49,17 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
     <PageMotion>
       {/* 日にちが決まるまでは「日程調整」、決まったら「お店探し」 */}
       <SiteHeader>
-        <StepBar current={party.decision ? 1 : 0} />
+        <StepBar current={party.decision?.shopId ? 2 : party.decision ? 1 : 0} />
       </SiteHeader>
       <div className={`mx-auto max-w-xl ${party.decision ? "pb-16" : "pb-40"}`}>
         <div className="px-4 pt-6 pb-4">
-          <p className="text-[11px] font-black tracking-[0.2em] text-stone-400">幹事の画面</p>
+          <p className="text-[11px] font-black text-stone-400">幹事の画面</p>
           <h1 className="mt-1 text-[22px] font-black tracking-tight">{party.title}</h1>
+          {!party.decision && <StartTime start={party.start} />}
         </div>
         {party.decision && (
           <div className="mb-4">
-            <DecisionCard photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />
+            <DecisionCard host people={summary.attendees.length} photo={decidedPhoto} decision={party.decision} partyId={party.id} title={party.title} url={pageUrl} />
           </div>
         )}
         <AdminPanel
@@ -85,9 +87,6 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           scene={{ audience: party.audience, budget: summary.budget }}
         />
         {/* 幹事も自分の予定を入れられる。ふだんは1行のボタンにたたみ、押すと開く */}
-        <div className="mt-4">
-          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
-        </div>
         {/* みんなの答えの細かい表は、いつもたたんでおく(いちばん良い日は「幹事が決める」に出ている) */}
         {summary.answered > 0 && (
           <Fold title={`みんなの答え(${summary.answered}人)`} note="日にち・時間・予算・場所">
@@ -95,6 +94,10 @@ export default async function AdminPage(props: PageProps<"/p/[id]/admin">) {
           </Fold>
         )}
         {/* お店の一覧は AdminPanel の中に1つだけ出す(選ぶのと予約のリンクを同じ一覧に) */}
+        {/* 幹事の答えは、どの段階でもいちばん下 */}
+        <div className="mt-4">
+          <AnswerPanel host partyId={party.id} dates={party.dates} audience={party.audience} start={party.start} />
+        </div>
       </div>
     </PageMotion>
     </PullToRefresh>

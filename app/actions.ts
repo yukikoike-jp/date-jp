@@ -3,16 +3,11 @@
 import { headers } from "next/headers";
 import { AUDIENCES, isAudience, normalizeAudience } from "@/lib/audience";
 import { billingEnabled, billingPortalUrl, createProCheckout, hasFun, licenseForEmail, proPrice } from "@/lib/billing";
-import { canSetPayment, isConfirmed, parseCollection, type CollectionInput } from "@/lib/collection";
-import { parsePushSub } from "@/lib/pushRemind";
-import { cleanPayLink } from "@/lib/reminder";
-import { pushReady } from "@/lib/webpush";
+import { canSetPayment, isConfirmed, isPayMethod, nextPayment, parseCollection, type CollectionInput } from "@/lib/collection";
 import { AREAS, isBudget, isGenreKey, isSecondGenreKey } from "@/lib/sendai";
 import { findShop, searchSecondShops, searchShopsAlways, type Shop } from "@/lib/shops";
 import { getStore } from "@/lib/store";
 import type { Decision } from "@/lib/store/types";
-import { findSponsor } from "@/lib/sponsors";
-import { loadParty } from "@/lib/view";
 import { summarize } from "@/lib/summary";
 import { isStation, normalizeStationQuery, type Station } from "@/lib/stations";
 import { generateGroupId, generateToken, hashToken, verifyToken } from "@/lib/tokens";
@@ -129,6 +124,8 @@ export async function setMust(partyId: string, adminToken: string, names: string
 export async function findShops(input: {
   /** 飲む場所の駅(全国) */
   station: unknown;
+  /** 駅をいくつか選んだとき(3つまで)。あれば station より優先 */
+  stations?: unknown;
   genres: string[];
   budget: number | null;
   privateRoom: boolean;
@@ -140,8 +137,26 @@ export async function findShops(input: {
   second?: { genre: string | null } | null;
   audience: string;
 }): Promise<{ shops: Shop[]; otherArea: boolean; relaxed: string | null }> {
-  if (!isStation(input.station)) return { shops: [], otherArea: false, relaxed: null };
-  const point = { lat: input.station.lat, lng: input.station.lng };
+  // 駅をいくつか選んだときは、駅ごとに探して、交互に並べる(同じお店は1つにする)
+  const many = Array.isArray(input.stations) ? input.stations.filter(isStation).slice(0, 3) : [];
+  if (many.length > 1) {
+    const each = await Promise.all(many.map((s) => findShops({ ...input, station: s, stations: undefined })));
+    const seen = new Set<string>();
+    const shops: Shop[] = [];
+    for (let i = 0; shops.length < 12 && each.some((r) => i < r.shops.length); i++) {
+      for (const r of each) {
+        const s = r.shops[i];
+        if (s && !seen.has(s.id)) {
+          seen.add(s.id);
+          shops.push(s);
+        }
+      }
+    }
+    return { shops: shops.slice(0, 12), otherArea: each.every((r) => r.otherArea), relaxed: each.find((r) => r.relaxed)?.relaxed ?? null };
+  }
+  const station = many[0] ?? input.station;
+  if (!isStation(station)) return { shops: [], otherArea: false, relaxed: null };
+  const point = { lat: station.lat, lng: station.lng };
   if (input.second) {
     const shops = await searchSecondShops({ ...point, size: 2, genre: isSecondGenreKey(input.second.genre) ? input.second.genre : null, exclude: null, area: AREAS[0].key });
     return { shops, otherArea: false, relaxed: null };
@@ -171,7 +186,8 @@ export async function findShops(input: {
 
 /** 集金のページを作る(Tsudoro+ の機能。2026-11-19 から、会計ではなく Support の集金チェックから作る)。金額はサーバーで計算し直す */
 export async function startCollection(input: CollectionInput, license: string | null = null): Promise<{ ok: true; id: string; adminToken: string } | Fail> {
-  if (!(await hasFun(license))) return { ok: false, error: "集金のページは Tsudoro+ の機能です" };
+  // 集金のページを作るのは Tsudoro+(2026-11-21。集金が、幹事がお金を払ってでも解決したい悩みなので)
+  if (!(await hasFun(license))) return { ok: false, error: "集金チェックは Tsudoro+ で使えます" };
   const parsed = parseCollection(input);
   if (!parsed.ok) return parsed;
 
@@ -194,6 +210,7 @@ export async function setCollectionPayment(
   personId: number,
   paid: boolean,
   adminToken: string | null,
+  method: unknown = null,
 ): Promise<{ ok: true } | Fail> {
   const store = getStore();
   const c = await store.getCollection(collectionId);
@@ -201,62 +218,10 @@ export async function setCollectionPayment(
   const person = c.people.find((p) => p.id === personId);
   if (!person || person.organizer) return { ok: false, error: "この人の支払いは変えられません" };
   const isHost = verifyToken(adminToken, c.adminHash);
-  if (!canSetPayment(isHost)) return { ok: false, error: "受け取りの記録は幹事だけができます" };
-  await store.setPayment(collectionId, personId, paid === true ? { by: "host" } : null);
-  return { ok: true };
-}
-
-/**
- * 集金の設定。幹事(鍵が合う)だけが変えられる。
- * payLink = 幹事の PayPay のリンク(空で消す。参加する人の画面に「払う」ボタンが出る)。
- * autoRemind = 自動でお知らせ(有料プレミアム。オンにするには、契約中の端末の鍵 license が要る)
- */
-export async function saveCollectionSettings(
-  collectionId: string,
-  adminToken: string | null,
-  input: { payLink: string; autoRemind?: boolean },
-  license: string | null,
-): Promise<{ ok: true; payLink: string | null; autoRemindAt: number | null } | Fail> {
-  const store = getStore();
-  const c = await store.getCollection(collectionId);
-  if (!c) return { ok: false, error: "集金のページが見つかりません" };
-  if (!verifyToken(adminToken, c.adminHash)) return { ok: false, error: "設定を変えられるのは幹事だけです" };
-
-  const raw = typeof input?.payLink === "string" ? input.payLink.trim() : "";
-  const payLink = raw === "" ? null : cleanPayLink(raw);
-  if (raw !== "" && payLink === null) return { ok: false, error: "PayPay のリンク(https://paypay.ne.jp/…)を入れてください" };
-
-  let autoRemindAt: number | null = c.autoRemindAt ?? null;
-  if (input?.autoRemind === true) {
-    if (!(await hasFun(license))) return { ok: false, error: "自動でお知らせは Tsudoro+ の機能です" };
-    if (!pushReady()) return { ok: false, error: "通知の準備がまだできていません" };
-    autoRemindAt = autoRemindAt ?? Date.now();
-  } else if (input?.autoRemind === false) {
-    autoRemindAt = null;
-  }
-  await store.setCollectionSettings(collectionId, { payLink, autoRemindAt });
-  return { ok: true, payLink, autoRemindAt };
-}
-
-/**
- * 払うまで、この端末にお知らせを送ってよいと登録する。「自動でお知らせ」がオンの集金で、払っていない人だけ。
- * 名前の確認はしない(ログインがないため)。ほかの人の名前で登録しても、通知が届くのはその端末だけ
- */
-export async function subscribePush(
-  collectionId: string,
-  personId: number,
-  subscription: unknown,
-): Promise<{ ok: true } | Fail> {
-  const sub = parsePushSub(subscription);
-  if (!sub) return { ok: false, error: "通知の登録に失敗しました" };
-  const store = getStore();
-  const c = await store.getCollection(collectionId);
-  if (!c || c.autoRemindAt === undefined) return { ok: false, error: "この集金は自動でお知らせを使っていません" };
-  const person = c.people.find((p) => p.id === personId);
-  if (!person || person.organizer || isConfirmed(c.payments[person.id])) return { ok: false, error: "この人にはお知らせは要りません" };
-  const subs = await store.listPushSubs(collectionId);
-  if (subs.length >= 200) return { ok: false, error: "登録できる数をこえました" };
-  await store.addPushSub({ collectionId, personId, ...sub });
+  // 幹事は受け取りの記録。参加した人は「払った」の申告(幹事が確かめるまで数えない)
+  const next = nextPayment(canSetPayment(isHost), c.payments[personId], paid === true, isPayMethod(method) ? method : null);
+  if (next === "forbidden") return { ok: false, error: "幹事が受け取りを記録したものは、幹事だけが変えられます" };
+  await store.setPayment(collectionId, personId, next);
   return { ok: true };
 }
 
@@ -283,39 +248,6 @@ export async function collectionProgress(
 }
 
 /**
- * 二次会のお店。一次会のお店が決まっていればその近く、なければ一番人気の場所の近くで探す。
- * 人数は二次会に残れる人(いなければ行く人全員)
- */
-export async function findSecondShops(
-  partyId: string,
-  genre: string | null,
-): Promise<{ shops: Shop[]; size: number; near: string }> {
-  const view = await loadParty(partyId);
-  if (!view?.party.decision) return { shops: [], size: 0, near: "" };
-  const { party, summary } = view;
-  const decision = party.decision!;
-  const first = decision.shopId ? await findShop(decision.shopId) : null;
-  const area = AREAS.find((a) => a.key === summary.area) ?? AREAS[0];
-  const base =
-    first?.lat != null && first.lng != null
-      ? { lat: first.lat, lng: first.lng }
-      : summary.meeting ?? { lat: area.lat, lng: area.lng };
-  const size = summary.secondParty.length || summary.attendees.length;
-  const shops = await searchSecondShops({
-    ...base,
-    size,
-    genre: isSecondGenreKey(genre) ? genre : null,
-    exclude: decision.shopId,
-    area: area.key,
-  });
-  return {
-    shops,
-    size,
-    near: first?.lat != null ? (decision.shopName ?? first.name) : summary.meeting ? `${summary.meeting.name}駅` : area.label,
-  };
-}
-
-/**
  * 駅名から駅を探す(全国)。HeartRails Express の無料の駅データを使う。
  * 同じ駅の路線ちがいは1つにまとめ、名前と都道府県と場所だけを返す
  */
@@ -338,15 +270,6 @@ export async function searchStations(query: string): Promise<Station[]> {
     console.error("[stations] 駅を探せませんでした", e);
     return [];
   }
-}
-
-/** 広告が画面に出たことを数える。lib/sponsors.ts にある広告だけを数える */
-export async function logAdView(sponsorId: string): Promise<void> {
-  const sponsor = typeof sponsorId === "string" ? findSponsor(sponsorId) : null;
-  if (!sponsor) return;
-  await getStore()
-    .logAdEvent(sponsor.id, "view")
-    .catch((e) => console.error("[ad] 数えられませんでした", e));
 }
 
 /** going = 決まった日に行く人の数(決まっていなければ 0)。audience = 学生・プライベート・会社のどれの会か */

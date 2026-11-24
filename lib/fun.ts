@@ -1,4 +1,4 @@
-// 有料パックの「もりあげ道具」(席替え・チーム分け・王様ゲーム・ルーレット)。純粋関数。
+// 有料パックの「もりあげ道具」(席決め・ウソはどれ?・ルーレット)。純粋関数。
 // 乱数は引数で渡せるようにして、テストで結果を固定できるようにする
 
 export type Rand = () => number;
@@ -36,7 +36,7 @@ export const SEAT_LAYOUTS: { key: SeatLayout; label: string; note: string }[] = 
 ];
 
 /**
- * 席替え。席の順に名前を入れた一覧を返す。
+ * 席決め。席の順に名前を入れた一覧を返す。
  * table = 手前の列と奥の列(奥は手前と同じか1席少ない)、round と counter = 1周・1列の順
  */
 export type SeatPins = { top?: string | null; exit?: string | null };
@@ -64,8 +64,7 @@ function arrange(names: readonly string[], layout: SeatLayout, rand: Rand, pins:
   return order.map((x) => x ?? rest.shift() ?? "");
 }
 
-export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] } {
-  const order = arrange(names, layout, rand, pins);
+function toRows(order: string[], layout: SeatLayout): { rows: string[][] } {
   if (layout === "table") {
     const half = Math.ceil(order.length / 2);
     return { rows: [order.slice(0, half), order.slice(half)] };
@@ -73,35 +72,54 @@ export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Ran
   return { rows: [order] };
 }
 
-/** チーム分け。人数がかたよらないよう、順に配る(最大と最小の差は1人まで) */
-export function splitTeams(names: readonly string[], teams: number, rand: Rand = Math.random): string[][] {
-  const n = Math.max(1, Math.min(teams, names.length || 1));
-  const out: string[][] = Array.from({ length: n }, () => []);
-  shuffle(names, rand).forEach((name, i) => out[i % n].push(name));
+export function seatPlan(names: readonly string[], layout: SeatLayout, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] } {
+  return toRows(arrange(names, layout, rand, pins), layout);
+}
+
+/** 机(卓)の数の上限。1卓に2人はいるようにする */
+export function maxTables(count: number): number {
+  return Math.max(1, Math.min(8, Math.floor(count / 2)));
+}
+
+/**
+ * 机がいくつかあるときの席決め(2026-11-21)。人数はできるだけ同じにする(差は1人まで)。
+ * 上座の人は1卓目の席1、出口に近い席の人は最後の卓の出口の席
+ */
+export function seatTables(names: readonly string[], layout: SeatLayout, tables: number, rand: Rand = Math.random, pins: SeatPins = {}): { rows: string[][] }[] {
+  const n = names.length;
+  const t = Math.max(1, Math.min(Math.floor(tables) || 1, maxTables(n)));
+  if (t === 1) return [seatPlan(names, layout, rand, pins)];
+  const top = pins.top && names.includes(pins.top) ? pins.top : null;
+  const exit = pins.exit && pins.exit !== top && names.includes(pins.exit) ? pins.exit : null;
+  const rest = shuffle(
+    names.filter((x) => x !== top && x !== exit),
+    rand,
+  );
+  const out: { rows: string[][] }[] = [];
+  for (let i = 0; i < t; i++) {
+    const size = Math.floor(n / t) + (i < n % t ? 1 : 0);
+    const seats: (string | null)[] = Array(size).fill(null);
+    if (i === 0 && top) seats[0] = top;
+    if (i === t - 1 && exit) seats[seatExitIndex(layout, size)] = exit;
+    out.push(toRows(seats.map((x) => x ?? rest.shift() ?? ""), layout));
+  }
   return out;
 }
 
-export type KingDraw = { name: string; card: "王様" | number };
-
-/** 王様ゲームのくじ。1人が王様、残りは 1〜(人数−1) の番号。誰が何を引いたかを返す */
-export function kingGame(names: readonly string[], rand: Rand = Math.random): KingDraw[] {
-  const cards: KingDraw["card"][] = ["王様", ...Array.from({ length: Math.max(0, names.length - 1) }, (_, i) => i + 1)];
-  const dealt = shuffle(cards, rand);
-  return names.map((name, i) => ({ name, card: dealt[i] }));
-}
-
-/** 王様の命令の例(だれでも楽しめる軽いもの) */
-export const KING_ORDERS = [
-  "◯番がみんなに乾杯の音頭をとる",
-  "◯番がいまの気分を一言で言う",
-  "◯番と◯番がグラスで軽く乾杯する",
-  "◯番が最近いちばん笑ったことを話す",
-  "◯番が好きな食べものを発表する",
-  "◯番が右隣の人をほめる",
-  "◯番が今日のおすすめの一品を決める",
-  "◯番が次に行きたい場所を1つ言う",
-  "◯番と◯番が席を交換する",
-  "◯番がみんなの写真を撮る",
+/** 「ウソはどれ?」のお題。会社の会でも話しやすい、仕事と私生活の軽いこと(2026-11-21) */
+export const LIE_THEMES = [
+  "休みの日のすごし方",
+  "子どものころの話",
+  "好きな食べもの・苦手な食べもの",
+  "行ったことのある場所",
+  "最近ハマっていること",
+  "学生時代の部活・サークル",
+  "はじめてのアルバイト・仕事",
+  "朝のすごし方",
+  "特技・意外な一面",
+  "最近買ってよかったもの",
+  "家族・ペットの話",
+  "これまでの失敗談",
 ];
 
 /** 名前の一覧から1人を選ぶ(ルーレット)。選んだ人の番号を返す。いなければ -1 */

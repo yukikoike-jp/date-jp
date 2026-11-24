@@ -6,11 +6,10 @@ import { useState, useTransition } from "react";
 import { startCollection } from "@/app/actions";
 import { loadAudience } from "@/lib/audience";
 import { rememberCollection } from "@/lib/myCollections";
-import { ProPaywall, loadLicense, useFunAccess } from "./ProGate";
+import { loadLicense, useFunAccess } from "./ProGate";
 import { BUTTON_PRIMARY, INPUT } from "./ui";
 
-// 集金をすぐはじめる(ホームの「集金の催促を、アプリにまかせる」の行き先)。割り勘の計算の画面を通らず、
-// 合計と名前を入れるだけで、集金のページ(幹事の画面。払い方・催促のおまかせはそこで)に進む。全員同じ額で割る
+// 集金をすぐはじめる。割り勘の計算の画面を通らず、合計と名前を入れるだけで集金のページ(幹事の画面)に進む。全員同じ額で割る
 
 /** 名前の一覧にする。改行・カンマ・読点で区切り、空は捨てて、20文字・30人まで */
 function parseNames(text: string): string[] {
@@ -23,12 +22,12 @@ function parseNames(text: string): string[] {
 
 export function QuickCollect() {
   const router = useRouter();
-  const access = useFunAccess();
   const [title, setTitle] = useState("");
   const [total, setTotal] = useState("");
   const [names, setNames] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const access = useFunAccess();
 
   const list = parseNames(names);
   const totalYen = Number(total);
@@ -36,6 +35,10 @@ export function QuickCollect() {
 
   function submit() {
     setError(null);
+    if (!access.unlocked) {
+      router.push("/fun?tab=collect");
+      return;
+    }
     start(async () => {
       const r = await startCollection({
         title,
@@ -54,15 +57,6 @@ export function QuickCollect() {
       rememberCollection({ id: r.id, token: r.adminToken, title: title.trim(), total: totalYen, createdAt: Date.now() });
       router.push(`/c/${r.id}?token=${r.adminToken}`);
     });
-  }
-
-  // 集金のページは Tsudoro+ の機能。買う前は購入の案内を出す
-  if (!access.loading && !access.unlocked) {
-    return (
-      <div className="mx-4">
-        <ProPaywall feature="Tsudoro+" price={access.price} purchasable={access.purchasable} />
-      </div>
-    );
   }
 
   return (
