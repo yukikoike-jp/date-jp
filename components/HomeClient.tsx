@@ -189,11 +189,11 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
           <p className="mt-1 text-[13px] font-medium text-white/60">{home.lead}</p>
           <ol className="mt-6 flex items-start" aria-label="URLひとつで進むこと">
             {[
-              { Icon: CalendarDays, label: "日程調整" },
-              { Icon: Store, label: "お店探し" },
-              { Icon: Wallet, label: "集金" },
-            ].map(({ Icon, label }, i) => (
-              <li key={label} className={`${label === "集金" ? "tone-green " : ""}flex flex-1 items-start`}>
+              { Icon: CalendarDays, label: "日程調整", tone: "" },
+              { Icon: Store, label: "お店探し", tone: "" },
+              { Icon: Wallet, label: "集金", tone: "" },
+            ].map(({ Icon, label, tone }, i) => (
+              <li key={label} className={`${tone} flex flex-1 items-start`}>
                 <span className="anim-stagger flex flex-1 flex-col items-center gap-1.5" style={{ "--i": i + 2 } as React.CSSProperties}>
                   <span className="grid size-11 place-items-center rounded-2xl bg-accent/12 text-accent ring-1 ring-accent/30">
                     <Icon className="size-5" aria-hidden />
@@ -215,7 +215,7 @@ export function HomeClient({ about }: { about?: React.ReactNode }) {
         {/* ツールは「お店」と「集金」の2つだけ(2026-11-25)。Tsudoro+ の入口(/fun)は、お金を取らない方針なので、ホームから隠した */}
         <div className="grid grid-cols-2 gap-2.5">
           <ToolTile href="/shops" icon={<Store className="size-6" aria-hidden />} title="お店探し" sub={home.shops} />
-          <ToolTile href="/collect" icon={<Wallet className="size-6" aria-hidden />} title="集金" sub={home.collect} tone="tone-green" />
+          <ToolTile href="/collect" icon={<Wallet className="size-6" aria-hidden />} title="集金" sub={home.collect} />
         </div>
       </section>
 
