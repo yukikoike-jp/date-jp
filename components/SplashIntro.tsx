@@ -10,34 +10,18 @@ const NAME = "Tsudoro";
 const LINES = [-150, -120, -90, -60, -30, 30, 150];
 
 function Glass({ side }: { side: "left" | "right" }) {
-  // ビールは、グラデーションではなく、ふつうの琥珀色(上が少し明るく、下が深い)のベタ塗りに、白い泡と小さな気泡。
-  // 光沢の筋は入れず、色はくすんだ琥珀に寄せる(つるつるの「AIっぽい」黄色にならないように)
   return (
     <svg viewBox="0 0 60 90" className="h-32 w-[5.4rem]" aria-hidden style={side === "right" ? { transform: "scaleX(-1)" } : undefined}>
       <defs>
+        <linearGradient id={`intro-beer-${side}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe08a" />
+          <stop offset="1" stopColor="#f2a21f" />
+        </linearGradient>
         <clipPath id={`intro-glass-${side}`}>
           <path d="M10 18h40l-4 60a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6z" />
         </clipPath>
       </defs>
-      <g clipPath={`url(#intro-glass-${side})`}>
-        <g className="intro-pour">
-          <rect x="6" y="30" width="48" height="60" fill="#dc9413" />
-          <rect x="6" y="58" width="48" height="32" fill="#cf8710" />
-          {/* 気泡 */}
-          <g fill="#f6d27a" opacity="0.75">
-            <circle cx="22" cy="68" r="1.1" />
-            <circle cx="33" cy="56" r="0.9" />
-            <circle cx="40" cy="70" r="1.3" />
-            <circle cx="28" cy="46" r="0.8" />
-            <circle cx="37" cy="40" r="0.9" />
-          </g>
-          {/* 泡(ふちはまるく波うたせる) */}
-          <path
-            d="M8 22h44v8c-3 3-6 3-9 0-3 4-6 4-9 0-3 4-6 4-9 0-3 3-6 3-9 0-3 2-6 2-8 0z"
-            fill="#fbf1d3"
-          />
-        </g>
-      </g>
+      <rect className="intro-pour" x="6" y="30" width="48" height="60" fill={`url(#intro-beer-${side})`} clipPath={`url(#intro-glass-${side})`} />
       <path
         d="M10 18h40l-4 60a6 6 0 0 1-6 6H20a6 6 0 0 1-6-6z"
         fill="none"
