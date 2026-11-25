@@ -109,29 +109,24 @@ export function CollectList({ demo = false }: { demo?: boolean }) {
         </>
       )}
 
-      {/* 集金のしかたは、ふだんはたたんでおく */}
-      <details className="group mt-4 [&_summary::-webkit-details-marker]:hidden">
-        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-1 text-xs font-bold text-muted">
-          <span className="flex items-center gap-1.5">
-            <ListChecks className="size-3.5" aria-hidden />
-            集金のしかた
-          </span>
-          <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
-        </summary>
-        <ol className="mt-1 overflow-hidden rounded-2xl bg-surface-2 ring-1 ring-white/8">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="flex gap-3 border-t border-border px-4 py-3 first:border-t-0">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent text-xs font-black text-accent-text" aria-hidden>
-                {i + 1}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-sm font-black">{s.title}</span>
-                <span className="mt-0.5 block text-xs text-muted">{s.note}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </details>
+      {/* 集金のしかた(たたまず、いつも開いておく) */}
+      <h3 className="mt-5 mb-2 flex items-center gap-1.5 text-xs font-bold text-muted">
+        <ListChecks className="size-3.5" aria-hidden />
+        集金のしかた
+      </h3>
+      <ol className="overflow-hidden rounded-2xl bg-surface-2 ring-1 ring-white/8">
+        {STEPS.map((s, i) => (
+          <li key={s.title} className="flex gap-3 border-t border-border px-4 py-3 first:border-t-0">
+            <span className="grid size-7 shrink-0 place-items-center rounded-full bg-accent text-xs font-black text-accent-text" aria-hidden>
+              {i + 1}
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-black">{s.title}</span>
+              <span className="mt-0.5 block text-xs text-muted">{s.note}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
     </>
   );
 }
